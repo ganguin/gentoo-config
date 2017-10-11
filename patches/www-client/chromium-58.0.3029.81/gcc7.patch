@@ -1,0 +1,93 @@
+diff --git a/third_party/WebKit/Source/wtf/LinkedHashSet.h b/third_party/WebKit/Source/wtf/LinkedHashSet.h
+index 1a380b4..4accad2 100644
+--- a/third_party/WebKit/Source/wtf/LinkedHashSet.h
++++ b/third_party/WebKit/Source/wtf/LinkedHashSet.h
+@@ -687,6 +687,8 @@ inline LinkedHashSet<T, U, V, W>& LinkedHashSet<T, U, V, W>::operator=(
+   return *this;
+ }
+ 
++inline void swapAnchor(LinkedHashSetNodeBase& a, LinkedHashSetNodeBase& b);
++
+ template <typename T, typename U, typename V, typename W>
+ inline void LinkedHashSet<T, U, V, W>::swap(LinkedHashSet& other) {
+   m_impl.swap(other.m_impl);
+diff --git a/v8/src/objects-body-descriptors.h b/v8/src/objects-body-descriptors.h
+index 91cb888..a1c3634 100644
+--- a/v8/src/objects-body-descriptors.h
++++ b/v8/src/objects-body-descriptors.h
+@@ -99,7 +99,7 @@ class FixedBodyDescriptor final : public BodyDescriptorBase {
+ 
+   template <typename StaticVisitor>
+   static inline void IterateBody(HeapObject* obj, int object_size) {
+-    IterateBody(obj);
++    IterateBody<StaticVisitor>(obj);
+   }
+ };
+ 
+diff --git a/v8/src/objects-inl.h b/v8/src/objects-inl.h
+index 3aa26c5..e018147 100644
+--- a/v8/src/objects-inl.h
++++ b/v8/src/objects-inl.h
+@@ -7858,6 +7858,24 @@ bool GlobalDictionaryShape::IsDeleted(Dictionary* dict, int entry) {
+   return PropertyCell::cast(dict->ValueAt(entry))->value()->IsTheHole(isolate);
+ }
+ 
++template <typename Derived, typename Shape, typename Key>
++inline uint32_t HashTable<Derived,Shape,Key>::Hash(Key key) {
++  if (Shape::UsesSeed) {
++    return Shape::SeededHash(key, GetHeap()->HashSeed());
++  } else {
++    return Shape::Hash(key);
++  }
++}
++
++template <typename Derived, typename Shape, typename Key>
++inline uint32_t HashTable<Derived,Shape,Key>::HashForObject(Key key, Object* object) {
++  if (Shape::UsesSeed) {
++    return Shape::SeededHashForObject(key, GetHeap()->HashSeed(), object);
++  } else {
++    return Shape::HashForObject(key, object);
++  }
++}
++
+ 
+ bool ObjectHashTableShape::IsMatch(Handle<Object> key, Object* other) {
+   return key->SameValue(other);
+diff --git a/v8/src/objects.h b/v8/src/objects.h
+index 04d3d38..697ce55 100644
+--- a/v8/src/objects.h
++++ b/v8/src/objects.h
+@@ -3359,21 +3359,9 @@ class HashTable : public HashTableBase {
+   typedef Shape ShapeT;
+ 
+   // Wrapper methods
+-  inline uint32_t Hash(Key key) {
+-    if (Shape::UsesSeed) {
+-      return Shape::SeededHash(key, GetHeap()->HashSeed());
+-    } else {
+-      return Shape::Hash(key);
+-    }
+-  }
++  inline uint32_t Hash(Key key);
+ 
+-  inline uint32_t HashForObject(Key key, Object* object) {
+-    if (Shape::UsesSeed) {
+-      return Shape::SeededHashForObject(key, GetHeap()->HashSeed(), object);
+-    } else {
+-      return Shape::HashForObject(key, object);
+-    }
+-  }
++  inline uint32_t HashForObject(Key key, Object* object);
+ 
+   // Returns a new HashTable object.
+   MUST_USE_RESULT static Handle<Derived> New(
+--- a/third_party/WebKit/Source/platform/graphics/gpu/SharedGpuContext.h	2017-05-20 02:22:24.966948019 +0200
++++ b/third_party/WebKit/Source/platform/graphics/gpu/SharedGpuContext.h	2017-05-20 02:10:59.966194905 +0200
+@@ -6,6 +6,7 @@
+ #include "wtf/ThreadSpecific.h"
+ 
+ #include <memory>
++#include <functional>
+ 
+ namespace gpu {
+ namespace gles2 {

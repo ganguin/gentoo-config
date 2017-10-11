@@ -1,0 +1,33 @@
+From f68c8104d7564457de85d6eac85d97de692ccf3e Mon Sep 17 00:00:00 2001
+From: Jakub Jirutka <jakub@jirutka.cz>
+Date: Sun, 7 Aug 2016 02:22:00 +0200
+Subject: [PATCH] Disable is_on_nfs_mount() check on musl libc (fixes #2937)
+
+musl libc doesn't provide constant NFS_SUPER_MAGICK that is used in
+the is_on_nfs_mount function.
+---
+ src/cargo/util/flock.rs | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/cargo/util/flock.rs b/src/cargo/util/flock.rs
+index cccdd4a..3e4530b 100644
+--- a/src/cargo/util/flock.rs
++++ b/src/cargo/util/flock.rs
+@@ -291,7 +291,7 @@ fn acquire(config: &Config,
+         human(format!("failed to lock file: {}", path.display()))
+     });
+ 
+-    #[cfg(target_os = "linux")]
++    #[cfg(all(target_os = "linux", not(target_env = "musl")))]
+     fn is_on_nfs_mount(path: &Path) -> bool {
+         use std::ffi::CString;
+         use std::mem;
+@@ -310,7 +310,7 @@ fn acquire(config: &Config,
+         }
+     }
+ 
+-    #[cfg(not(target_os = "linux"))]
++    #[cfg(any(not(target_os = "linux"), target_env = "musl"))]
+     fn is_on_nfs_mount(_path: &Path) -> bool {
+         false
+     }

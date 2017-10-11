@@ -1,0 +1,4 @@
+dev-util/intel-ocl-sdk Intel-SDP
+# required by tfm-fingerprint (argument)
+>=sys-auth/tfm-fingerprint-1.0 UPEK-SDK-EULA
+www-plugins/chrome-binary-plugins google-chrome

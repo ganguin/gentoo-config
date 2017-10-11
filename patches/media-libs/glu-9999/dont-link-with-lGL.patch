@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 998eb8f..27b254e 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -11,7 +11,7 @@ aux_source_directory(source SRC)
+ aux_source_directory(source/libtess TESS_SRC)
+ file(GLOB_RECURSE NURBS_SRC source/libnurbs/*.cc)
+ add_library(GLU SHARED ${SRC} ${TESS_SRC} ${NURBS_SRC})
+-target_link_libraries(GLU GL m)
++target_link_libraries(GLU m)
+ 
+ if(CMAKE_SHARED_LIBRARY_SUFFIX MATCHES ".so")
+     set_target_properties(GLU PROPERTIES SUFFIX ".so.1")

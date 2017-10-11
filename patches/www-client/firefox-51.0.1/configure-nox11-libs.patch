@@ -1,0 +1,13 @@
+diff --git a/old-configure.in b/old-configure.in
+index 1f15268..e0dfd09 100644
+--- a/old-configure.in
++++ b/old-configure.in
+@@ -2939,7 +2939,7 @@ dnl enable once PeerConnection lands
+     AC_DEFINE(MOZ_SCTP)
+     AC_DEFINE(MOZ_SRTP)
+     if test -n "$MOZ_X11"; then
+-      MOZ_WEBRTC_X11_LIBS="-lXext -lXdamage -lXfixes -lXcomposite"
++      MOZ_WEBRTC_X11_LIBS=""
+     fi
+ else
+     MOZ_SYNTH_PICO=

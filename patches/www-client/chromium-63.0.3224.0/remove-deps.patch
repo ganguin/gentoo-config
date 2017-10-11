@@ -1,0 +1,60 @@
+diff --git a/DEPS b/DEPS
+index c8da7d3610fc..935aa3944315 100644
+--- a/DEPS
++++ b/DEPS
+@@ -589,19 +589,19 @@ hooks = [
+         'src/tools',
+     ],
+   },
+-  {
+-    # This downloads binaries for Native Client's newlib toolchain.
+-    # Done in lieu of building the toolchain from scratch as it can take
+-    # anywhere from 30 minutes to 4 hours depending on platform to build.
+-    'name': 'nacltools',
+-    'pattern': '.',
+-    'action': [
+-        'python',
+-        'src/build/download_nacl_toolchains.py',
+-        '--mode', 'nacl_core_sdk',
+-        'sync', '--extract',
+-    ],
+-  },
++  #{
++  #  # This downloads binaries for Native Client's newlib toolchain.
++  #  # Done in lieu of building the toolchain from scratch as it can take
++  #  # anywhere from 30 minutes to 4 hours depending on platform to build.
++  #  'name': 'nacltools',
++  #  'pattern': '.',
++  #  'action': [
++  #      'python',
++  #      'src/build/download_nacl_toolchains.py',
++  #      '--mode', 'nacl_core_sdk',
++  #      'sync', '--extract',
++  #  ],
++  #},
+   {
+     # Downloads the current stable linux sysroot to build/linux/ if needed.
+     # This sysroot updates at about the same rate that the chrome build deps
+@@ -627,14 +627,14 @@ hooks = [
+   # Pull binutils for linux, enabled debug fission for faster linking /
+   # debugging when used with clang on Ubuntu Precise.
+   # https://code.google.com/p/chromium/issues/detail?id=352046
+-  {
+-    'name': 'binutils',
+-    'pattern': 'src/third_party/binutils',
+-    'action': [
+-        'python',
+-        'src/third_party/binutils/download.py',
+-    ],
+-  },
++  #{
++  #  'name': 'binutils',
++  #  'pattern': 'src/third_party/binutils',
++  #  'action': [
++  #      'python',
++  #      'src/third_party/binutils/download.py',
++  #  ],
++  #},
+   {
+     # Pull clang if needed or requested via GYP_DEFINES.
+     # Note: On Win, this should run after win_toolchain, as it may use it.

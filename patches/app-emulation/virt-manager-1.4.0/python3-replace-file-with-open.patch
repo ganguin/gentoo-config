@@ -1,0 +1,372 @@
+diff --git a/tests/capabilities.py b/tests/capabilities.py
+index 0c1a2b8..0f57137 100644
+--- a/tests/capabilities.py
++++ b/tests/capabilities.py
+@@ -31,7 +31,7 @@ conn = utils.open_testdriver()
+ class TestCapabilities(unittest.TestCase):
+     def _buildCaps(self, filename):
+         path = os.path.join("tests/capabilities-xml", filename)
+-        return Capabilities(conn, file(path).read())
++        return Capabilities(conn, open(path).read())
+ 
+     def testCapsCPUFeaturesOldSyntax(self):
+         filename = "test-old-vmx.xml"
+@@ -132,7 +132,7 @@ class TestCapabilities(unittest.TestCase):
+     ##############################
+ 
+     def testDomainCapabilities(self):
+-        xml = file("tests/capabilities-xml/test-domcaps.xml").read()
++        xml = open("tests/capabilities-xml/test-domcaps.xml").read()
+         caps = DomainCapabilities(utils.open_testdriver(), xml)
+ 
+         self.assertEqual(caps.os.loader.supported, True)
+diff --git a/tests/clitest.py b/tests/clitest.py
+index b63a92a..edc1ed8 100644
+--- a/tests/clitest.py
++++ b/tests/clitest.py
+@@ -149,7 +149,7 @@ class Command(object):
+             sys.stderr = out
+             sys.argv = self.argv
+             if self.input_file:
+-                sys.stdin = file(self.input_file)
++                sys.stdin = open(self.input_file)
+ 
+             exc = ""
+             try:
+@@ -248,7 +248,7 @@ class Command(object):
+                 # Generate test files that don't exist yet
+                 filename = self.compare_file
+                 if utils.REGENERATE_OUTPUT or not os.path.exists(filename):
+-                    file(filename, "w").write(output)
++                    open(filename, "w").write(output)
+ 
+                 if "--print-diff" in self.argv and output.count("\n") > 3:
+                     # 1) Strip header
+diff --git a/tests/uitests/utils.py b/tests/uitests/utils.py
+index 3656268..9ab9969 100644
+--- a/tests/uitests/utils.py
++++ b/tests/uitests/utils.py
+@@ -67,7 +67,7 @@ class DogtailApp(object):
+             os.path.join(os.getcwd(), "virt-manager"),
+             "--test-first-run", "--no-fork", "--connect", self.uri] +
+             (extra_opts or []),
+-            stdout=file(os.devnull), stderr=file(os.devnull))
++            stdout=open(os.devnull), stderr=file(os.devnull))
+         time.sleep(1)
+ 
+         self._root = dogtail.tree.root.application("virt-manager")
+diff --git a/tests/utils.py b/tests/utils.py
+index 013b305..f8a3194 100644
+--- a/tests/utils.py
++++ b/tests/utils.py
+@@ -184,7 +184,7 @@ def diff_compare(actual_out, filename=None, expect_out=None):
+     """Compare passed string output to contents of filename"""
+     if not expect_out:
+         if not os.path.exists(filename) or REGENERATE_OUTPUT:
+-            file(filename, "w").write(actual_out)
++            open(filename, "w").write(actual_out)
+         expect_out = read_file(filename)
+ 
+     diff = "".join(difflib.unified_diff(expect_out.splitlines(1),
+diff --git a/tests/xmlparse.py b/tests/xmlparse.py
+index f380d06..87ba6e7 100644
+--- a/tests/xmlparse.py
++++ b/tests/xmlparse.py
+@@ -35,7 +35,7 @@ def sanitize_file_xml(xml):
+ 
+ class XMLParseTest(unittest.TestCase):
+     def _roundtrip_compare(self, filename):
+-        expectXML = sanitize_file_xml(file(filename).read())
++        expectXML = sanitize_file_xml(open(filename).read())
+         guest = virtinst.Guest(conn, parsexml=expectXML)
+         actualXML = guest.get_xml_config()
+         utils.diff_compare(actualXML, expect_out=expectXML)
+@@ -88,7 +88,7 @@ class XMLParseTest(unittest.TestCase):
+         infile = "tests/xmlparse-xml/%s-in.xml" % basename
+         outfile = "tests/xmlparse-xml/%s-out.xml" % basename
+         guest = virtinst.Guest(kvm and kvmconn or conn,
+-                               parsexml=file(infile).read())
++                               parsexml=open(infile).read())
+         return guest, outfile
+ 
+     def testAlterGuest(self):
+@@ -684,7 +684,7 @@ class XMLParseTest(unittest.TestCase):
+         infile  = "tests/xmlparse-xml/change-hostdevs-in.xml"
+         outfile = "tests/xmlparse-xml/change-hostdevs-out.xml"
+         guest = virtinst.Guest(conn,
+-                               parsexml=file(infile).read())
++                               parsexml=open(infile).read())
+ 
+         dev1 = guest.get_devices("hostdev")[0]
+         dev2 = guest.get_devices("hostdev")[1]
+@@ -799,7 +799,7 @@ class XMLParseTest(unittest.TestCase):
+         infile  = "tests/xmlparse-xml/change-sounds-in.xml"
+         outfile = "tests/xmlparse-xml/change-sounds-out.xml"
+         guest = virtinst.Guest(conn,
+-                               parsexml=file(infile).read())
++                               parsexml=open(infile).read())
+ 
+         dev1 = guest.get_devices("sound")[0]
+         dev2 = guest.get_devices("sound")[1]
+@@ -1008,7 +1008,7 @@ class XMLParseTest(unittest.TestCase):
+         basename = "change-snapshot"
+         infile = "tests/xmlparse-xml/%s-in.xml" % basename
+         outfile = "tests/xmlparse-xml/%s-out.xml" % basename
+-        snap = virtinst.DomainSnapshot(conn, parsexml=file(infile).read())
++        snap = virtinst.DomainSnapshot(conn, parsexml=open(infile).read())
+ 
+         check = self._make_checker(snap)
+         check("name", "offline-root-child1", "name-foo")
+@@ -1033,7 +1033,7 @@ class XMLParseTest(unittest.TestCase):
+         basename = "test-bridge-ip"
+         infile = "tests/interface-xml/%s.xml" % basename
+         outfile = "tests/xmlparse-xml/interface-%s-out.xml" % basename
+-        iface = virtinst.Interface(conn, parsexml=file(infile).read())
++        iface = virtinst.Interface(conn, parsexml=open(infile).read())
+ 
+         self.assertEquals(len(iface.protocols), 2)
+         self.assertEquals(len(iface.interfaces), 3)
+@@ -1073,7 +1073,7 @@ class XMLParseTest(unittest.TestCase):
+         basename = "test-bond-arp"
+         infile = "tests/interface-xml/%s.xml" % basename
+         outfile = "tests/xmlparse-xml/interface-%s-out.xml" % basename
+-        iface = virtinst.Interface(conn, parsexml=file(infile).read())
++        iface = virtinst.Interface(conn, parsexml=open(infile).read())
+ 
+         check = self._make_checker(iface)
+         check("start_mode", "onboot", "hotplug")
+@@ -1092,7 +1092,7 @@ class XMLParseTest(unittest.TestCase):
+         basename = "test-bond-mii"
+         infile = "tests/interface-xml/%s.xml" % basename
+         outfile = "tests/xmlparse-xml/interface-%s-out.xml" % basename
+-        iface = virtinst.Interface(conn, parsexml=file(infile).read())
++        iface = virtinst.Interface(conn, parsexml=open(infile).read())
+ 
+         check = self._make_checker(iface)
+         check("mii_frequency", 123, 111)
+@@ -1107,7 +1107,7 @@ class XMLParseTest(unittest.TestCase):
+         basename = "test-vlan"
+         infile = "tests/interface-xml/%s.xml" % basename
+         outfile = "tests/xmlparse-xml/interface-%s-out.xml" % basename
+-        iface = virtinst.Interface(conn, parsexml=file(infile).read())
++        iface = virtinst.Interface(conn, parsexml=open(infile).read())
+ 
+         check = self._make_checker(iface)
+         check("tag", 123, 456)
+@@ -1125,7 +1125,7 @@ class XMLParseTest(unittest.TestCase):
+         basename = "pool-fs"
+         infile = "tests/xmlparse-xml/%s.xml" % basename
+         outfile = "tests/xmlparse-xml/%s-out.xml" % basename
+-        pool = virtinst.StoragePool(conn, parsexml=file(infile).read())
++        pool = virtinst.StoragePool(conn, parsexml=open(infile).read())
+ 
+         check = self._make_checker(pool)
+         check("type", "fs", "dir")
+@@ -1148,7 +1148,7 @@ class XMLParseTest(unittest.TestCase):
+         basename = "pool-iscsi"
+         infile = "tests/storage-xml/%s.xml" % basename
+         outfile = "tests/xmlparse-xml/%s-out.xml" % basename
+-        pool = virtinst.StoragePool(conn, parsexml=file(infile).read())
++        pool = virtinst.StoragePool(conn, parsexml=open(infile).read())
+ 
+         check = self._make_checker(pool)
+         check("iqn", "foo.bar.baz.iqn", "my.iqn")
+@@ -1166,7 +1166,7 @@ class XMLParseTest(unittest.TestCase):
+         basename = "pool-gluster"
+         infile = "tests/storage-xml/%s.xml" % basename
+         outfile = "tests/xmlparse-xml/%s-out.xml" % basename
+-        pool = virtinst.StoragePool(conn, parsexml=file(infile).read())
++        pool = virtinst.StoragePool(conn, parsexml=open(infile).read())
+ 
+         check = self._make_checker(pool)
+         check("source_path", "/some/source/path", "/foo")
+@@ -1180,7 +1180,7 @@ class XMLParseTest(unittest.TestCase):
+         basename = "pool-rbd"
+         infile = "tests/xmlparse-xml/%s.xml" % basename
+         outfile = "tests/xmlparse-xml/%s-out.xml" % basename
+-        pool = virtinst.StoragePool(conn, parsexml=file(infile).read())
++        pool = virtinst.StoragePool(conn, parsexml=open(infile).read())
+ 
+         check = self._make_checker(pool.hosts[0])
+         check("name", "ceph-mon-1.example.com")
+@@ -1200,7 +1200,7 @@ class XMLParseTest(unittest.TestCase):
+         basename = "pool-dir-vol"
+         infile = "tests/xmlparse-xml/%s-in.xml" % basename
+         outfile = "tests/xmlparse-xml/%s-out.xml" % basename
+-        vol = virtinst.StorageVolume(conn, parsexml=file(infile).read())
++        vol = virtinst.StorageVolume(conn, parsexml=open(infile).read())
+ 
+         check = self._make_checker(vol)
+         check("type", None, "file")
+@@ -1229,7 +1229,7 @@ class XMLParseTest(unittest.TestCase):
+         basename = "network-multi"
+         infile = "tests/xmlparse-xml/%s-in.xml" % basename
+         outfile = "tests/xmlparse-xml/%s-out.xml" % basename
+-        net = virtinst.Network(conn, parsexml=file(infile).read())
++        net = virtinst.Network(conn, parsexml=open(infile).read())
+ 
+         check = self._make_checker(net)
+         check("name", "ipv6_multirange", "new-foo")
+@@ -1302,7 +1302,7 @@ class XMLParseTest(unittest.TestCase):
+         basename = "clear-cpu-unknown-vals"
+         infile = "tests/xmlparse-xml/%s-in.xml" % basename
+         outfile = "tests/xmlparse-xml/%s-out.xml" % basename
+-        guest = virtinst.Guest(kvmconn, parsexml=file(infile).read())
++        guest = virtinst.Guest(kvmconn, parsexml=open(infile).read())
+ 
+         guest.cpu.copy_host_cpu()
+         guest.cpu.clear()
+diff --git a/virtManager/baseclass.py b/virtManager/baseclass.py
+index 3d40ae2..4895473 100644
+--- a/virtManager/baseclass.py
++++ b/virtManager/baseclass.py
+@@ -198,7 +198,7 @@ class vmmGObjectUI(vmmGObject):
+ 
+             self.builder = Gtk.Builder()
+             self.builder.set_translation_domain("virt-manager")
+-            self.builder.add_from_string(file(uifile).read())
++            self.builder.add_from_string(open(uifile).read())
+ 
+             if not topwin:
+                 self.topwin = self.widget(windowname)
+diff --git a/virtManager/details.py b/virtManager/details.py
+index 487541a..922b0da 100644
+--- a/virtManager/details.py
++++ b/virtManager/details.py
+@@ -1511,7 +1511,7 @@ class vmmDetails(vmmGObjectUI):
+         filename = path
+         if not filename.endswith(".png"):
+             filename += ".png"
+-        file(filename, "wb").write(ret)
++        open(filename, "wb").write(ret)
+ 
+ 
+     ############################
+diff --git a/virtManager/snapshots.py b/virtManager/snapshots.py
+index 299d5e7..90ddcdd 100644
+--- a/virtManager/snapshots.py
++++ b/virtManager/snapshots.py
+@@ -302,7 +302,7 @@ class vmmSnapshotPage(vmmGObjectUI):
+         mime = _mime_to_ext(os.path.splitext(filename)[1][1:], reverse=True)
+         if not mime:
+             return
+-        return self._make_screenshot_pixbuf(mime, file(filename, "rb").read())
++        return self._make_screenshot_pixbuf(mime, open(filename, "rb").read())
+ 
+     def _set_snapshot_state(self, snap=None):
+         self.widget("snapshot-notebook").set_current_page(0)
+@@ -517,7 +517,7 @@ class vmmSnapshotPage(vmmGObjectUI):
+ 
+             filename = basesn + "." + _mime_to_ext(mime)
+             logging.debug("Writing screenshot to %s", filename)
+-            file(filename, "wb").write(sndata)
++            open(filename, "wb").write(sndata)
+         except:
+             logging.exception("Error saving screenshot")
+ 
+diff --git a/virtinst/capabilities.py b/virtinst/capabilities.py
+index a056c3f..cd25bbc 100644
+--- a/virtinst/capabilities.py
++++ b/virtinst/capabilities.py
+@@ -58,7 +58,7 @@ class _CPUMapFileValues(XMLBuilder):
+ 
+     def __init__(self, conn):
+         if os.path.exists(self._cpu_filename):
+-            xml = file(self._cpu_filename).read()
++            xml = open(self._cpu_filename).read()
+         else:
+             xml = None
+             logging.debug("CPU map file not found: %s", self._cpu_filename)
+diff --git a/virtinst/initrdinject.py b/virtinst/initrdinject.py
+index 03f3045..9ae9df6 100644
+--- a/virtinst/initrdinject.py
++++ b/virtinst/initrdinject.py
+@@ -38,7 +38,7 @@ def _rhel4_initrd_inject(initrd, injections):
+     logging.debug("Is RHEL4 initrd")
+ 
+     # Uncompress the initrd
+-    newinitrd = file(initrd + ".new", "wb")
++    newinitrd = open(initrd + ".new", "wb")
+     gzip_proc = subprocess.Popen(["gzip", "-d", "-f", "-c", initrd],
+                                  stdout=newinitrd,
+                                  stderr=subprocess.PIPE)
+@@ -67,8 +67,8 @@ def _rhel4_initrd_inject(initrd, injections):
+ 
+     # Recompress the initrd
+     gzip_proc = subprocess.Popen(["gzip"],
+-                                 stdin=file(newinitrd.name, "rb"),
+-                                 stdout=file(initrd, "wb"),
++                                 stdin=open(newinitrd.name, "rb"),
++                                 stdout=open(initrd, "wb"),
+                                  stderr=subprocess.PIPE)
+     gzip_proc.wait()
+     gziperr = gzip_proc.stderr.read()
+diff --git a/virtinst/kernelupload.py b/virtinst/kernelupload.py
+index 31f2722..8d5cdb7 100644
+--- a/virtinst/kernelupload.py
++++ b/virtinst/kernelupload.py
+@@ -95,7 +95,7 @@ def _upload_file(conn, meter, destpool, src):
+         vol.upload(stream, offset, length, flags)
+ 
+         # Open source file
+-        fileobj = file(src, "r")
++        fileobj = open(src, "r")
+ 
+         # Start transfer
+         total = 0
+diff --git a/virtinst/uri.py b/virtinst/uri.py
+index 3674726..48198fa 100644
+--- a/virtinst/uri.py
++++ b/virtinst/uri.py
+@@ -196,14 +196,14 @@ class MagicURI(object):
+         """
+         # Fake capabilities
+         if self.capsfile:
+-            capsxml = file(self.capsfile).read()
++            capsxml = open(self.capsfile).read()
+             conn.getCapabilities = lambda: capsxml
+ 
+         # Fake domcapabilities. This is insufficient since output should
+         # vary per type/arch/emulator combo, but it can be expanded later
+         # if needed
+         if self.domcapsfile:
+-            domcapsxml = file(self.domcapsfile).read()
++            domcapsxml = open(self.domcapsfile).read()
+             def fake_domcaps(emulator, arch, machine, virttype, flags=0):
+                 ignore = emulator
+                 ignore = flags
+diff --git a/virtinst/urlfetcher.py b/virtinst/urlfetcher.py
+index 7b0a8f5..9494b8f 100644
+--- a/virtinst/urlfetcher.py
++++ b/virtinst/urlfetcher.py
+@@ -155,7 +155,7 @@ class _URLFetcher(object):
+         # pylint: disable=redefined-variable-type
+         if "VIRTINST_TEST_SUITE" in os.environ:
+             fn = os.path.join("/tmp", prefix)
+-            fileobj = file(fn, "w")
++            fileobj = open(fn, "w")
+         else:
+             fileobj = tempfile.NamedTemporaryFile(
+                 dir=self.scratchdir, prefix=prefix, delete=False)
+@@ -275,7 +275,7 @@ class _LocalURLFetcher(_URLFetcher):
+         return os.path.exists(url)
+ 
+     def _grabber(self, url):
+-        urlobj = file(url, "r")
++        urlobj = open(url, "r")
+         size = os.path.getsize(url)
+         return urlobj, size
+ 
+diff --git a/virtinst/util.py b/virtinst/util.py
+index 3aa835b..4122db6 100644
+--- a/virtinst/util.py
++++ b/virtinst/util.py
+@@ -257,7 +257,7 @@ def generate_uuid(conn):
+ 
+ def default_route():
+     route_file = "/proc/net/route"
+-    d = file(route_file)
++    d = open(route_file)
+ 
+     defn = 0
+     for line in d:

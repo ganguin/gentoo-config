@@ -1,0 +1,42 @@
+Index: chrome/chrome_paks.gni
+diff --git a/chrome/chrome_paks.gni b/chrome/chrome_paks.gni
+index 8b1ec9ba64e221751d889a8dfe078c29e76d4851..61afb481af55d09fe8289dd02ca25927ddcbfc2c 100644
+--- a/chrome/chrome_paks.gni
++++ b/chrome/chrome_paks.gni
+@@ -51,7 +51,10 @@ template("chrome_repack_percent") {
+       deps += invoker.deps
+     }
+ 
+-    if (use_ash) {
++    # Chrome --mash in non-chromeos builds need to access some ash resources
++    # in order to avoid some missing icons in Ash's window manager session.
++    # TODO(tonikitoo): Remove this when a chrome/mus is available.
++    if (use_ash || enable_package_mash_services) {
+       sources +=
+           [ "$root_gen_dir/ash/resources/ash_resources_${percent}_percent.pak" ]
+       deps += [ "//ash/resources" ]
+Index: chrome/chrome_repack_locales.gni
+diff --git a/chrome/chrome_repack_locales.gni b/chrome/chrome_repack_locales.gni
+index 62706f125de6a70f1250d70cd9c2aece63b9aed6..91681b0d1d8407f3d16787f7a8ac79fcf6eac446 100644
+--- a/chrome/chrome_repack_locales.gni
++++ b/chrome/chrome_repack_locales.gni
+@@ -5,6 +5,7 @@
+ import("//build/config/chrome_build.gni")
+ import("//build/config/features.gni")
+ import("//build/config/ui.gni")
++import("//chrome/common/features.gni")
+ import("//tools/grit/repack.gni")
+ 
+ # Wraps repack_locales(), setting the source_patterns and deps required for
+@@ -40,7 +41,10 @@ template("chrome_repack_locales") {
+       deps += invoker.deps
+     }
+ 
+-    if (use_ash) {
++    # Chrome --mash in non-chromeos builds need to access some ash resources
++    # in order to avoid some missing localized strings in Ash's window manager session.
++    # TODO(tonikitoo): Remove this when a chrome/mus is available.
++    if (use_ash || enable_package_mash_services) {
+       source_patterns += [ "${root_gen_dir}/ash/common/strings/ash_strings_" ]
+       deps += [ "//ash/common/strings" ]
+     }

@@ -1,0 +1,12 @@
+diff --git a/Source/WebKit2/UIProcess/gtk/WaylandCompositor.cpp b/Source/WebKit2/UIProcess/gtk/WaylandCompositor.cpp
+index cf1f52a..ae49556 100644
+--- a/Source/WebKit2/UIProcess/gtk/WaylandCompositor.cpp
++++ b/Source/WebKit2/UIProcess/gtk/WaylandCompositor.cpp
+@@ -27,6 +27,7 @@
+ #include "WaylandCompositor.h"
+ 
+ #if PLATFORM(WAYLAND) && USE(EGL)
++#define MESA_EGL_NO_X11_HEADERS
+ 
+ #include "WebKit2WaylandServerProtocol.h"
+ #include <EGL/egl.h>

@@ -1,0 +1,14 @@
+diff --git a/widget/moz.build b/widget/moz.build
+index 86c72d8..2229668 100644
+--- a/widget/moz.build
++++ b/widget/moz.build
+@@ -52,9 +52,6 @@ TEST_DIRS += ['tests']
+ if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+     DIRS += ['gtk']
+ 
+-    if CONFIG['MOZ_X11']:
+-        DIRS += ['gtkxtbin']
+-
+ XPIDL_SOURCES += [
+     'nsIAppShell.idl',
+     'nsIBaseWindow.idl',

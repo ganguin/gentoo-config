@@ -1,0 +1,12 @@
+diff --git a/libcanberra-gtk3.pc.in b/libcanberra-gtk3.pc.in
+index fe89d3a..8ffc10c 100644
+--- a/libcanberra-gtk3.pc.in
++++ b/libcanberra-gtk3.pc.in
+@@ -6,6 +6,6 @@ includedir=@includedir@
+ Name: libcanberra-gtk3
+ Description: Gtk3 Event Sound API
+ Version: @PACKAGE_VERSION@
+-Libs: -L${libdir} -lcanberra-gtk3 -lX11 @PTHREAD_LIBS@
++Libs: -L${libdir} -lcanberra-gtk3 @PTHREAD_LIBS@
+ Cflags: -D_REENTRANT -I${includedir}
+ Requires: libcanberra gdk-3.0 gtk+-3.0

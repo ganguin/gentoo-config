@@ -1,0 +1,3734 @@
+diff --git a/dom/base/nsDOMWindowUtils.cpp b/dom/base/nsDOMWindowUtils.cpp
+index 6a94176..be9b566 100644
+--- a/dom/base/nsDOMWindowUtils.cpp
++++ b/dom/base/nsDOMWindowUtils.cpp
+@@ -69,7 +69,7 @@
+ 
+ #if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK)
+ #include <gdk/gdk.h>
+-#include <gdk/gdkx.h>
++//#include <gdk/gdkx.h>
+ #endif
+ 
+ #include "Layers.h"
+@@ -312,7 +312,7 @@ nsDOMWindowUtils::Redraw(uint32_t aCount, uint32_t *aDurationOut)
+       for (uint32_t i = 0; i < aCount; i++)
+         rootFrame->InvalidateFrame();
+ 
+-#if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK)
++#if defined(MOZ_X11_no) && defined(MOZ_WIDGET_GTK)
+       XSync(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), False);
+ #endif
+ 
+diff --git a/dom/ipc/ContentChild.cpp b/dom/ipc/ContentChild.cpp
+index 22ff711..802d9fe 100644
+--- a/dom/ipc/ContentChild.cpp
++++ b/dom/ipc/ContentChild.cpp
+@@ -164,7 +164,7 @@
+ #include "mozilla/widget/AudioSession.h"
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "mozilla/X11Util.h"
+ #endif
+ 
+@@ -592,7 +592,7 @@ ContentChild::Init(MessageLoop* aIOLoop,
+   }
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   // Do this after initializing GDK, or GDK will install its own handler.
+   XRE_InstallX11ErrorHandler();
+ #endif
+@@ -619,7 +619,7 @@ ContentChild::Init(MessageLoop* aIOLoop,
+   GetIPCChannel()->SetChannelFlags(MessageChannel::REQUIRE_A11Y_REENTRY);
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   // Send the parent our X socket to act as a proxy reference for our X
+   // resources.
+   int xSocketFd = ConnectionNumber(DefaultXDisplay());
+diff --git a/dom/plugins/base/npapi.h b/dom/plugins/base/npapi.h
+index 12ac635..2577699 100644
+--- a/dom/plugins/base/npapi.h
++++ b/dom/plugins/base/npapi.h
+@@ -43,7 +43,7 @@
+ 
+ #if defined(XP_UNIX)
+ #include <stdio.h>
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+ #include <X11/Xlib.h>
+ #include <X11/Xutil.h>
+ #include "X11UndefineNone.h"
+@@ -243,7 +243,7 @@ typedef struct
+ typedef struct
+ {
+   int32_t      type;
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+   Display*     display;
+   Visual*      visual;
+   Colormap     colormap;
+@@ -566,7 +566,7 @@ typedef struct _NPEvent
+   uintptr_t wParam;
+   uintptr_t lParam;
+ } NPEvent;
+-#elif defined(XP_UNIX) && defined(MOZ_X11)
++#elif defined(XP_UNIX) && defined(MOZ_X11_no)
+ typedef XEvent NPEvent;
+ #else
+ typedef void*  NPEvent;
+@@ -580,7 +580,7 @@ typedef RgnHandle NPQDRegion;
+ typedef CGPathRef NPCGRegion;
+ #elif defined(XP_WIN)
+ typedef HRGN NPRegion;
+-#elif defined(XP_UNIX) && defined(MOZ_X11)
++#elif defined(XP_UNIX) && defined(MOZ_X11_no)
+ typedef Region NPRegion;
+ #elif defined(XP_SYMBIAN)
+ typedef QRegion* NPRegion;
+diff --git a/dom/plugins/base/nsNPAPIPlugin.cpp b/dom/plugins/base/nsNPAPIPlugin.cpp
+index 1bea269..0ee9b14 100644
+--- a/dom/plugins/base/nsNPAPIPlugin.cpp
++++ b/dom/plugins/base/nsNPAPIPlugin.cpp
+@@ -58,7 +58,7 @@
+ // needed for nppdf plugin
+ #if (MOZ_WIDGET_GTK)
+ #include <gdk/gdk.h>
+-#include <gdk/gdkx.h>
++//#include <gdk/gdkx.h>
+ #if (MOZ_WIDGET_GTK == 2)
+ #include "gtk2xtbin.h"
+ #endif
+@@ -85,7 +85,7 @@ using mozilla::PluginPRLibrary;
+ using mozilla::plugins::PluginModuleChromeParent;
+ using mozilla::plugins::PluginModuleContentParent;
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "mozilla/X11Util.h"
+ #endif
+ 
+@@ -1745,7 +1745,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
+ 
+ #if defined(XP_UNIX) && !defined(XP_MACOSX)
+   case NPNVxDisplay : {
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+     if (npp) {
+       nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *) npp->ndata;
+       bool windowless = false;
+diff --git a/dom/plugins/base/nsPluginInstanceOwner.cpp b/dom/plugins/base/nsPluginInstanceOwner.cpp
+index b7651be..0f7e4b0 100644
+--- a/dom/plugins/base/nsPluginInstanceOwner.cpp
++++ b/dom/plugins/base/nsPluginInstanceOwner.cpp
+@@ -4,7 +4,7 @@
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include <cairo-xlib.h>
+ #include "gfxXlibSurface.h"
+ /* X headers suck */
+@@ -745,7 +745,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
+   }
+ 
+   return NS_OK;
+-#elif defined(MOZ_WIDGET_GTK) && defined(MOZ_X11)
++#elif defined(MOZ_WIDGET_GTK) && defined(MOZ_X11_no)
+   // X11 window managers want the toplevel window for WM_TRANSIENT_FOR.
+   nsIWidget* win = mPluginFrame->GetNearestWidget();
+   if (!win)
+@@ -2102,7 +2102,7 @@ nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
+   return NS_OK;
+ }
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ static unsigned int XInputEventState(const WidgetInputEvent& anEvent)
+ {
+   unsigned int state = 0;
+@@ -2582,7 +2582,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
+   }
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   // this code supports windowless plugins
+   nsIWidget* widget = anEvent.mWidget;
+   XEvent pluginEvent = XEvent();
+@@ -3055,7 +3055,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
+ }
+ #endif
+ 
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
+                                   const gfxRect& aFrameRect,
+                                   const gfxRect& aDirtyRect)
+@@ -3200,7 +3200,7 @@ nsPluginInstanceOwner::Renderer::DrawWithXlib(cairo_surface_t* xsurface,
+ 
+   NPSetWindowCallbackStruct* ws_info =
+     static_cast<NPSetWindowCallbackStruct*>(mWindow->ws_info);
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   if (ws_info->visual != visual || ws_info->colormap != colormap) {
+     ws_info->visual = visual;
+     ws_info->colormap = colormap;
+@@ -3419,7 +3419,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
+     // passing HDC till paint event when it is really
+     // needed. Change spec?
+     mPluginWindow->window = nullptr;
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     // Fill in the display field.
+     NPSetWindowCallbackStruct* ws_info =
+     static_cast<NPSetWindowCallbackStruct*>(mPluginWindow->ws_info);
+diff --git a/dom/plugins/base/nsPluginInstanceOwner.h b/dom/plugins/base/nsPluginInstanceOwner.h
+index 589bcb0..66609b4 100644
+--- a/dom/plugins/base/nsPluginInstanceOwner.h
++++ b/dom/plugins/base/nsPluginInstanceOwner.h
+@@ -45,7 +45,7 @@ class PuppetWidget;
+ 
+ using mozilla::widget::PuppetWidget;
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "gfxXlibNativeRenderer.h"
+ #endif
+ 
+@@ -214,7 +214,7 @@ public:
+     return mPluginWindow->type == NPWindowTypeDrawable &&
+     (MatchPluginName("Shockwave Flash") ||
+      MatchPluginName("Test Plug-in"));
+-#elif defined(MOZ_X11) || defined(XP_MACOSX)
++#elif defined(MOZ_X11_no) || defined(XP_MACOSX)
+     return true;
+ #else
+     return false;
+@@ -393,7 +393,7 @@ private:
+ 
+   int mLastMouseDownButtonType;
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   class Renderer : public gfxXlibNativeRenderer
+   {
+   public:
+diff --git a/dom/plugins/base/nsPluginNativeWindowGtk.cpp b/dom/plugins/base/nsPluginNativeWindowGtk.cpp
+index bfb9510..33a6982 100644
+--- a/dom/plugins/base/nsPluginNativeWindowGtk.cpp
++++ b/dom/plugins/base/nsPluginNativeWindowGtk.cpp
+@@ -14,15 +14,15 @@
+ #include "nsNPAPIPlugin.h"
+ #include "npapi.h"
+ #include <gtk/gtk.h>
+-#include <gdk/gdkx.h>
++//#include <gdk/gdkx.h>
+ #include <gdk/gdk.h>
+ 
+ #if (GTK_MAJOR_VERSION == 3)
+-#include <gtk/gtkx.h>
++//#include <gtk/gtkx.h>
+ #else
+ #include "gtk2xtbin.h"
+ #endif
+-#include "mozilla/X11Util.h"
++//#include "mozilla/X11Util.h"
+ 
+ static void plug_added_cb(GtkWidget *widget, gpointer data);
+ static gboolean plug_removed_cb   (GtkWidget *widget, gpointer data);
+@@ -41,10 +41,10 @@ nsPluginNativeWindowGtk::nsPluginNativeWindowGtk() : nsPluginNativeWindow()
+   type = NPWindowTypeWindow;
+   mSocketWidget = 0;
+   mWsInfo.type = 0;
+-  mWsInfo.display = nullptr;
+-  mWsInfo.visual = nullptr;
+-  mWsInfo.colormap = 0;
+-  mWsInfo.depth = 0;
++  //mWsInfo.display = nullptr;
++  //mWsInfo.visual = nullptr;
++  //mWsInfo.colormap = 0;
++  //mWsInfo.depth = 0;
+ }
+ 
+ nsPluginNativeWindowGtk::~nsPluginNativeWindowGtk() 
+@@ -71,159 +71,11 @@ nsresult PLUG_DeletePluginNativeWindow(nsPluginNativeWindow * aPluginNativeWindo
+ 
+ nsresult nsPluginNativeWindowGtk::CallSetWindow(RefPtr<nsNPAPIPluginInstance> &aPluginInstance)
+ {
+-  if (aPluginInstance) {
+-    if (type == NPWindowTypeWindow &&
+-        XRE_IsContentProcess()) {
+-      // In this case, most of the initialization code here has already happened
+-      // in the chrome process. The window we have in content is the XID of the
+-      // socket widget we need to hand to plugins.
+-      SetWindow((XID)window);
+-	  } else if (type == NPWindowTypeWindow) {
+-      if (!mSocketWidget) {
+-        nsresult rv;
+-
+-        // The documentation on the types for many variables in NP(N|P)_GetValue
+-        // is vague.  Often boolean values are NPBool (1 byte), but
+-        // https://developer.mozilla.org/en/XEmbed_Extension_for_Mozilla_Plugins
+-        // treats NPPVpluginNeedsXEmbed as PRBool (int), and
+-        // on x86/32-bit, flash stores to this using |movl 0x1,&needsXEmbed|.
+-        // thus we can't use NPBool for needsXEmbed, or the three bytes above
+-        // it on the stack would get clobbered. so protect with the larger bool.
+-        int needsXEmbed = 0;
+-        rv = aPluginInstance->GetValueFromPlugin(NPPVpluginNeedsXEmbed, &needsXEmbed);
+-        // If the call returned an error code make sure we still use our default value.
+-        if (NS_FAILED(rv)) {
+-          needsXEmbed = 0;
+-        }
+-#ifdef DEBUG
+-        printf("nsPluginNativeWindowGtk: NPPVpluginNeedsXEmbed=%d\n", needsXEmbed);
+-#endif
+-
+-        bool isOOPPlugin = aPluginInstance->GetPlugin()->GetLibrary()->IsOOP();
+-        if (needsXEmbed || isOOPPlugin) {        
+-          bool enableXtFocus = !needsXEmbed;
+-          rv = CreateXEmbedWindow(enableXtFocus);
+-        }
+-        else {
+-#if (MOZ_WIDGET_GTK == 2)
+-          rv = CreateXtWindow();
+-#else
+-          return NS_ERROR_FAILURE;
+-#endif
+-        }
+-
+-        if (NS_FAILED(rv)) {
+-          return NS_ERROR_FAILURE;
+-        }
+-      }
+-
+-      if (!mSocketWidget) {
+-        return NS_ERROR_FAILURE;
+-      }
+-
+-      // Make sure to resize and re-place the window if required.
+-      SetAllocation();
+-      // Need to reset "window" each time as nsPluginFrame::DidReflow sets it
+-      // to the ancestor window.
+-#if (MOZ_WIDGET_GTK == 2)
+-      if (GTK_IS_XTBIN(mSocketWidget)) {
+-        // Point the NPWindow structures window to the actual X window
+-        SetWindow(GTK_XTBIN(mSocketWidget)->xtwindow);
+-      }
+-      else { // XEmbed or OOP&Xt
+-        SetWindow(gtk_socket_get_id(GTK_SOCKET(mSocketWidget)));
+-      }
+-#else
+-      // Gtk3 supports only OOP by GtkSocket
+-      SetWindow(gtk_socket_get_id(GTK_SOCKET(mSocketWidget)));
+-#endif
+-
+-#ifdef DEBUG
+-      printf("nsPluginNativeWindowGtk: call SetWindow with xid=%p\n", (void *)window);
+-#endif
+-    } // NPWindowTypeWindow
+-    aPluginInstance->SetWindow(this);
+-  } else if (mPluginInstance) {
+-    mPluginInstance->SetWindow(nullptr);
+-  }
+-
+-  SetPluginInstance(aPluginInstance);
+-  return NS_OK;
++  return NS_ERROR_FAILURE;
+ }
+ 
+ nsresult nsPluginNativeWindowGtk::CreateXEmbedWindow(bool aEnableXtFocus) {
+-  NS_ASSERTION(!mSocketWidget,"Already created a socket widget!");
+-  GdkDisplay *display = gdk_display_get_default();
+-  GdkWindow *parent_win = gdk_x11_window_lookup_for_display(display, GetWindow());
+-  mSocketWidget = gtk_socket_new();
+-
+-  //attach the socket to the container widget
+-  gtk_widget_set_parent_window(mSocketWidget, parent_win);
+-
+-  // enable/disable focus event handlers,
+-  // see plugin_window_filter_func() for details
+-  g_object_set_data(G_OBJECT(mSocketWidget), "enable-xt-focus", (void *)aEnableXtFocus);
+-
+-  g_signal_connect(mSocketWidget, "plug_added",
+-                   G_CALLBACK(plug_added_cb), nullptr);
+-
+-  // Make sure to handle the plug_removed signal.  If we don't the
+-  // socket will automatically be destroyed when the plug is
+-  // removed, which means we're destroying it more than once.
+-  // SYNTAX ERROR.
+-  g_signal_connect(mSocketWidget, "plug_removed",
+-                   G_CALLBACK(plug_removed_cb), nullptr);
+-
+-  g_signal_connect(mSocketWidget, "unrealize",
+-                   G_CALLBACK(socket_unrealize_cb), nullptr);
+-
+-  g_signal_connect(mSocketWidget, "destroy",
+-                   G_CALLBACK(gtk_widget_destroyed), &mSocketWidget);
+-
+-  gpointer user_data = nullptr;
+-  gdk_window_get_user_data(parent_win, &user_data);
+-
+-  GtkContainer *container = GTK_CONTAINER(user_data);
+-  gtk_container_add(container, mSocketWidget);
+-  gtk_widget_realize(mSocketWidget);
+-
+-  // The GtkSocket has a visible window, but the plugin's XEmbed plug will
+-  // cover this window.  Normally GtkSockets let the X server paint their
+-  // background and this would happen immediately (before the plug is
+-  // created).  Setting the background to None prevents the server from
+-  // painting this window, avoiding flicker.
+-  // TODO GTK3
+-#if (MOZ_WIDGET_GTK == 2)
+-  gdk_window_set_back_pixmap(gtk_widget_get_window(mSocketWidget), nullptr, FALSE);
+-#endif
+-
+-  // Resize before we show
+-  SetAllocation();
+-
+-  gtk_widget_show(mSocketWidget);
+-
+-  gdk_flush();
+-  SetWindow(gtk_socket_get_id(GTK_SOCKET(mSocketWidget)));
+-
+-  // Fill out the ws_info structure.
+-  // (The windowless case is done in nsPluginFrame.cpp.)
+-  GdkWindow *gdkWindow = gdk_x11_window_lookup_for_display(display, GetWindow());
+-  if(!gdkWindow)
+-    return NS_ERROR_FAILURE;
+-
+-  mWsInfo.display = GDK_WINDOW_XDISPLAY(gdkWindow);
+-#if (MOZ_WIDGET_GTK == 2)
+-  mWsInfo.colormap = GDK_COLORMAP_XCOLORMAP(gdk_drawable_get_colormap(gdkWindow));
+-  GdkVisual* gdkVisual = gdk_drawable_get_visual(gdkWindow);
+-  mWsInfo.depth = gdkVisual->depth;
+-#else
+-  mWsInfo.colormap = X11None;
+-  GdkVisual* gdkVisual = gdk_window_get_visual(gdkWindow);
+-  mWsInfo.depth = gdk_visual_get_depth(gdkVisual);
+-#endif
+-  mWsInfo.visual = GDK_VISUAL_XVISUAL(gdkVisual);
+-    
+-  return NS_OK;
++  return NS_ERROR_FAILURE;
+ }
+ 
+ void nsPluginNativeWindowGtk::SetAllocation() {
+@@ -304,8 +156,6 @@ plug_added_cb(GtkWidget *socket, gpointer data)
+   // receives the DestroyNotify event for the plug window, GDK releases its
+   // reference to plugWindow.  This is typically the last reference and so the
+   // weak ref callback triggers release of the socket.
+-  GdkWindow* plugWindow = gtk_socket_get_plug_window(GTK_SOCKET(socket));
+-  g_object_weak_ref(G_OBJECT(plugWindow), plug_window_finalize_cb, socket);
+ }
+ 
+ /* static */
+@@ -319,38 +169,4 @@ plug_removed_cb (GtkWidget *widget, gpointer data)
+ static void
+ socket_unrealize_cb(GtkWidget *widget, gpointer data)
+ {
+-  // Unmap and reparent any child windows that GDK does not yet know about.
+-  // (See bug 540114 comment 10.)
+-  GdkWindow* socket_window =  gtk_widget_get_window(widget);
+-  GdkDisplay* gdkDisplay = gdk_display_get_default();
+-  Display* display = GDK_DISPLAY_XDISPLAY(gdkDisplay);
+-
+-  // Ignore X errors that may happen if windows get destroyed (possibly
+-  // requested by the plugin) between XQueryTree and when we operate on them.
+-  gdk_error_trap_push();
+-
+-  Window root, parent;
+-  Window* children;
+-  unsigned int nchildren;
+-  if (!XQueryTree(display, gdk_x11_window_get_xid(socket_window),
+-                  &root, &parent, &children, &nchildren))
+-    return;
+-
+-  for (unsigned int i = 0; i < nchildren; ++i) {
+-    Window child = children[i];
+-    if (!gdk_x11_window_lookup_for_display(gdkDisplay, child)) {
+-      // This window is not known to GDK.
+-      XUnmapWindow(display, child);
+-      XReparentWindow(display, child, DefaultRootWindow(display), 0, 0);
+-    }
+-  }
+-
+-  if (children) XFree(children);
+-
+-  mozilla::FinishX(display);
+-#if (MOZ_WIDGET_GTK == 3)
+-  gdk_error_trap_pop_ignored();
+-#else
+-  gdk_error_trap_pop();
+-#endif
+ }
+diff --git a/dom/plugins/base/nsPluginNativeWindowGtk.h b/dom/plugins/base/nsPluginNativeWindowGtk.h
+index 872d7f0..30cd67a 100644
+--- a/dom/plugins/base/nsPluginNativeWindowGtk.h
++++ b/dom/plugins/base/nsPluginNativeWindowGtk.h
+@@ -8,14 +8,14 @@
+ #include "nsPluginNativeWindow.h"
+ #include "npapi.h"
+ #include <gtk/gtk.h>
+-#include <gdk/gdkx.h>
++//#include <gdk/gdkx.h>
+ #include <gdk/gdk.h>
+ #if (GTK_MAJOR_VERSION == 3)
+-#include <gtk/gtkx.h>
++//#include <gtk/gtkx.h>
+ #else
+ #include "gtk2xtbin.h"
+ #endif
+-#include "mozilla/X11Util.h"
++//#include "mozilla/X11Util.h"
+ 
+ class nsPluginNativeWindowGtk : public nsPluginNativeWindow {
+ public:
+@@ -26,16 +26,8 @@ public:
+   nsresult CreateXEmbedWindow(bool aEnableXtFocus);
+   void SetAllocation();
+ 
+-  XID GetWindow() const
+-  {
+-    return static_cast<XID>(reinterpret_cast<uintptr_t>(window));
+-  }
+ 
+ private:
+-  void SetWindow(XID aWindow)
+-  {
+-    window = reinterpret_cast<void*>(static_cast<uintptr_t>(aWindow));
+-  }
+ 
+   NPSetWindowCallbackStruct mWsInfo;
+   /**
+diff --git a/dom/plugins/ipc/NPEventUnix.h b/dom/plugins/ipc/NPEventUnix.h
+index 4cc9a54..fe0e295 100644
+--- a/dom/plugins/ipc/NPEventUnix.h
++++ b/dom/plugins/ipc/NPEventUnix.h
+@@ -9,7 +9,7 @@
+ 
+ #include "npapi.h"
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "mozilla/X11Util.h"
+ #endif
+ 
+@@ -61,7 +61,7 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>     // synonym for XEvent
+             return false;
+         }
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+         SetXDisplay(aResult->event);
+ #endif
+         return true;
+@@ -73,7 +73,7 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>     // synonym for XEvent
+         aLog->append(L"(XEvent)");
+     }
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ private:
+     static void SetXDisplay(XEvent& ev)
+     {
+diff --git a/dom/plugins/ipc/PluginInstanceChild.cpp b/dom/plugins/ipc/PluginInstanceChild.cpp
+index 2640fdd..1a60ab7 100644
+--- a/dom/plugins/ipc/PluginInstanceChild.cpp
++++ b/dom/plugins/ipc/PluginInstanceChild.cpp
+@@ -16,7 +16,7 @@
+ #include "gfx2DGlue.h"
+ #include "nsNPAPIPluginInstance.h"
+ #include "mozilla/gfx/2D.h"
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "gfxXlibSurface.h"
+ #endif
+ #ifdef XP_WIN
+@@ -50,7 +50,7 @@ using namespace std;
+ #ifdef MOZ_WIDGET_GTK
+ 
+ #include <gtk/gtk.h>
+-#include <gdk/gdkx.h>
++//#include <gdk/gdkx.h>
+ #include <gdk/gdk.h>
+ #if (MOZ_WIDGET_GTK == 2)
+ #include "gtk2xtbin.h"
+@@ -200,7 +200,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
+     mWindow.type = NPWindowTypeWindow;
+     mData.ndata = (void*) this;
+     mData.pdata = nullptr;
+-#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
++#if defined(MOZ_X11_no) && defined(XP_UNIX) && !defined(XP_MACOSX)
+     mWindow.ws_info = &mWsInfo;
+     memset(&mWsInfo, 0, sizeof(mWsInfo));
+ #if (MOZ_WIDGET_GTK == 2)
+@@ -391,7 +391,7 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
+ 
+     switch(aVar) {
+ 
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+     case NPNVToolkit:
+         *((NPNToolkitType*)aValue) = NPNVGtk2;
+         return NPERR_NO_ERROR;
+@@ -461,7 +461,7 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
+             *static_cast<HWND*>(aValue) = mPluginWindowHWND;
+             return NPERR_NO_ERROR;
+         }
+-#elif defined(MOZ_X11)
++#elif defined(MOZ_X11_no)
+         NPError result;
+         CallNPN_GetValue_NPNVnetscapeWindow(static_cast<XID*>(aValue), &result);
+         return result;
+@@ -742,7 +742,7 @@ PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(
+     AssertPluginThread();
+     AutoStackHelper guard(this);
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     // The documentation on the types for many variables in NP(N|P)_GetValue
+     // is vague.  Often boolean values are NPBool (1 byte), but
+     // https://developer.mozilla.org/en/XEmbed_Extension_for_Mozilla_Plugins
+@@ -900,7 +900,7 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
+     AssertPluginThread();
+     AutoStackHelper guard(this);
+ 
+-#if defined(MOZ_X11) && defined(DEBUG)
++#if defined(MOZ_X11_no) && defined(DEBUG)
+     if (GraphicsExpose == event.event.type)
+         PLUGIN_LOG_DEBUG(("  received drawable 0x%lx\n",
+                           event.event.xgraphicsexpose.drawable));
+@@ -958,7 +958,7 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
+     }
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     if (GraphicsExpose == event.event.type) {
+         // Make sure the X server completes the drawing before the parent
+         // draws on top and destroys the Drawable.
+@@ -1191,7 +1191,7 @@ PluginInstanceChild::RecvContentsScaleFactorChanged(const double& aContentsScale
+ #endif
+ }
+ 
+-#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
++#if defined(MOZ_X11_no) && defined(XP_UNIX) && !defined(XP_MACOSX)
+ // Create a new window from NPWindow
+ bool PluginInstanceChild::CreateWindow(const NPRemoteWindow& aWindow)
+ { 
+@@ -1289,7 +1289,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
+     AssertPluginThread();
+     AutoStackHelper guard(this);
+ 
+-#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
++#if defined(MOZ_X11_no) && defined(XP_UNIX) && !defined(XP_MACOSX)
+     NS_ASSERTION(mWsInfo.display, "We should have a valid display!");
+ 
+     // The minimum info is sent over IPC to allow this
+@@ -1428,6 +1428,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
+ 
+ #elif defined(ANDROID)
+     // TODO: Need Android impl
++#elif defined(MOZ_WIDGET_GTK)
+ #elif defined(MOZ_WIDGET_UIKIT)
+     // Don't care
+ #else
+@@ -3407,7 +3408,7 @@ PluginInstanceChild::CreateOptSurface(void)
+         (mIsTransparent && !mBackground) ? SurfaceFormat::A8R8G8B8_UINT32 :
+                                            SurfaceFormat::X8R8G8B8_UINT32;
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     Display* dpy = mWsInfo.display;
+     Screen* screen = DefaultScreenOfDisplay(dpy);
+     if (format == SurfaceFormat::X8R8G8B8_UINT32 &&
+@@ -3467,7 +3468,7 @@ PluginInstanceChild::MaybeCreatePlatformHelperSurface(void)
+         return false;
+     }
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     bool supportNonDefaultVisual = false;
+     Screen* screen = DefaultScreenOfDisplay(mWsInfo.display);
+     Visual* defaultVisual = DefaultVisualOfScreen(screen);
+@@ -3626,11 +3627,11 @@ PluginInstanceChild::EnsureCurrentBuffer(void)
+ void
+ PluginInstanceChild::UpdateWindowAttributes(bool aForceSetWindow)
+ {
+-#if defined(MOZ_X11) || defined(XP_WIN)
++#if defined(MOZ_X11_no) || defined(XP_WIN)
+     RefPtr<gfxASurface> curSurface = mHelperSurface ? mHelperSurface : mCurrentSurface;
+ #endif // Only used within MOZ_X11 or XP_WIN blocks. Unused variable otherwise
+     bool needWindowUpdate = aForceSetWindow;
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     Visual* visual = nullptr;
+     Colormap colormap = 0;
+     if (curSurface && curSurface->GetType() == gfxSurfaceType::Xlib) {
+@@ -3726,7 +3727,7 @@ PluginInstanceChild::PaintRectToPlatformSurface(const nsIntRect& aRect,
+     // We should not send an async surface if we're using direct rendering.
+     MOZ_ASSERT(!IsUsingDirectDrawing());
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     {
+         NS_ASSERTION(aSurface->GetType() == gfxSurfaceType::Xlib,
+                      "Non supported platform surface type");
+@@ -3783,7 +3784,7 @@ PluginInstanceChild::PaintRectToSurface(const nsIntRect& aRect,
+     // Render using temporary X surface, with copy to image surface
+     nsIntRect plPaintRect(aRect);
+     RefPtr<gfxASurface> renderSurface = aSurface;
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     if (mIsTransparent && (GetQuirks() & QUIRK_FLASH_EXPOSE_COORD_TRANSLATION)) {
+         // Work around a bug in Flash up to 10.1 d51 at least, where expose event
+         // top left coordinates within the plugin-rect and not at the drawable
+@@ -4132,7 +4133,7 @@ PluginInstanceChild::ShowPluginFrame()
+     NPRect r = { (uint16_t)rect.y, (uint16_t)rect.x,
+                  (uint16_t)rect.YMost(), (uint16_t)rect.XMost() };
+     SurfaceDescriptor currSurf;
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     if (mCurrentSurface->GetType() == gfxSurfaceType::Xlib) {
+         gfxXlibSurface *xsurf = static_cast<gfxXlibSurface*>(mCurrentSurface.get());
+         currSurf = SurfaceDescriptorX11(xsurf);
+@@ -4184,7 +4185,7 @@ PluginInstanceChild::ReadbackDifferenceRect(const nsIntRect& rect)
+ 
+     // We can read safely from XSurface,SharedDIBSurface and Unsafe SharedMemory,
+     // because PluginHost is not able to modify that surface
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+     if (mBackSurface->GetType() != gfxSurfaceType::Xlib &&
+         !gfxSharedImageSurface::IsSharedImage(mBackSurface))
+         return false;
+@@ -4193,7 +4194,7 @@ PluginInstanceChild::ReadbackDifferenceRect(const nsIntRect& rect)
+         return false;
+ #endif
+ 
+-#if defined(MOZ_X11) || defined(XP_WIN)
++#if defined(MOZ_X11_no) || defined(XP_WIN)
+     if (mCurrentSurface->GetContentType() != mBackSurface->GetContentType())
+         return false;
+ 
+@@ -4311,7 +4312,7 @@ PluginInstanceChild::RecvUpdateBackground(const SurfaceDescriptor& aBackground,
+     if (!mBackground) {
+         // XXX refactor me
+         switch (aBackground.type()) {
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+         case SurfaceDescriptor::TSurfaceDescriptorX11: {
+             mBackground = aBackground.get_SurfaceDescriptorX11().OpenForeign();
+             break;
+@@ -4656,7 +4657,7 @@ PluginInstanceChild::Destroy()
+       xt_client_xloop_destroy();
+     }
+ #endif
+-#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
++#if defined(MOZ_X11_no) && defined(XP_UNIX) && !defined(XP_MACOSX)
+     DeleteWindow();
+ #endif
+ }
+diff --git a/dom/plugins/ipc/PluginInstanceParent.cpp b/dom/plugins/ipc/PluginInstanceParent.cpp
+index 02f0641..cc0dff1 100644
+--- a/dom/plugins/ipc/PluginInstanceParent.cpp
++++ b/dom/plugins/ipc/PluginInstanceParent.cpp
+@@ -28,7 +28,7 @@
+ #include "nsPluginInstanceOwner.h"
+ #include "nsFocusManager.h"
+ #include "nsIDOMElement.h"
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "gfxXlibSurface.h"
+ #endif
+ #include "gfxContext.h"
+@@ -193,7 +193,7 @@ PluginInstanceParent::ActorDestroy(ActorDestroyReason why)
+         if (mImageContainer) {
+             mImageContainer->ClearAllImages();
+         }
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+         FinishX(DefaultXDisplay());
+ #endif
+     }
+@@ -266,7 +266,7 @@ PluginInstanceParent::AnswerNPN_GetValue_NPNVnetscapeWindow(NativeWindowHandle*
+ {
+ #ifdef XP_WIN
+     HWND id;
+-#elif defined(MOZ_X11)
++#elif defined(MOZ_X11_no)
+     XID id;
+ #elif defined(XP_DARWIN)
+     intptr_t id;
+@@ -274,7 +274,7 @@ PluginInstanceParent::AnswerNPN_GetValue_NPNVnetscapeWindow(NativeWindowHandle*
+     // TODO: Need Android impl
+     int id;
+ #else
+-#warning Implement me
++    int id;
+ #endif
+ 
+     *result = mNPNIface->getvalue(mNPP, NPNVnetscapeWindow, &id);
+@@ -476,7 +476,7 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
+         case NPDrawingModelAsyncWindowsDXGISurface:
+             allowed = AllowDirectDXGISurfaceDrawing();
+             break;
+-#elif defined(MOZ_X11)
++#elif defined(MOZ_X11_no)
+         case NPDrawingModelSyncX:
+             allowed = true;
+             break;
+@@ -910,7 +910,7 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
+         return true;
+     }
+ #endif
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     else if (newSurface.type() == SurfaceDescriptor::TSurfaceDescriptorX11) {
+         surface = newSurface.get_SurfaceDescriptorX11().OpenForeign();
+     }
+@@ -927,7 +927,7 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
+         // This is the "old front buffer" we're about to hand back to
+         // the plugin.  We might still have drawing operations
+         // referencing it.
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+         if (mFrontSurface->GetType() == gfxSurfaceType::Xlib) {
+             // Finish with the surface and XSync here to ensure the server has
+             // finished operations on the surface before the plugin starts
+@@ -1170,7 +1170,7 @@ PluginInstanceParent::EndUpdateBackground(const nsIntRect& aRect)
+         ("[InstanceParent][%p] EndUpdateBackground for <x=%d,y=%d, w=%d,h=%d>",
+          this, aRect.x, aRect.y, aRect.width, aRect.height));
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     // Have to XSync here to avoid the plugin trying to draw with this
+     // surface racing with its creation in the X server.  We also want
+     // to avoid the plugin drawing onto stale pixels, then handing us
+@@ -1227,7 +1227,7 @@ PluginInstanceParent::CreateBackground(const nsIntSize& aSize)
+ 
+     // XXX refactor me
+ 
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+     Screen* screen = DefaultScreenOfDisplay(DefaultXDisplay());
+     Visual* visual = DefaultVisualOfScreen(screen);
+     mBackground = gfxXlibSurface::Create(screen, visual,
+@@ -1272,7 +1272,7 @@ PluginInstanceParent::BackgroundDescriptor()
+ 
+     // XXX refactor me
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     gfxXlibSurface* xsurf = static_cast<gfxXlibSurface*>(mBackground.get());
+     return SurfaceDescriptorX11(xsurf);
+ #endif
+@@ -1399,7 +1399,7 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
+     }
+ #endif
+ 
+-#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
++#if defined(MOZ_X11_no) && defined(XP_UNIX) && !defined(XP_MACOSX)
+     const NPSetWindowCallbackStruct* ws_info =
+       static_cast<NPSetWindowCallbackStruct*>(aWindow->ws_info);
+     window.visualID = ws_info->visual ? ws_info->visual->visualid : 0;
+@@ -1436,7 +1436,7 @@ PluginInstanceParent::NPP_GetValue(NPPVariable aVariable,
+         return NPERR_NO_ERROR;
+     }
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     case NPPVpluginNeedsXEmbed: {
+         bool needsXEmbed;
+         NPError rv;
+@@ -1616,7 +1616,7 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
+     }
+ #endif
+ 
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+     switch (npevent->type) {
+     case GraphicsExpose:
+         PLUGIN_LOG_DEBUG(("  schlepping drawable 0x%lx across the pipe\n",
+diff --git a/dom/plugins/ipc/PluginMessageUtils.cpp b/dom/plugins/ipc/PluginMessageUtils.cpp
+index 47653fe..60b3f20 100644
+--- a/dom/plugins/ipc/PluginMessageUtils.cpp
++++ b/dom/plugins/ipc/PluginMessageUtils.cpp
+@@ -50,7 +50,7 @@ namespace plugins {
+ 
+ NPRemoteWindow::NPRemoteWindow() :
+   window(0), x(0), y(0), width(0), height(0), type(NPWindowTypeDrawable)
+-#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
++#if defined(MOZ_X11_no) && defined(XP_UNIX) && !defined(XP_MACOSX)
+   , visualID(0)
+   , colormap(0)
+ #endif /* XP_UNIX */
+diff --git a/dom/plugins/ipc/PluginMessageUtils.h b/dom/plugins/ipc/PluginMessageUtils.h
+index 55be59d..f158e91 100644
+--- a/dom/plugins/ipc/PluginMessageUtils.h
++++ b/dom/plugins/ipc/PluginMessageUtils.h
+@@ -90,7 +90,7 @@ struct NPRemoteWindow
+   uint32_t height;
+   NPRect clipRect;
+   NPWindowType type;
+-#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
++#if defined(MOZ_X11_no) && defined(XP_UNIX) && !defined(XP_MACOSX)
+   VisualID visualID;
+   Colormap colormap;
+ #endif /* XP_UNIX */
+@@ -112,10 +112,12 @@ struct NPAudioDeviceChangeDetailsIPC
+ 
+ #ifdef XP_WIN
+ typedef HWND NativeWindowHandle;
+-#elif defined(MOZ_X11)
++#elif defined(MOZ_X11_no)
+ typedef XID NativeWindowHandle;
+ #elif defined(XP_DARWIN) || defined(ANDROID)
+ typedef intptr_t NativeWindowHandle; // never actually used, will always be 0
++#elif defined(XP_UNIX)
++typedef intptr_t NativeWindowHandle;
+ #else
+ #error Need NativeWindowHandle for this platform
+ #endif
+@@ -360,7 +362,7 @@ struct ParamTraits<mozilla::plugins::NPRemoteWindow>
+     WriteParam(aMsg, aParam.height);
+     WriteParam(aMsg, aParam.clipRect);
+     WriteParam(aMsg, aParam.type);
+-#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
++#if defined(MOZ_X11_no) && defined(XP_UNIX) && !defined(XP_MACOSX)
+     aMsg->WriteULong(aParam.visualID);
+     aMsg->WriteULong(aParam.colormap);
+ #endif
+@@ -385,7 +387,7 @@ struct ParamTraits<mozilla::plugins::NPRemoteWindow>
+           ReadParam(aMsg, aIter, &type)))
+       return false;
+ 
+-#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
++#if defined(MOZ_X11_no) && defined(XP_UNIX) && !defined(XP_MACOSX)
+     unsigned long visualID;
+     unsigned long colormap;
+     if (!(aMsg->ReadULong(aIter, &visualID) &&
+@@ -406,7 +408,7 @@ struct ParamTraits<mozilla::plugins::NPRemoteWindow>
+     aResult->height = height;
+     aResult->clipRect = clipRect;
+     aResult->type = type;
+-#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
++#if defined(MOZ_X11_no) && defined(XP_UNIX) && !defined(XP_MACOSX)
+     aResult->visualID = visualID;
+     aResult->colormap = colormap;
+ #endif
+diff --git a/dom/plugins/ipc/PluginModuleChild.cpp b/dom/plugins/ipc/PluginModuleChild.cpp
+index 84dc7c7..c21d328 100644
+--- a/dom/plugins/ipc/PluginModuleChild.cpp
++++ b/dom/plugins/ipc/PluginModuleChild.cpp
+@@ -11,7 +11,7 @@
+ 
+ #include "mozilla/ipc/MessageChannel.h"
+ 
+-#ifdef MOZ_WIDGET_GTK
++#ifdef MOZ_WIDGET_GTK_no
+ #include <gtk/gtk.h>
+ #endif
+ 
+@@ -23,7 +23,7 @@
+ #include "nsPluginsDir.h"
+ #include "nsXULAppAPI.h"
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ # include "nsX11ErrorHandler.h"
+ # include "mozilla/X11Util.h"
+ #endif
+@@ -122,7 +122,7 @@ PluginModuleChild::PluginModuleChild(bool aIsChrome)
+   , mInitializeFunc(0)
+ #if defined(OS_WIN) || defined(OS_MACOSX)
+   , mGetEntryPointsFunc(0)
+-#elif defined(MOZ_WIDGET_GTK)
++#elif defined(MOZ_WIDGET_GTK_no)
+   , mNestedLoopTimerId(0)
+ #endif
+ #ifdef OS_WIN
+@@ -258,7 +258,7 @@ PluginModuleChild::InitForChrome(const std::string& aPluginFilename,
+     // XXX quirks isn't initialized yet
+     mAsyncRenderSupport = info.fSupportsAsyncRender;
+ #endif
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+     NS_NAMED_LITERAL_CSTRING(flash10Head, "Shockwave Flash 10.");
+     if (StringBeginsWith(nsDependentCString(info.fDescription), flash10Head)) {
+         AddQuirk(QUIRK_FLASH_EXPOSE_COORD_TRANSLATION);
+@@ -271,7 +271,7 @@ PluginModuleChild::InitForChrome(const std::string& aPluginFilename,
+     mozilla::plugins::PluginUtilsOSX::SetProcessName(nameBuffer);
+ #endif
+     pluginFile.FreePluginInfo(info);
+-#if defined(MOZ_X11) || defined(XP_MACOSX)
++#if defined(MOZ_X11_no) || defined(XP_MACOSX)
+     if (!mLibrary)
+ #endif
+     {
+@@ -319,7 +319,7 @@ PluginModuleChild::InitForChrome(const std::string& aPluginFilename,
+     return true;
+ }
+ 
+-#if defined(MOZ_WIDGET_GTK)
++#if defined(MOZ_WIDGET_GTK_no)
+ 
+ typedef void (*GObjectDisposeFn)(GObject*);
+ typedef gboolean (*GtkWidgetScrollEventFn)(GtkWidget*, GdkEventScroll*);
+@@ -545,6 +545,17 @@ PluginModuleChild::ExitedCxxStack()
+     mNestedLoopTimerId = 0;
+ }
+ 
++#else
++void
++PluginModuleChild::EnteredCxxStack()
++{
++}
++
++void
++PluginModuleChild::ExitedCxxStack()
++{
++}
++
+ #endif
+ 
+ bool
+@@ -568,7 +579,7 @@ PluginModuleChild::ShouldContinueFromReplyTimeout()
+ bool
+ PluginModuleChild::InitGraphics()
+ {
+-#if defined(MOZ_WIDGET_GTK)
++#if defined(MOZ_WIDGET_GTK_no)
+     // Work around plugins that don't interact well with GDK
+     // client-side windows.
+     PR_SetEnv("GDK_NATIVE_WINDOWS=1");
+@@ -607,7 +618,7 @@ PluginModuleChild::InitGraphics()
+ #else
+     // may not be necessary on all platforms
+ #endif
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     // Do this after initializing GDK, or GDK will install its own handler.
+     InstallX11ErrorHandler();
+ #endif
+@@ -617,7 +628,7 @@ PluginModuleChild::InitGraphics()
+ void
+ PluginModuleChild::DeinitGraphics()
+ {
+-#if defined(MOZ_X11) && defined(NS_FREE_PERMANENT_DATA)
++#if defined(MOZ_X11_no) && defined(NS_FREE_PERMANENT_DATA)
+     // We free some data off of XDisplay close hooks, ensure they're
+     // run.  Closing the display is pretty scary, so we only do it to
+     // silence leak checkers.
+@@ -1103,7 +1114,7 @@ _getvalue(NPP aNPP,
+     switch (aVariable) {
+         // Copied from nsNPAPIPlugin.cpp
+         case NPNVToolkit:
+-#if defined(MOZ_WIDGET_GTK)
++#if defined(MOZ_WIDGET_GTK_no)
+             *static_cast<NPNToolkitType*>(aValue) = NPNVGtk2;
+             return NPERR_NO_ERROR;
+ #endif
+@@ -1124,7 +1135,7 @@ _getvalue(NPP aNPP,
+         case NPNVSupportsWindowless:
+             *(NPBool*)aValue = PluginModuleChild::GetChrome()->Settings().supportsWindowless();
+             return NPERR_NO_ERROR;
+-#if defined(MOZ_WIDGET_GTK)
++#if defined(MOZ_WIDGET_GTK_no)
+         case NPNVxDisplay: {
+             if (aNPP) {
+                 return InstCast(aNPP)->NPN_GetValue(aVariable, aValue);
+@@ -1888,7 +1899,7 @@ PluginModuleChild::DoNP_Initialize(const PluginSettings& aSettings)
+     SetEventHooks();
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     // Send the parent our X socket to act as a proxy reference for our X
+     // resources.
+     int xSocketFd = ConnectionNumber(DefaultXDisplay());
+diff --git a/dom/plugins/ipc/PluginModuleChild.h b/dom/plugins/ipc/PluginModuleChild.h
+index 233a953..4c88f4f 100644
+--- a/dom/plugins/ipc/PluginModuleChild.h
++++ b/dom/plugins/ipc/PluginModuleChild.h
+@@ -11,6 +11,7 @@
+ 
+ #include <string>
+ #include <vector>
++#include <glib.h>
+ 
+ #include "base/basictypes.h"
+ 
+diff --git a/dom/plugins/ipc/moz.build b/dom/plugins/ipc/moz.build
+index b569aeb..f4dab4a 100644
+--- a/dom/plugins/ipc/moz.build
++++ b/dom/plugins/ipc/moz.build
+@@ -137,7 +137,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gtk3':
+     CXXFLAGS += CONFIG['TK_CFLAGS']
+ else:
+     # Force build against gtk+2 for struct offsets and such.
+-    CXXFLAGS += CONFIG['MOZ_GTK2_CFLAGS']
++    CXXFLAGS += CONFIG['TK_CFLAGS']
++    #CXXFLAGS += CONFIG['MOZ_GTK2_CFLAGS']
+ 
+ CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
+ 
+diff --git a/gfx/2d/BorrowedContext.h b/gfx/2d/BorrowedContext.h
+index edb923b..148067a 100644
+--- a/gfx/2d/BorrowedContext.h
++++ b/gfx/2d/BorrowedContext.h
+@@ -8,7 +8,7 @@
+ 
+ #include "2D.h"
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include <X11/extensions/Xrender.h>
+ #include <X11/Xlib.h>
+ #include "X11UndefineNone.h"
+@@ -75,7 +75,7 @@ private:
+   DrawTarget *mDT;
+ };
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ /* This is a helper class that let's you borrow an Xlib drawable from
+  * a DrawTarget. This is used for drawing themed widgets.
+  *
+diff --git a/gfx/2d/DrawTargetCairo.cpp b/gfx/2d/DrawTargetCairo.cpp
+index c0e4f0a..b4775ec 100644
+--- a/gfx/2d/DrawTargetCairo.cpp
++++ b/gfx/2d/DrawTargetCairo.cpp
+@@ -2315,7 +2315,7 @@ BorrowedCairoContext::ReturnCairoContextToDrawTarget(DrawTarget* aDT,
+   cairoDT->mContext = aCairo;
+ }
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ bool
+ BorrowedXlibDrawable::Init(DrawTarget* aDT)
+ {
+diff --git a/gfx/angle/include/EGL/eglplatform.h b/gfx/angle/include/EGL/eglplatform.h
+index 6d550da..2099e0d 100755
+--- a/gfx/angle/include/EGL/eglplatform.h
++++ b/gfx/angle/include/EGL/eglplatform.h
+@@ -105,6 +105,13 @@ typedef intptr_t EGLNativeDisplayType;
+ typedef intptr_t EGLNativeWindowType;
+ typedef intptr_t EGLNativePixmapType;
+ 
++//#elif defined(MESA_EGL_NO_X11_HEADERS)
++#elif defined(__unix__)
++
++typedef void            *EGLNativeDisplayType;
++typedef khronos_uintptr_t EGLNativePixmapType;
++typedef khronos_uintptr_t EGLNativeWindowType;
++
+ #elif defined(__unix__)
+ 
+ /* X11 (tentative)  */
+diff --git a/gfx/gl/GLContextProvider.h b/gfx/gl/GLContextProvider.h
+index 6e096c1..b6ea9b7 100644
+--- a/gfx/gl/GLContextProvider.h
++++ b/gfx/gl/GLContextProvider.h
+@@ -41,18 +41,20 @@ namespace gl {
+   #define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderCGL
+ #endif
+ 
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+   #define GL_CONTEXT_PROVIDER_NAME GLContextProviderGLX
+   #include "GLContextProviderImpl.h"
+   #undef GL_CONTEXT_PROVIDER_NAME
+   #define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderGLX
+ #endif
+ 
+-#define GL_CONTEXT_PROVIDER_NAME GLContextProviderEGL
+-#include "GLContextProviderImpl.h"
+-#undef GL_CONTEXT_PROVIDER_NAME
+-#ifndef GL_CONTEXT_PROVIDER_DEFAULT
+-  #define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderEGL
++#ifndef MOZ_GL_PROVIDER
++  #define GL_CONTEXT_PROVIDER_NAME GLContextProviderEGL
++  #include "GLContextProviderImpl.h"
++  #undef GL_CONTEXT_PROVIDER_NAME
++  #ifndef GL_CONTEXT_PROVIDER_DEFAULT
++    #define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderEGL
++  #endif
+ #endif
+ 
+ #if defined(MOZ_WIDGET_UIKIT)
+diff --git a/gfx/gl/GLContextProviderEGL.cpp b/gfx/gl/GLContextProviderEGL.cpp
+index ca972e0..c34e231 100644
+--- a/gfx/gl/GLContextProviderEGL.cpp
++++ b/gfx/gl/GLContextProviderEGL.cpp
+@@ -3,7 +3,7 @@
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
+-#if defined(MOZ_WIDGET_GTK)
++#if defined(MOZ_WIDGET_GTK_no)
+     #include <gdk/gdkx.h>
+     // we're using default display for now
+     #define GET_NATIVE_WINDOW(aWidget) ((EGLNativeWindowType)GDK_WINDOW_XID((GdkWindow*)aWidget->GetNativeData(NS_NATIVE_WINDOW)))
+diff --git a/gfx/gl/GLLibraryEGL.h b/gfx/gl/GLLibraryEGL.h
+index fa6ea74..1cbabff 100644
+--- a/gfx/gl/GLLibraryEGL.h
++++ b/gfx/gl/GLLibraryEGL.h
+@@ -5,7 +5,7 @@
+ #ifndef GLLIBRARYEGL_H_
+ #define GLLIBRARYEGL_H_
+ 
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+ #include "mozilla/X11Util.h"
+ #endif
+ 
+@@ -46,7 +46,7 @@
+     #endif
+ #endif
+ 
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+ #define EGL_DEFAULT_DISPLAY  ((EGLNativeDisplayType)mozilla::DefaultXDisplay())
+ #else
+ #define EGL_DEFAULT_DISPLAY  ((EGLNativeDisplayType)0)
+diff --git a/gfx/gl/moz.build b/gfx/gl/moz.build
+index 596612b..859d6bb 100644
+--- a/gfx/gl/moz.build
++++ b/gfx/gl/moz.build
+@@ -13,10 +13,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'uikit':
+     gl_provider = 'EAGL'
+ elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+-    if CONFIG['MOZ_EGL_XRENDER_COMPOSITE']:
+-        gl_provider = 'EGL'
+-    else:
+-        gl_provider = 'GLX'
++    gl_provider = 'EGL'
+ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+     gl_provider = 'EGL'
+ 
+diff --git a/gfx/ipc/GPUProcessManager.cpp b/gfx/ipc/GPUProcessManager.cpp
+index 0b55cd9..cb03c05 100644
+--- a/gfx/ipc/GPUProcessManager.cpp
++++ b/gfx/ipc/GPUProcessManager.cpp
+@@ -17,7 +17,7 @@
+ #include "mozilla/layers/LayerTreeOwnerTracker.h"
+ #include "mozilla/layers/RemoteCompositorSession.h"
+ #include "mozilla/widget/PlatformWidgetTypes.h"
+-#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
++#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING_no
+ # include "mozilla/widget/CompositorWidgetChild.h"
+ #endif
+ #include "nsBaseWidget.h"
+@@ -526,7 +526,7 @@ GPUProcessManager::CreateRemoteSession(nsBaseWidget* aWidget,
+                                        bool aUseExternalSurfaceSize,
+                                        const gfx::IntSize& aSurfaceSize)
+ {
+-#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
++#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING_no
+   ipc::Endpoint<PCompositorBridgeParent> parentPipe;
+   ipc::Endpoint<PCompositorBridgeChild> childPipe;
+ 
+diff --git a/gfx/layers/client/TextureClient.cpp b/gfx/layers/client/TextureClient.cpp
+index 7182731..6149ede 100644
+--- a/gfx/layers/client/TextureClient.cpp
++++ b/gfx/layers/client/TextureClient.cpp
+@@ -41,7 +41,7 @@
+ #include "gfxWindowsPlatform.h"
+ #include "gfx2DGlue.h"
+ #endif
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "mozilla/layers/TextureClientX11.h"
+ #ifdef GL_PROVIDER_GLX
+ #include "GLXLibrary.h"
+@@ -1054,7 +1054,7 @@ TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
+   }
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   gfxSurfaceType type =
+     gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType();
+ 
+diff --git a/gfx/layers/composite/TextureHost.cpp b/gfx/layers/composite/TextureHost.cpp
+index 8c5b8c7..1af335e 100644
+--- a/gfx/layers/composite/TextureHost.cpp
++++ b/gfx/layers/composite/TextureHost.cpp
+@@ -35,7 +35,7 @@
+ #include "../d3d11/CompositorD3D11.h"
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "mozilla/layers/X11TextureHost.h"
+ #endif
+ 
+@@ -208,7 +208,7 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
+         return CreateTextureHostBasic(aDesc, aDeallocator, aFlags);
+       }
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     case SurfaceDescriptor::TSurfaceDescriptorX11: {
+       const SurfaceDescriptorX11& desc = aDesc.get_SurfaceDescriptorX11();
+       return MakeAndAddRef<X11TextureHost>(aFlags, desc);
+diff --git a/gfx/layers/ipc/CompositorBridgeChild.cpp b/gfx/layers/ipc/CompositorBridgeChild.cpp
+index 6c716ec..e3fb4cd 100644
+--- a/gfx/layers/ipc/CompositorBridgeChild.cpp
++++ b/gfx/layers/ipc/CompositorBridgeChild.cpp
+@@ -40,7 +40,7 @@
+ #include "WinUtils.h"
+ #endif
+ #include "mozilla/widget/CompositorWidget.h"
+-#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
++#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING_no
+ # include "mozilla/widget/CompositorWidgetChild.h"
+ #endif
+ #include "VsyncSource.h"
+@@ -1064,7 +1064,7 @@ CompositorBridgeChild::AllocPCompositorWidgetChild(const CompositorWidgetInitDat
+ bool
+ CompositorBridgeChild::DeallocPCompositorWidgetChild(PCompositorWidgetChild* aActor)
+ {
+-#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
++#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING_no
+   delete aActor;
+   return true;
+ #else
+diff --git a/gfx/layers/ipc/CompositorBridgeParent.cpp b/gfx/layers/ipc/CompositorBridgeParent.cpp
+index 977662e..9409cf3 100644
+--- a/gfx/layers/ipc/CompositorBridgeParent.cpp
++++ b/gfx/layers/ipc/CompositorBridgeParent.cpp
+@@ -53,7 +53,7 @@
+ #include "mozilla/media/MediaSystemResourceService.h" // for MediaSystemResourceService
+ #include "mozilla/mozalloc.h"           // for operator new, etc
+ #include "mozilla/Telemetry.h"
+-#ifdef MOZ_WIDGET_GTK
++#ifdef MOZ_WIDGET_GTK_no
+ #include "basic/X11BasicCompositor.h" // for X11BasicCompositor
+ #endif
+ #include "nsCOMPtr.h"                   // for already_AddRefed
+@@ -82,7 +82,7 @@
+ #include "VsyncSource.h"
+ #endif
+ #include "mozilla/widget/CompositorWidget.h"
+-#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
++#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING_no
+ # include "mozilla/widget/CompositorWidgetParent.h"
+ #endif
+ 
+@@ -1642,7 +1642,7 @@ CompositorBridgeParent::NewCompositor(const nsTArray<LayersBackend>& aBackendHin
+                                      mEGLSurfaceSize.height,
+                                      mUseExternalSurfaceSize);
+     } else if (aBackendHints[i] == LayersBackend::LAYERS_BASIC) {
+-#ifdef MOZ_WIDGET_GTK
++#ifdef MOZ_WIDGET_GTK_no
+       if (gfxVars::UseXRender()) {
+         compositor = new X11BasicCompositor(this, mWidget);
+       } else
+@@ -1943,7 +1943,7 @@ CompositorBridgeParent::PostInsertVsyncProfilerMarker(TimeStamp aVsyncTimestamp)
+ widget::PCompositorWidgetParent*
+ CompositorBridgeParent::AllocPCompositorWidgetParent(const CompositorWidgetInitData& aInitData)
+ {
+-#if defined(MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING)
++#if defined(MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING_no)
+   if (mWidget) {
+     // Should not create two widgets on the same compositor.
+     return nullptr;
+@@ -1964,7 +1964,7 @@ CompositorBridgeParent::AllocPCompositorWidgetParent(const CompositorWidgetInitD
+ bool
+ CompositorBridgeParent::DeallocPCompositorWidgetParent(PCompositorWidgetParent* aActor)
+ {
+-#if defined(MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING)
++#if defined(MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING_no)
+   static_cast<widget::CompositorWidgetParent*>(aActor)->Release();
+   return true;
+ #else
+diff --git a/gfx/layers/ipc/CrossProcessCompositorBridgeParent.cpp b/gfx/layers/ipc/CrossProcessCompositorBridgeParent.cpp
+index 1bb6d04..8b90a67 100644
+--- a/gfx/layers/ipc/CrossProcessCompositorBridgeParent.cpp
++++ b/gfx/layers/ipc/CrossProcessCompositorBridgeParent.cpp
+@@ -52,7 +52,7 @@
+ #include "mozilla/media/MediaSystemResourceService.h" // for MediaSystemResourceService
+ #include "mozilla/mozalloc.h"           // for operator new, etc
+ #include "mozilla/Telemetry.h"
+-#ifdef MOZ_WIDGET_GTK
++#ifdef MOZ_WIDGET_GTK_no
+ #include "basic/X11BasicCompositor.h" // for X11BasicCompositor
+ #endif
+ #include "nsCOMPtr.h"                   // for already_AddRefed
+@@ -81,7 +81,7 @@
+ #include "VsyncSource.h"
+ #endif
+ #include "mozilla/widget/CompositorWidget.h"
+-#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
++#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING_no
+ # include "mozilla/widget/CompositorWidgetParent.h"
+ #endif
+ 
+diff --git a/gfx/layers/ipc/ShadowLayerUtils.h b/gfx/layers/ipc/ShadowLayerUtils.h
+index 257cee8..c1393b2 100644
+--- a/gfx/layers/ipc/ShadowLayerUtils.h
++++ b/gfx/layers/ipc/ShadowLayerUtils.h
+@@ -17,7 +17,7 @@
+ #define MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS
+ #endif
+ 
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+ # include "mozilla/layers/ShadowLayerUtilsX11.h"
+ #else
+ namespace mozilla { namespace layers {
+diff --git a/gfx/layers/moz.build b/gfx/layers/moz.build
+index 2a2fa11..508673b 100644
+--- a/gfx/layers/moz.build
++++ b/gfx/layers/moz.build
+@@ -204,7 +204,7 @@ EXPORTS.mozilla.layers += [
+     'TransactionIdAllocator.h',
+ ]
+ 
+-if CONFIG['MOZ_X11']:
++if CONFIG['MOZ_X11_no']:
+     EXPORTS.mozilla.layers += [
+         'basic/TextureClientX11.h',
+         'basic/X11TextureSourceBasic.h',
+diff --git a/gfx/src/moz.build b/gfx/src/moz.build
+index 3678eee..dc48470 100644
+--- a/gfx/src/moz.build
++++ b/gfx/src/moz.build
+@@ -51,7 +51,7 @@ EXPORTS.mozilla.gfx += [
+     'TiledRegion.h',
+ ]
+ 
+-if CONFIG['MOZ_X11']:
++if CONFIG['MOZ_X11_no']:
+     EXPORTS.mozilla += ['X11Util.h']
+     SOURCES += [
+         'X11Util.cpp',
+diff --git a/gfx/thebes/gfxASurface.cpp b/gfx/thebes/gfxASurface.cpp
+index 31f1855..fdbac19 100644
+--- a/gfx/thebes/gfxASurface.cpp
++++ b/gfx/thebes/gfxASurface.cpp
+@@ -29,7 +29,7 @@
+ #include "gfxWindowsSurface.h"
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "gfxXlibSurface.h"
+ #endif
+ 
+@@ -160,7 +160,7 @@ gfxASurface::Wrap (cairo_surface_t *csurf, const IntSize& aSize)
+         result = new gfxWindowsSurface(csurf);
+     }
+ #endif
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     else if (stype == CAIRO_SURFACE_TYPE_XLIB) {
+         result = new gfxXlibSurface(csurf);
+     }
+diff --git a/gfx/thebes/gfxDrawable.cpp b/gfx/thebes/gfxDrawable.cpp
+index 7d25cc9..26c5ea0 100644
+--- a/gfx/thebes/gfxDrawable.cpp
++++ b/gfx/thebes/gfxDrawable.cpp
+@@ -8,8 +8,8 @@
+ #include "gfxContext.h"
+ #include "gfxPlatform.h"
+ #include "gfx2DGlue.h"
+-#ifdef MOZ_X11
+ #include "cairo.h"
++#ifdef MOZ_X11_no
+ #include "gfxXlibSurface.h"
+ #endif
+ #include "mozilla/gfx/Logging.h"
+diff --git a/gfx/thebes/gfxFcPlatformFontList.cpp b/gfx/thebes/gfxFcPlatformFontList.cpp
+index b6e9167..4ae683d 100644
+--- a/gfx/thebes/gfxFcPlatformFontList.cpp
++++ b/gfx/thebes/gfxFcPlatformFontList.cpp
+@@ -33,7 +33,7 @@
+ #include "gfxPlatformGtk.h"
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "mozilla/X11Util.h"
+ #endif
+ 
+@@ -719,7 +719,7 @@ gfxFontconfigFontEntry::CreateScaledFont(FcPattern* aRenderPattern,
+ static void ApplyGdkScreenFontOptions(FcPattern *aPattern);
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ static bool
+ GetXftInt(Display* aDisplay, const char* aName, int* aResult)
+ {
+@@ -771,7 +771,7 @@ PreparePattern(FcPattern* aPattern, bool aIsPrinterFont)
+        ApplyGdkScreenFontOptions(aPattern);
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+         if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+             FcValue value;
+             int lcdfilter;
+diff --git a/gfx/thebes/gfxGdkNativeRenderer.cpp b/gfx/thebes/gfxGdkNativeRenderer.cpp
+index f8964ad..4b27491 100644
+--- a/gfx/thebes/gfxGdkNativeRenderer.cpp
++++ b/gfx/thebes/gfxGdkNativeRenderer.cpp
+@@ -7,7 +7,7 @@
+ #include "gfxContext.h"
+ #include "gfxPlatformGtk.h"
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include <gdk/gdkx.h>
+ #include "cairo-xlib.h"
+ #include "gfxXlibSurface.h"
+diff --git a/gfx/thebes/gfxGdkNativeRenderer.h b/gfx/thebes/gfxGdkNativeRenderer.h
+index d95b1fe..4c465d6 100644
+--- a/gfx/thebes/gfxGdkNativeRenderer.h
++++ b/gfx/thebes/gfxGdkNativeRenderer.h
+@@ -8,7 +8,7 @@
+ 
+ #include <gdk/gdk.h>
+ #include "nsSize.h"
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "gfxXlibNativeRenderer.h"
+ #endif
+ 
+@@ -21,7 +21,7 @@ class gfxContext;
+  * to all Thebes transformations, clipping etc.
+  */
+ class gfxGdkNativeRenderer
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     : private gfxXlibNativeRenderer
+ #endif
+ {
+@@ -46,7 +46,7 @@ public:
+         // will be set and there is no dependence on what the existing pixels
+         // in the drawable are set to.
+         DRAW_IS_OPAQUE =
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+             gfxXlibNativeRenderer::DRAW_IS_OPAQUE
+ #else
+             0x1
+@@ -54,7 +54,7 @@ public:
+         // If set, then numClipRects can be zero or one.
+         // If not set, then numClipRects will be zero.
+         , DRAW_SUPPORTS_CLIP_RECT =
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+             gfxXlibNativeRenderer::DRAW_SUPPORTS_CLIP_RECT
+ #else
+             0x2
+@@ -73,7 +73,7 @@ public:
+ #endif
+ 
+ private:
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     // for gfxXlibNativeRenderer:
+     virtual nsresult DrawWithXlib(cairo_surface_t* surface,
+                                   nsIntPoint offset,
+diff --git a/gfx/thebes/gfxPlatformGtk.cpp b/gfx/thebes/gfxPlatformGtk.cpp
+index 5a5f7e3..7effcef 100644
+--- a/gfx/thebes/gfxPlatformGtk.cpp
++++ b/gfx/thebes/gfxPlatformGtk.cpp
+@@ -36,11 +36,11 @@
+ 
+ #include "gfxImageSurface.h"
+ #ifdef MOZ_X11
+-#include <gdk/gdkx.h>
+-#include "gfxXlibSurface.h"
+-#include "cairo-xlib.h"
++//#include <gdk/gdkx.h>
++//#include "gfxXlibSurface.h"
++//#include "cairo-xlib.h"
+ #include "mozilla/Preferences.h"
+-#include "mozilla/X11Util.h"
++//#include "mozilla/X11Util.h"
+ 
+ #ifdef GL_PROVIDER_GLX
+ #include "GLContextProvider.h"
+@@ -86,7 +86,7 @@ gfxPlatformGtk::gfxPlatformGtk()
+ 
+     mMaxGenericSubstitutions = UNINITIALIZED_VALUE;
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     if (XRE_IsParentProcess()) {
+       if (GDK_IS_X11_DISPLAY(gdk_display_get_default()) &&
+           mozilla::Preferences::GetBool("gfx.xrender.enabled"))
+@@ -105,7 +105,7 @@ gfxPlatformGtk::gfxPlatformGtk()
+     InitBackendPrefs(canvasMask, BackendType::CAIRO,
+                      contentMask, BackendType::CAIRO);
+ 
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+     mXCompositorDisplay = nullptr;
+     mWaylandCompositorDisplay = nullptr;
+ 
+@@ -117,11 +117,11 @@ gfxPlatformGtk::gfxPlatformGtk()
+     }
+ #if defined(GDK_WINDOWING_WAYLAND)
+     else {
+-      mWaylandCompositorDisplay = wl_display_connect(nullptr);
+-      MOZ_ASSERT(mWaylandCompositorDisplay, "Failed to create compositor display!");
+     }
+ #endif
+ #endif // defined(MOZ_X11)
++      mWaylandCompositorDisplay = wl_display_connect(nullptr);
++      MOZ_ASSERT(mWaylandCompositorDisplay, "Failed to create compositor display!");
+ }
+ 
+ gfxPlatformGtk::~gfxPlatformGtk()
+@@ -132,24 +132,24 @@ gfxPlatformGtk::~gfxPlatformGtk()
+         gfxPangoFontGroup::Shutdown();
+     }
+ 
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+     if (mIsX11Display) {
+        XCloseDisplay(mXCompositorDisplay);
+     }
+ #if defined(GDK_WINDOWING_WAYLAND)
+     else {
+-       wl_display_disconnect(mWaylandCompositorDisplay);
+     }
+ #endif
+ #endif
++       wl_display_disconnect(mWaylandCompositorDisplay);
+ }
+ 
+ void
+ gfxPlatformGtk::FlushContentDrawing()
+ {
+-    if (gfxVars::UseXRender()) {
+-        XFlush(DefaultXDisplay());
+-    }
++//    if (gfxVars::UseXRender()) {
++//        XFlush(DefaultXDisplay());
++//    }
+ }
+ 
+ already_AddRefed<gfxASurface>
+@@ -170,24 +170,12 @@ gfxPlatformGtk::CreateOffscreenSurface(const IntSize& aSize,
+     if (gdkScreen) {
+         // When forcing PaintedLayers to use image surfaces for content,
+         // force creation of gfxImageSurface surfaces.
+-        if (gfxVars::UseXRender() && !UseImageOffscreenSurfaces()) {
+-            Screen *screen = gdk_x11_screen_get_xscreen(gdkScreen);
+-            XRenderPictFormat* xrenderFormat =
+-                gfxXlibSurface::FindRenderFormat(DisplayOfScreen(screen),
+-                                                 aFormat);
+-
+-            if (xrenderFormat) {
+-                newSurface = gfxXlibSurface::Create(screen, xrenderFormat,
+-                                                    aSize);
+-            }
+-        } else {
+             // We're not going to use XRender, so we don't need to
+             // search for a render format
+             newSurface = new gfxImageSurface(aSize, aFormat);
+             // The gfxImageSurface ctor zeroes this for us, no need to
+             // waste time clearing again
+             needsClear = false;
+-        }
+     }
+ #endif
+ 
+@@ -476,7 +464,7 @@ gfxPlatformGtk::GetPlatformCMSOutputProfile(void *&mem, size_t &size)
+     mem = nullptr;
+     size = 0;
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     GdkDisplay *display = gdk_display_get_default();
+     if (!GDK_IS_X11_DISPLAY(display))
+         return;
+@@ -629,7 +617,7 @@ gfxPlatformGtk::GetGdkDrawable(cairo_surface_t *target)
+     if (result)
+         return result;
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     if (cairo_surface_get_type(target) != CAIRO_SURFACE_TYPE_XLIB)
+         return nullptr;
+ 
+@@ -909,6 +897,7 @@ gfxPlatformGtk::CreateHardwareVsyncSource()
+   }
+   return gfxPlatform::CreateHardwareVsyncSource();
+ }
++#endif
+ 
+ bool
+ gfxPlatformGtk::SupportsApzTouchInput() const
+@@ -917,4 +906,3 @@ gfxPlatformGtk::SupportsApzTouchInput() const
+   return value == 1 || value == 2;
+ }
+ 
+-#endif
+diff --git a/gfx/thebes/moz.build b/gfx/thebes/moz.build
+index 0623b5b..533c943 100644
+--- a/gfx/thebes/moz.build
++++ b/gfx/thebes/moz.build
+@@ -114,7 +114,7 @@ elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+         'PrintTargetPS.cpp',
+     ]
+ 
+-    if CONFIG['MOZ_X11']:
++    if CONFIG['MOZ_X11_no']:
+         EXPORTS += [
+             'gfxXlibNativeRenderer.h',
+             'gfxXlibSurface.h',
+diff --git a/layout/generic/nsPluginFrame.cpp b/layout/generic/nsPluginFrame.cpp
+index 5455ea4..36915c6 100644
+--- a/layout/generic/nsPluginFrame.cpp
++++ b/layout/generic/nsPluginFrame.cpp
+@@ -74,7 +74,7 @@
+ #include "mozilla/gfx/QuartzSupport.h"
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "mozilla/X11Util.h"
+ using mozilla::DefaultXDisplay;
+ #endif
+diff --git a/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_options.cc b/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_options.cc
+index b7f123b..eacd634 100644
+--- a/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_options.cc
++++ b/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_options.cc
+@@ -30,7 +30,7 @@ DesktopCaptureOptions::~DesktopCaptureOptions() {}
+ // static
+ DesktopCaptureOptions DesktopCaptureOptions::CreateDefault() {
+   DesktopCaptureOptions result;
+-#if defined(USE_X11)
++#if defined(USE_X11_no)
+   result.set_x_display(SharedXDisplay::CreateDefault());
+ #endif
+ #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
+diff --git a/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_options.h b/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_options.h
+index 030cb2b..f7bb2a4 100644
+--- a/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_options.h
++++ b/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_options.h
+@@ -13,7 +13,7 @@
+ #include "webrtc/base/constructormagic.h"
+ #include "webrtc/system_wrappers/interface/scoped_refptr.h"
+ 
+-#if defined(USE_X11)
++#if defined(USE_X11_no)
+ #include "webrtc/modules/desktop_capture/x11/shared_x_display.h"
+ #endif
+ 
+@@ -37,7 +37,7 @@ class DesktopCaptureOptions {
+   // X11 connection failed (e.g. DISPLAY isn't set).
+   static DesktopCaptureOptions CreateDefault();
+ 
+-#if defined(USE_X11)
++#if defined(USE_X11_no)
+   SharedXDisplay* x_display() const { return x_display_; }
+   void set_x_display(scoped_refptr<SharedXDisplay> x_display) {
+     x_display_ = x_display;
+@@ -85,7 +85,7 @@ class DesktopCaptureOptions {
+ #endif
+ 
+  private:
+-#if defined(USE_X11)
++#if defined(USE_X11_no)
+   scoped_refptr<SharedXDisplay> x_display_;
+ #endif
+ 
+diff --git a/toolkit/components/moz.build b/toolkit/components/moz.build
+index 74f3ad7..dbd48e1 100644
+--- a/toolkit/components/moz.build
++++ b/toolkit/components/moz.build
+@@ -5,7 +5,7 @@
+ # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ 
+ # These component dirs are built for all apps (including suite)
+-if CONFIG['MOZ_ENABLE_XREMOTE']:
++if CONFIG['MOZ_ENABLE_XREMOTE_no']:
+     DIRS += ['remote']
+ 
+ DIRS += [
+diff --git a/toolkit/components/remote/nsGTKRemoteService.cpp b/toolkit/components/remote/nsGTKRemoteService.cpp
+index d72cf93..08fa886 100644
+--- a/toolkit/components/remote/nsGTKRemoteService.cpp
++++ b/toolkit/components/remote/nsGTKRemoteService.cpp
+@@ -9,7 +9,7 @@
+ 
+ #include <gtk/gtk.h>
+ #include <gdk/gdk.h>
+-#include <gdk/gdkx.h>
++//#include <gdk/gdkx.h>
+ 
+ #include "nsIBaseWindow.h"
+ #include "nsIDocShell.h"
+diff --git a/toolkit/components/remote/nsGTKRemoteService.h b/toolkit/components/remote/nsGTKRemoteService.h
+index 638558b..559e6a3 100644
+--- a/toolkit/components/remote/nsGTKRemoteService.h
++++ b/toolkit/components/remote/nsGTKRemoteService.h
+@@ -13,18 +13,18 @@
+ #endif
+ 
+ #include <gdk/gdk.h>
+-#include <gdk/gdkx.h>
++//#include <gdk/gdkx.h>
+ #include <gtk/gtk.h>
+ 
+ #include "nsInterfaceHashtable.h"
+-#include "nsXRemoteService.h"
++//#include "nsXRemoteService.h"
+ #include "mozilla/Attributes.h"
+ #ifdef ENABLE_REMOTE_DBUS
+ #include "mozilla/ipc/DBusConnectionRefPtr.h"
+ #endif
+ 
+ 
+-class nsGTKRemoteService final : public nsXRemoteService
++class nsGTKRemoteService final
+ {
+ public:
+   // We will be a static singleton, so don't use the ordinary methods.
+diff --git a/toolkit/library/moz.build b/toolkit/library/moz.build
+index 3006fd0..770956f 100644
+--- a/toolkit/library/moz.build
++++ b/toolkit/library/moz.build
+@@ -311,11 +311,7 @@ if CONFIG['MOZ_ENABLE_DBUS']:
+     OS_LIBS += CONFIG['MOZ_DBUS_GLIB_LIBS']
+ 
+ if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
+-        OS_LIBS += [l for l in CONFIG['TK_LIBS']
+-            if l not in ('-lgtk-3', '-lgdk-3')]
+-    else:
+-        OS_LIBS += CONFIG['TK_LIBS']
++    OS_LIBS += CONFIG['TK_LIBS']
+     OS_LIBS += CONFIG['XLDFLAGS']
+     OS_LIBS += CONFIG['XLIBS']
+     OS_LIBS += CONFIG['XEXT_LIBS']
+diff --git a/toolkit/toolkit.mozbuild b/toolkit/toolkit.mozbuild
+index 0f5b6e9..b6ba71c 100644
+--- a/toolkit/toolkit.mozbuild
++++ b/toolkit/toolkit.mozbuild
+@@ -118,7 +118,7 @@ DIRS += [
+     '/xpfe/components',
+ ]
+ 
+-if CONFIG['MOZ_ENABLE_XREMOTE']:
++if CONFIG['MOZ_ENABLE_XREMOTE_no']:
+     DIRS += ['/widget/xremoteclient']
+ 
+ if CONFIG['MOZ_SPELLCHECK']:
+diff --git a/toolkit/xre/moz.build b/toolkit/xre/moz.build
+index dd15dc0..9d8bd32 100644
+--- a/toolkit/xre/moz.build
++++ b/toolkit/xre/moz.build
+@@ -58,7 +58,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
+         'nsGDKErrorHandler.cpp',
+     ]
+ 
+-if CONFIG['MOZ_X11']:
++if CONFIG['MOZ_X11_no']:
+     EXPORTS += ['nsX11ErrorHandler.h']
+     UNIFIED_SOURCES += [
+         'nsX11ErrorHandler.cpp',
+diff --git a/toolkit/xre/nsAppRunner.cpp b/toolkit/xre/nsAppRunner.cpp
+index ee36da7..a8aa0fe 100644
+--- a/toolkit/xre/nsAppRunner.cpp
++++ b/toolkit/xre/nsAppRunner.cpp
+@@ -165,7 +165,7 @@
+ #endif
+ 
+ // for X remote support
+-#ifdef MOZ_ENABLE_XREMOTE
++#ifdef MOZ_ENABLE_XREMOTE_no
+ #include "XRemoteClient.h"
+ #include "nsIRemoteService.h"
+ #include "nsProfileLock.h"
+@@ -249,7 +249,7 @@ nsString gAbsoluteArgv0Path;
+ #ifdef MOZ_WAYLAND
+ #include <gdk/gdkwayland.h>
+ #endif
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include <gdk/gdkx.h>
+ #endif /* MOZ_X11 */
+ #include "nsGTKToolkit.h"
+@@ -1591,7 +1591,7 @@ DumpHelp()
+   printf("Usage: %s [ options ... ] [URL]\n"
+          "       where options include:\n\n", gArgv[0]);
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   printf("X11 options\n"
+          "  --display=DISPLAY  X display to use\n"
+          "  --sync             Make X calls synchronous\n");
+@@ -1676,7 +1676,7 @@ DumpVersion()
+   printf("\n");
+ }
+ 
+-#ifdef MOZ_ENABLE_XREMOTE
++#ifdef MOZ_ENABLE_XREMOTE_no
+ static RemoteResult
+ ParseRemoteCommandLine(nsCString& program,
+                        const char** profile,
+@@ -2993,7 +2993,7 @@ public:
+   XREMain() :
+     mStartOffline(false)
+     , mShuttingDown(false)
+-#ifdef MOZ_ENABLE_XREMOTE
++#ifdef MOZ_ENABLE_XREMOTE_no
+     , mDisableRemote(false)
+ #endif
+ #if defined(MOZ_WIDGET_GTK)
+@@ -3016,7 +3016,7 @@ public:
+   nsCOMPtr<nsIFile> mProfD;
+   nsCOMPtr<nsIFile> mProfLD;
+   nsCOMPtr<nsIProfileLock> mProfileLock;
+-#ifdef MOZ_ENABLE_XREMOTE
++#ifdef MOZ_ENABLE_XREMOTE_no
+   nsCOMPtr<nsIRemoteService> mRemoteService;
+   nsProfileLock mRemoteLock;
+   nsCOMPtr<nsIFile> mRemoteLockDir;
+@@ -3031,7 +3031,7 @@ public:
+ 
+   bool mStartOffline;
+   bool mShuttingDown;
+-#ifdef MOZ_ENABLE_XREMOTE
++#ifdef MOZ_ENABLE_XREMOTE_no
+   bool mDisableRemote;
+ #endif
+ 
+@@ -3767,7 +3767,7 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
+     }
+   }
+ #endif /* MOZ_WIDGET_GTK */
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   // Init X11 in thread-safe mode. Must be called prior to the first call to XOpenDisplay
+   // (called inside gdk_display_open). This is a requirement for off main tread compositing.
+   XInitThreads();
+@@ -3793,7 +3793,7 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
+   }
+ #endif
+ #endif
+-#ifdef MOZ_ENABLE_XREMOTE
++#ifdef MOZ_ENABLE_XREMOTE_no
+   // handle --remote now that xpcom is fired up
+   bool newInstance;
+   {
+@@ -3870,7 +3870,7 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
+   gtk_widget_set_default_colormap(gdk_rgb_get_colormap());
+ #endif /* (MOZ_WIDGET_GTK == 2) */
+ #endif /* defined(MOZ_WIDGET_GTK) */
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   // Do this after initializing GDK, or GDK will install its own handler.
+   XRE_InstallX11ErrorHandler();
+ #endif
+@@ -4418,7 +4418,7 @@ XREMain::XRE_mainRun()
+   }
+ 
+   if (!mShuttingDown) {
+-#ifdef MOZ_ENABLE_XREMOTE
++#ifdef MOZ_ENABLE_XREMOTE_no
+     // if we have X remote support, start listening for requests on the
+     // proxy window.
+     if (!mDisableRemote)
+@@ -4626,7 +4626,7 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
+   }
+ 
+   if (!mShuttingDown) {
+-#ifdef MOZ_ENABLE_XREMOTE
++#ifdef MOZ_ENABLE_XREMOTE_no
+     // shut down the x remote proxy window
+     if (mRemoteService) {
+       mRemoteService->Shutdown();
+diff --git a/toolkit/xre/nsEmbedFunctions.cpp b/toolkit/xre/nsEmbedFunctions.cpp
+index 0e85532..a619121 100644
+--- a/toolkit/xre/nsEmbedFunctions.cpp
++++ b/toolkit/xre/nsEmbedFunctions.cpp
+@@ -43,7 +43,7 @@
+ #include "nsVersionComparator.h"
+ #include "chrome/common/mach_ipc_mac.h"
+ #endif
+-#include "nsX11ErrorHandler.h"
++//#include "nsX11ErrorHandler.h"
+ #include "nsGDKErrorHandler.h"
+ #include "base/at_exit.h"
+ #include "base/command_line.h"
+@@ -492,7 +492,7 @@ XRE_InitChildProcess(int aArgc,
+   gArgv = aArgv;
+   gArgc = aArgc;
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   XInitThreads();
+ #endif
+ #if MOZ_WIDGET_GTK == 2
+diff --git a/toolkit/xre/nsGDKErrorHandler.cpp b/toolkit/xre/nsGDKErrorHandler.cpp
+index a01a7c5..89b1c8b 100644
+--- a/toolkit/xre/nsGDKErrorHandler.cpp
++++ b/toolkit/xre/nsGDKErrorHandler.cpp
+@@ -6,14 +6,12 @@
+ #include "nsGDKErrorHandler.h"
+ 
+ #include <gtk/gtk.h>
+-#include <gdk/gdkx.h>
+ #include <errno.h>
+ #include <stdlib.h>
+ #include <string.h>
+ 
+ #include "nsDebug.h"
+ #include "nsString.h"
+-#include "nsX11ErrorHandler.h"
+ 
+ #include "prenv.h"
+ 
+@@ -29,62 +27,8 @@ static void
+ GdkErrorHandler(const gchar *log_domain, GLogLevelFlags log_level,
+                 const gchar *message,  gpointer user_data)
+ {
+-  if (strstr(message, "X Window System error")) {
+-    XErrorEvent event;
+-    nsDependentCString buffer(message);
+-    char *endptr;
+-
+-    /* Parse Gdk X Window error message which has this format:
+-     * (Details: serial XXXX error_code XXXX request_code XXXX (XXXX) minor_code XXXX)
+-     */
+-    NS_NAMED_LITERAL_CSTRING(serialString, "(Details: serial ");
+-    int32_t start = buffer.Find(serialString);
+-    if (start == kNotFound)
+-      NS_RUNTIMEABORT(message);
+-
+-    start += serialString.Length();
+-    errno = 0;
+-    event.serial = strtol(buffer.BeginReading() + start, &endptr, 10);
+-    if (errno)
+-      NS_RUNTIMEABORT(message);
+-
+-    NS_NAMED_LITERAL_CSTRING(errorCodeString, " error_code ");    
+-    if (!StringBeginsWith(Substring(endptr, buffer.EndReading()), errorCodeString))
+-      NS_RUNTIMEABORT(message);
+-
+-    errno = 0;
+-    event.error_code = strtol(endptr + errorCodeString.Length(), &endptr, 10);
+-    if (errno)
+-      NS_RUNTIMEABORT(message);
+-
+-    NS_NAMED_LITERAL_CSTRING(requestCodeString, " request_code ");
+-    if (!StringBeginsWith(Substring(endptr, buffer.EndReading()), requestCodeString))
+-      NS_RUNTIMEABORT(message);
+-
+-    errno = 0;
+-    event.request_code = strtol(endptr + requestCodeString.Length(), &endptr, 10);
+-    if (errno)
+-      NS_RUNTIMEABORT(message);
+-
+-    NS_NAMED_LITERAL_CSTRING(minorCodeString, " minor_code ");
+-    start = buffer.Find(minorCodeString, endptr - buffer.BeginReading());
+-    if (!start)
+-      NS_RUNTIMEABORT(message);
+-
+-    errno = 0;
+-    event.minor_code = strtol(buffer.BeginReading() + start + minorCodeString.Length(), nullptr, 10);
+-    if (errno)
+-      NS_RUNTIMEABORT(message);
+-
+-    event.display = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
+-    // Gdk does not provide resource ID
+-    event.resourceid = 0;
+-
+-    X11Error(event.display, &event);
+-  } else {
+     g_log_default_handler(log_domain, log_level, message, user_data);
+     NS_RUNTIMEABORT(message);
+-  }
+ }
+ 
+ void
+@@ -94,7 +38,4 @@ InstallGdkErrorHandler()
+                     (GLogLevelFlags)(G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION),
+                     GdkErrorHandler,
+                     nullptr);
+-  if (PR_GetEnv("MOZ_X_SYNC")) {
+-    XSynchronize(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), True);
+-  }
+ }
+diff --git a/toolkit/xre/nsNativeAppSupportUnix.cpp b/toolkit/xre/nsNativeAppSupportUnix.cpp
+index a04a799..a0f55f6 100644
+--- a/toolkit/xre/nsNativeAppSupportUnix.cpp
++++ b/toolkit/xre/nsNativeAppSupportUnix.cpp
+@@ -32,7 +32,7 @@
+ #include <glib-object.h>
+ #include <gtk/gtk.h>
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include <gdk/gdkx.h>
+ #include <X11/ICE/ICElib.h>
+ #include <X11/SM/SMlib.h>
+@@ -52,7 +52,7 @@
+ You have GTK+ %d.%d.\nThis application requires GTK+ %d.%d or newer.\n\n\
+ Please upgrade your GTK+ library if you wish to use this application."
+ 
+-#if MOZ_X11
++#if MOZ_X11_no
+ #undef IceSetIOErrorHandler
+ #undef IceAddConnectionWatch
+ #undef IceConnectionNumber
+@@ -126,7 +126,7 @@ static LazyLogModule sMozSMLog("MozSM");
+ class nsNativeAppSupportUnix : public nsNativeAppSupportBase
+ {
+ public:
+-#if MOZ_X11
++#if MOZ_X11_no
+   nsNativeAppSupportUnix(): mSessionConnection(nullptr),
+                             mClientState(STATE_DISCONNECTED) {};
+   ~nsNativeAppSupportUnix()
+@@ -143,7 +143,7 @@ public:
+   NS_IMETHOD Enable();
+ 
+ private:
+-#if MOZ_X11
++#if MOZ_X11_no
+   static void SaveYourselfCB(SmcConn smc_conn, SmPointer client_data,
+                              int save_style, Bool shutdown, int interact_style,
+                              Bool fast);
+@@ -163,7 +163,7 @@ private:
+ #endif
+ };
+ 
+-#if MOZ_X11
++#if MOZ_X11_no
+ static gboolean
+ process_ice_messages(IceConn connection)
+ {
+@@ -479,7 +479,7 @@ nsNativeAppSupportUnix::Start(bool *aRetVal)
+ 
+   *aRetVal = true;
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   gboolean sm_disable = FALSE;
+   if (!getenv("SESSION_MANAGER")) {
+     sm_disable = TRUE;
+diff --git a/widget/CompositorWidget.h b/widget/CompositorWidget.h
+index 93269ea..23a2964 100644
+--- a/widget/CompositorWidget.h
++++ b/widget/CompositorWidget.h
+@@ -41,7 +41,7 @@ class CompositorWidgetInitData;
+ class CompositorWidgetDelegate;
+ 
+ // Platforms that support out-of-process widgets.
+-#if defined(XP_WIN) || defined(MOZ_X11)
++#if defined(XP_WIN) || defined(MOZ_X11_no)
+ // CompositorWidgetParent should implement CompositorWidget and
+ // PCompositorWidgetParent.
+ class CompositorWidgetParent;
+diff --git a/widget/InProcessCompositorWidget.cpp b/widget/InProcessCompositorWidget.cpp
+index 9b301fc..6f412cb 100644
+--- a/widget/InProcessCompositorWidget.cpp
++++ b/widget/InProcessCompositorWidget.cpp
+@@ -14,7 +14,7 @@ namespace widget {
+ 
+ // Platforms with no OOP compositor process support use
+ // InProcessCompositorWidget by default.
+-#if !defined(MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING)
++#if !defined(MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING_no)
+ /* static */ RefPtr<CompositorWidget>
+ CompositorWidget::CreateLocal(const CompositorWidgetInitData& aInitData, nsIWidget* aWidget)
+ {
+diff --git a/widget/gtk/CompositorWidgetChild.h b/widget/gtk/CompositorWidgetChild.h
+index 403b905..cbf5a94 100644
+--- a/widget/gtk/CompositorWidgetChild.h
++++ b/widget/gtk/CompositorWidgetChild.h
+@@ -6,7 +6,7 @@
+ #ifndef widget_gtk_CompositorWidgetChild_h
+ #define widget_gtk_CompositorWidgetChild_h
+ 
+-#include "X11CompositorWidget.h"
++//#include "X11CompositorWidget.h"
+ #include "mozilla/widget/PCompositorWidgetChild.h"
+ #include "mozilla/widget/CompositorWidgetVsyncObserver.h"
+ 
+@@ -15,7 +15,6 @@ namespace widget {
+ 
+ class CompositorWidgetChild final
+  : public PCompositorWidgetChild
+- , public CompositorWidgetDelegate
+ {
+ public:
+   CompositorWidgetChild(RefPtr<CompositorVsyncDispatcher> aVsyncDispatcher,
+@@ -25,7 +24,7 @@ public:
+   bool RecvObserveVsync() override;
+   bool RecvUnobserveVsync() override;
+ 
+-  void NotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize) override;
++  void NotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize) ;
+ 
+ private:
+   RefPtr<CompositorVsyncDispatcher> mVsyncDispatcher;
+diff --git a/widget/gtk/CompositorWidgetParent.cpp b/widget/gtk/CompositorWidgetParent.cpp
+index c882f4f..cd5dc97 100644
+--- a/widget/gtk/CompositorWidgetParent.cpp
++++ b/widget/gtk/CompositorWidgetParent.cpp
+@@ -10,7 +10,6 @@ namespace mozilla {
+ namespace widget {
+ 
+ CompositorWidgetParent::CompositorWidgetParent(const CompositorWidgetInitData& aInitData)
+- : X11CompositorWidget(aInitData)
+ {
+   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_GPU);
+ }
+@@ -40,7 +39,7 @@ CompositorWidgetParent::GetVsyncObserver() const
+ bool
+ CompositorWidgetParent::RecvNotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize)
+ {
+-  NotifyClientSizeChanged(aClientSize);
++  //NotifyClientSizeChanged(aClientSize);
+   return true;
+ }
+ 
+diff --git a/widget/gtk/CompositorWidgetParent.h b/widget/gtk/CompositorWidgetParent.h
+index e80c0f8..4230605 100644
+--- a/widget/gtk/CompositorWidgetParent.h
++++ b/widget/gtk/CompositorWidgetParent.h
+@@ -6,15 +6,15 @@
+ #ifndef widget_gtk_CompositorWidgetParent_h
+ #define widget_gtk_CompositorWidgetParent_h
+ 
+-#include "X11CompositorWidget.h"
++//#include "X11CompositorWidget.h"
+ #include "mozilla/widget/PCompositorWidgetParent.h"
+ 
+ namespace mozilla {
+ namespace widget {
+ 
+ class CompositorWidgetParent final
+- : public PCompositorWidgetParent,
+-   public X11CompositorWidget
++ : public PCompositorWidgetParent//,
++   //public X11CompositorWidget
+ {
+ public:
+   explicit CompositorWidgetParent(const CompositorWidgetInitData& aInitData);
+@@ -22,8 +22,8 @@ public:
+ 
+   void ActorDestroy(ActorDestroyReason aWhy) override { }
+ 
+-  void ObserveVsync(VsyncObserver* aObserver) override;
+-  RefPtr<VsyncObserver> GetVsyncObserver() const override;
++  void ObserveVsync(VsyncObserver* aObserver);
++  RefPtr<VsyncObserver> GetVsyncObserver() const ;
+ 
+   bool RecvNotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize) override;
+ 
+diff --git a/widget/gtk/moz.build b/widget/gtk/moz.build
+index 1cc8917..bfca2d1 100644
+--- a/widget/gtk/moz.build
++++ b/widget/gtk/moz.build
+@@ -50,15 +50,15 @@ if CONFIG['MOZ_X11']:
+     UNIFIED_SOURCES += [
+         'CompositorWidgetChild.cpp',
+         'CompositorWidgetParent.cpp',
+-        'InProcessX11CompositorWidget.cpp',
+-        'nsIdleServiceGTK.cpp',
+-        'X11CompositorWidget.cpp',
++        #'InProcessX11CompositorWidget.cpp',
++        #'nsIdleServiceGTK.cpp',
++        #'X11CompositorWidget.cpp',
+     ]
+     EXPORTS.mozilla.widget += [
+         'CompositorWidgetChild.h',
+         'CompositorWidgetParent.h',
+-        'InProcessX11CompositorWidget.h',
+-        'X11CompositorWidget.h',
++        #'InProcessX11CompositorWidget.h',
++        #'X11CompositorWidget.h',
+     ]
+ 
+ if CONFIG['NS_PRINTING']:
+@@ -75,12 +75,12 @@ if CONFIG['NS_PRINTING']:
+ if CONFIG['MOZ_X11']:
+     UNIFIED_SOURCES += [
+         'nsClipboard.cpp',
+-        'nsClipboardX11.cpp',
++        #'nsClipboardX11.cpp',
+         'nsDragService.cpp',
+         'WindowSurfaceProvider.cpp',
+-        'WindowSurfaceX11.cpp',
+-        'WindowSurfaceX11Image.cpp',
+-        'WindowSurfaceXRender.cpp',
++        #'WindowSurfaceX11.cpp',
++        #'WindowSurfaceX11Image.cpp',
++        #'WindowSurfaceXRender.cpp',
+     ]
+     EXPORTS.mozilla.widget += [
+         'WindowSurfaceProvider.h',
+diff --git a/widget/gtk/mozgtk/mozgtk.c b/widget/gtk/mozgtk/mozgtk.c
+index 8db92ba..60e88e2 100644
+--- a/widget/gtk/mozgtk/mozgtk.c
++++ b/widget/gtk/mozgtk/mozgtk.c
+@@ -608,7 +608,7 @@ STUB(gtk_color_chooser_get_rgba)
+ STUB(gtk_color_chooser_set_use_alpha)
+ #endif
+ 
+-#ifdef GTK2_SYMBOLS
++#ifdef GTK2_SYMBOLS_no
+ STUB(gdk_drawable_get_screen)
+ STUB(gdk_rgb_get_colormap)
+ STUB(gdk_rgb_get_visual)
+@@ -623,21 +623,3 @@ STUB(gdkx_visual_get)
+ STUB(gtk_object_get_type)
+ #endif
+ 
+-#ifndef GTK3_SYMBOLS
+-// Only define the following workaround when using GTK3, which we detect
+-// by checking if GTK3 stubs are not provided.
+-#include <X11/Xlib.h>
+-// Bug 1271100
+-// We need to trick system Cairo into not using the XShm extension due to
+-// a race condition in it that results in frequent BadAccess errors. Cairo
+-// relies upon XShmQueryExtension to initially detect if XShm is available.
+-// So we define our own stub that always indicates XShm not being present.
+-// mozgtk loads before libXext/libcairo and so this stub will take priority.
+-// Our tree usage goes through xcb and remains unaffected by this.
+-MOZ_EXPORT Bool
+-XShmQueryExtension(Display* aDisplay)
+-{
+-  return False;
+-}
+-#endif
+-
+diff --git a/widget/gtk/nsClipboard.cpp b/widget/gtk/nsClipboard.cpp
+index 48f6ca7..d79bffc 100644
+--- a/widget/gtk/nsClipboard.cpp
++++ b/widget/gtk/nsClipboard.cpp
+@@ -9,7 +9,7 @@
+ 
+ #include "nsArrayUtils.h"
+ #include "nsClipboard.h"
+-#include "nsClipboardX11.h"
++//#include "nsClipboardX11.h"
+ #if defined(MOZ_WAYLAND)
+ #include "nsClipboardWayland.h"
+ #endif
+@@ -28,7 +28,7 @@
+ #include "imgIContainer.h"
+ 
+ #include <gtk/gtk.h>
+-#include <gtk/gtkx.h>
++//#include <gtk/gtkx.h>
+ 
+ #include "mozilla/dom/EncodingUtils.h"
+ #include "nsIUnicodeDecoder.h"
+@@ -54,6 +54,7 @@ ConvertHTMLtoUCS2          (guchar             *data,
+                             char16_t         **unicodeData,
+                             int32_t            &outUnicodeLen);
+ 
++#ifdef MOZ_X11_no
+ static void
+ GetHTMLCharset             (guchar * data, int32_t dataLength, nsCString& str);
+ 
+@@ -117,6 +118,7 @@ nsClipboard::~nsClipboard()
+         gtk_clipboard_clear(gtk_clipboard_get(GDK_SELECTION_PRIMARY));
+     }
+ }
++#endif
+ 
+ NS_IMPL_ISUPPORTS(nsClipboard, nsIClipboard)
+ 
+@@ -124,13 +126,13 @@ nsresult
+ nsClipboard::Init(void)
+ {
+     // create nsRetrievalContext
+-    if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+-        mContext = new nsRetrievalContextX11();
++    //if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
++    //    mContext = new nsRetrievalContextX11();
+ #if defined(MOZ_WAYLAND)
+-    } else {
++    //} else {
+         mContext = new nsRetrievalContextWayland();
+ #endif
+-    }
++    //}
+     return NS_OK;
+ }
+ 
+diff --git a/widget/gtk/nsDragService.cpp b/widget/gtk/nsDragService.cpp
+index 15b4eef..bc76399 100644
+--- a/widget/gtk/nsDragService.cpp
++++ b/widget/gtk/nsDragService.cpp
+@@ -22,12 +22,12 @@
+ #include "prthread.h"
+ #include <dlfcn.h>
+ #include <gtk/gtk.h>
+-#include <gdk/gdkx.h>
++//#include <gdk/gdkx.h>
+ #include "nsCRT.h"
+ #include "mozilla/BasicEvents.h"
+ #include "mozilla/Services.h"
+ 
+-#include "gfxXlibSurface.h"
++//#include "gfxXlibSurface.h"
+ #include "gfxContext.h"
+ #include "nsImageToPixbuf.h"
+ #include "nsPresContext.h"
+diff --git a/widget/gtk/nsGtkKeyUtils.cpp b/widget/gtk/nsGtkKeyUtils.cpp
+index ce55cf1..d4ca3db 100644
+--- a/widget/gtk/nsGtkKeyUtils.cpp
++++ b/widget/gtk/nsGtkKeyUtils.cpp
+@@ -12,11 +12,11 @@
+ #include <gdk/gdkkeysyms.h>
+ #include <algorithm>
+ #include <gdk/gdk.h>
+-#include <gdk/gdkx.h>
++//#include <gdk/gdkx.h>
+ #if (MOZ_WIDGET_GTK == 3)
+ #include <gdk/gdkkeysyms-compat.h>
+ #endif
+-#include <X11/XKBlib.h>
++//#include <X11/XKBlib.h>
+ #include "WidgetUtils.h"
+ #include "keysym2ucs.h"
+ #include "nsContentUtils.h"
+@@ -173,8 +173,8 @@ KeymapWrapper::KeymapWrapper() :
+     g_signal_connect(mGdkKeymap, "direction-changed",
+                      (GCallback)OnDirectionChanged, this);
+ 
+-    if (GDK_IS_X11_DISPLAY(gdk_display_get_default()))
+-        InitXKBExtension();
++    //if (GDK_IS_X11_DISPLAY(gdk_display_get_default()))
++    //    InitXKBExtension();
+ 
+     Init();
+ }
+@@ -194,10 +194,10 @@ KeymapWrapper::Init()
+     mModifierKeys.Clear();
+     memset(mModifierMasks, 0, sizeof(mModifierMasks));
+ 
+-    if (GDK_IS_X11_DISPLAY(gdk_display_get_default()))
+-        InitBySystemSettings();
++    //if (GDK_IS_X11_DISPLAY(gdk_display_get_default()))
++    //    InitBySystemSettings();
+ 
+-    gdk_window_add_filter(nullptr, FilterEvents, this);
++    //gdk_window_add_filter(nullptr, FilterEvents, this);
+ 
+     MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+         ("%p Init, CapsLock=0x%X, NumLock=0x%X, "
+@@ -215,233 +215,16 @@ KeymapWrapper::Init()
+ void
+ KeymapWrapper::InitXKBExtension()
+ {
+-    PodZero(&mKeyboardState);
+-
+-    int xkbMajorVer = XkbMajorVersion;
+-    int xkbMinorVer = XkbMinorVersion;
+-    if (!XkbLibraryVersion(&xkbMajorVer, &xkbMinorVer)) {
+-        MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+-            ("%p InitXKBExtension failed due to failure of "
+-             "XkbLibraryVersion()", this));
+-        return;
+-    }
+-
+-    Display* display =
+-        gdk_x11_display_get_xdisplay(gdk_display_get_default());
+-
+-    // XkbLibraryVersion() set xkbMajorVer and xkbMinorVer to that of the
+-    // library, which may be newer than what is required of the server in
+-    // XkbQueryExtension(), so these variables should be reset to
+-    // XkbMajorVersion and XkbMinorVersion before the XkbQueryExtension call.
+-    xkbMajorVer = XkbMajorVersion;
+-    xkbMinorVer = XkbMinorVersion;
+-    int opcode, baseErrorCode;
+-    if (!XkbQueryExtension(display, &opcode, &mXKBBaseEventCode, &baseErrorCode,
+-                           &xkbMajorVer, &xkbMinorVer)) {
+-        MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+-            ("%p InitXKBExtension failed due to failure of "
+-             "XkbQueryExtension(), display=0x%p", this, display));
+-        return;
+-    }
+-
+-    if (!XkbSelectEventDetails(display, XkbUseCoreKbd, XkbStateNotify,
+-                               XkbModifierStateMask, XkbModifierStateMask)) {
+-        MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+-            ("%p InitXKBExtension failed due to failure of "
+-             "XkbSelectEventDetails() for XModifierStateMask, display=0x%p",
+-                this, display));
+-        return;
+-    }
+-
+-    if (!XkbSelectEventDetails(display, XkbUseCoreKbd, XkbControlsNotify,
+-                               XkbPerKeyRepeatMask, XkbPerKeyRepeatMask)) {
+-        MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+-            ("%p InitXKBExtension failed due to failure of "
+-             "XkbSelectEventDetails() for XkbControlsNotify, display=0x%p",
+-             this, display));
+-        return;
+-    }
+-
+-    if (!XGetKeyboardControl(display, &mKeyboardState)) {
+-        MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+-            ("%p InitXKBExtension failed due to failure of "
+-             "XGetKeyboardControl(), display=0x%p",
+-             this, display));
+-        return;
+-    }
+-
+-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+-        ("%p InitXKBExtension, Succeeded", this));
+ }
+ 
+ void
+ KeymapWrapper::InitBySystemSettings()
+ {
+-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+-        ("%p InitBySystemSettings, mGdkKeymap=%p",
+-         this, mGdkKeymap));
+-
+-    Display* display =
+-        gdk_x11_display_get_xdisplay(gdk_display_get_default());
+-
+-    int min_keycode = 0;
+-    int max_keycode = 0;
+-    XDisplayKeycodes(display, &min_keycode, &max_keycode);
+-
+-    int keysyms_per_keycode = 0;
+-    KeySym* xkeymap = XGetKeyboardMapping(display, min_keycode,
+-                                          max_keycode - min_keycode + 1,
+-                                          &keysyms_per_keycode);
+-    if (!xkeymap) {
+-        MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+-            ("%p InitBySystemSettings, "
+-             "Failed due to null xkeymap", this));
+-        return;
+-    }
+-
+-    XModifierKeymap* xmodmap = XGetModifierMapping(display);
+-    if (!xmodmap) {
+-        MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+-            ("%p InitBySystemSettings, "
+-             "Failed due to null xmodmap", this));
+-        XFree(xkeymap);
+-        return;
+-    }
+-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+-        ("%p InitBySystemSettings, min_keycode=%d, "
+-         "max_keycode=%d, keysyms_per_keycode=%d, max_keypermod=%d",
+-         this, min_keycode, max_keycode, keysyms_per_keycode,
+-         xmodmap->max_keypermod));
+-
+-    // The modifiermap member of the XModifierKeymap structure contains 8 sets
+-    // of max_keypermod KeyCodes, one for each modifier in the order Shift,
+-    // Lock, Control, Mod1, Mod2, Mod3, Mod4, and Mod5.
+-    // Only nonzero KeyCodes have meaning in each set, and zero KeyCodes are
+-    // ignored.
+-
+-    // Note that two or more modifiers may use one modifier flag.  E.g.,
+-    // on Ubuntu 10.10, Alt and Meta share the Mod1 in default settings.
+-    // And also Super and Hyper share the Mod4. In such cases, we need to
+-    // decide which modifier flag means one of DOM modifiers.
+-
+-    // mod[0] is Modifier introduced by Mod1.
+-    Modifier mod[5];
+-    int32_t foundLevel[5];
+-    for (uint32_t i = 0; i < ArrayLength(mod); i++) {
+-        mod[i] = NOT_MODIFIER;
+-        foundLevel[i] = INT32_MAX;
+-    }
+-    const uint32_t map_size = 8 * xmodmap->max_keypermod;
+-    for (uint32_t i = 0; i < map_size; i++) {
+-        KeyCode keycode = xmodmap->modifiermap[i];
+-        MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+-            ("%p InitBySystemSettings, "
+-             "  i=%d, keycode=0x%08X",
+-             this, i, keycode));
+-        if (!keycode || keycode < min_keycode || keycode > max_keycode) {
+-            continue;
+-        }
+-
+-        ModifierKey* modifierKey = GetModifierKey(keycode);
+-        if (!modifierKey) {
+-            modifierKey = mModifierKeys.AppendElement(ModifierKey(keycode));
+-        }
+-
+-        const KeySym* syms =
+-            xkeymap + (keycode - min_keycode) * keysyms_per_keycode;
+-        const uint32_t bit = i / xmodmap->max_keypermod;
+-        modifierKey->mMask |= 1 << bit;
+-
+-        // We need to know the meaning of Mod1, Mod2, Mod3, Mod4 and Mod5.
+-        // Let's skip if current map is for others.
+-        if (bit < 3) {
+-            continue;
+-        }
+-
+-        const int32_t modIndex = bit - 3;
+-        for (int32_t j = 0; j < keysyms_per_keycode; j++) {
+-            Modifier modifier = GetModifierForGDKKeyval(syms[j]);
+-            MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+-                ("%p InitBySystemSettings, "
+-                 "    Mod%d, j=%d, syms[j]=%s(0x%X), modifier=%s",
+-                 this, modIndex + 1, j, gdk_keyval_name(syms[j]), syms[j],
+-                 GetModifierName(modifier)));
+-
+-            switch (modifier) {
+-                case NOT_MODIFIER:
+-                    // Don't overwrite the stored information with
+-                    // NOT_MODIFIER.
+-                    break;
+-                case CAPS_LOCK:
+-                case SHIFT:
+-                case CTRL:
+-                    // Ignore the modifiers defined in GDK spec. They shouldn't
+-                    // be mapped to Mod1-5 because they must not work on native
+-                    // GTK applications.
+-                    break;
+-                default:
+-                    // If new modifier is found in higher level than stored
+-                    // value, we don't need to overwrite it.
+-                    if (j > foundLevel[modIndex]) {
+-                        break;
+-                    }
+-                    // If new modifier is more important than stored value,
+-                    // we should overwrite it with new modifier.
+-                    if (j == foundLevel[modIndex]) {
+-                        mod[modIndex] = std::min(modifier, mod[modIndex]);
+-                        break;
+-                    }
+-                    foundLevel[modIndex] = j;
+-                    mod[modIndex] = modifier;
+-                    break;
+-            }
+-        }
+-    }
+-
+-    for (uint32_t i = 0; i < COUNT_OF_MODIFIER_INDEX; i++) {
+-        Modifier modifier;
+-        switch (i) {
+-            case INDEX_NUM_LOCK:
+-                modifier = NUM_LOCK;
+-                break;
+-            case INDEX_SCROLL_LOCK:
+-                modifier = SCROLL_LOCK;
+-                break;
+-            case INDEX_ALT:
+-                modifier = ALT;
+-                break;
+-            case INDEX_META:
+-                modifier = META;
+-                break;
+-            case INDEX_SUPER:
+-                modifier = SUPER;
+-                break;
+-            case INDEX_HYPER:
+-                modifier = HYPER;
+-                break;
+-            case INDEX_LEVEL3:
+-                modifier = LEVEL3;
+-                break;
+-            case INDEX_LEVEL5:
+-                modifier = LEVEL5;
+-                break;
+-            default:
+-                MOZ_CRASH("All indexes must be handled here");
+-        }
+-        for (uint32_t j = 0; j < ArrayLength(mod); j++) {
+-            if (modifier == mod[j]) {
+-                mModifierMasks[i] |= 1 << (j + 3);
+-            }
+-        }
+-    }
+-
+-    XFreeModifiermap(xmodmap);
+-    XFree(xkeymap);
+ }
+ 
+ KeymapWrapper::~KeymapWrapper()
+ {
+-    gdk_window_remove_filter(nullptr, FilterEvents, this);
++    //gdk_window_remove_filter(nullptr, FilterEvents, this);
+     g_signal_handlers_disconnect_by_func(mGdkKeymap,
+                                          FuncToGpointer(OnKeysChanged), this);
+     g_signal_handlers_disconnect_by_func(mGdkKeymap,
+@@ -451,77 +234,6 @@ KeymapWrapper::~KeymapWrapper()
+         ("%p Destructor", this));
+ }
+ 
+-/* static */ GdkFilterReturn
+-KeymapWrapper::FilterEvents(GdkXEvent* aXEvent,
+-                            GdkEvent* aGdkEvent,
+-                            gpointer aData)
+-{
+-    XEvent* xEvent = static_cast<XEvent*>(aXEvent);
+-    switch (xEvent->type) {
+-        case KeyPress: {
+-            // If the key doesn't support auto repeat, ignore the event because
+-            // even if such key (e.g., Shift) is pressed during auto repeat of
+-            // anoter key, it doesn't stop the auto repeat.
+-            KeymapWrapper* self = static_cast<KeymapWrapper*>(aData);
+-            if (!self->IsAutoRepeatableKey(xEvent->xkey.keycode)) {
+-                break;
+-            }
+-            if (sRepeatState == NOT_PRESSED) {
+-                sRepeatState = FIRST_PRESS;
+-            } else if (sLastRepeatableHardwareKeyCode == xEvent->xkey.keycode) {
+-                sRepeatState = REPEATING;
+-            } else {
+-                // If a different key is pressed while another key is pressed,
+-                // auto repeat system repeats only the last pressed key.
+-                // So, setting new keycode and setting repeat state as first key
+-                // press should work fine.
+-                sRepeatState = FIRST_PRESS;
+-            }
+-            sLastRepeatableHardwareKeyCode = xEvent->xkey.keycode;
+-            break;
+-        }
+-        case KeyRelease: {
+-            if (sLastRepeatableHardwareKeyCode != xEvent->xkey.keycode) {
+-                // This case means the key release event is caused by
+-                // a non-repeatable key such as Shift or a repeatable key that
+-                // was pressed before sLastRepeatableHardwareKeyCode was
+-                // pressed.
+-                break;
+-            }
+-            sRepeatState = NOT_PRESSED;
+-            break;
+-        }
+-        case FocusOut: {
+-            // At moving focus, we should reset keyboard repeat state.
+-            // Strictly, this causes incorrect behavior.  However, this
+-            // correctness must be enough for web applications.
+-            sRepeatState = NOT_PRESSED;
+-            break;
+-        }
+-        default: {
+-            KeymapWrapper* self = static_cast<KeymapWrapper*>(aData);
+-            if (xEvent->type != self->mXKBBaseEventCode) {
+-                break;
+-            }
+-            XkbEvent* xkbEvent = (XkbEvent*)xEvent;
+-            if (xkbEvent->any.xkb_type != XkbControlsNotify ||
+-                !(xkbEvent->ctrls.changed_ctrls & XkbPerKeyRepeatMask)) {
+-                break;
+-            }
+-            if (!XGetKeyboardControl(xkbEvent->any.display,
+-                                     &self->mKeyboardState)) {
+-                MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+-                    ("%p FilterEvents failed due to failure "
+-                     "of XGetKeyboardControl(), display=0x%p",
+-                     self, xkbEvent->any.display));
+-            }
+-            break;
+-        }
+-    }
+-
+-    return GDK_FILTER_CONTINUE;
+-}
+-
+ static void
+ ResetBidiKeyboard()
+ {
+@@ -920,23 +632,6 @@ KeymapWrapper::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
+     // key release events, the result isn't what we want.
+     guint modifierState = aGdkKeyEvent->state;
+     GdkDisplay* gdkDisplay = gdk_display_get_default();
+-    if (aGdkKeyEvent->is_modifier && GDK_IS_X11_DISPLAY(gdkDisplay)) {
+-        Display* display =
+-            gdk_x11_display_get_xdisplay(gdkDisplay);
+-        if (XEventsQueued(display, QueuedAfterReading)) {
+-            XEvent nextEvent;
+-            XPeekEvent(display, &nextEvent);
+-            if (nextEvent.type == keymapWrapper->mXKBBaseEventCode) {
+-                XkbEvent* XKBEvent = (XkbEvent*)&nextEvent;
+-                if (XKBEvent->any.xkb_type == XkbStateNotify) {
+-                    XkbStateNotifyEvent* stateNotifyEvent =
+-                        (XkbStateNotifyEvent*)XKBEvent;
+-                    modifierState &= ~0xFF;
+-                    modifierState |= stateNotifyEvent->lookup_mods;
+-                }
+-            }
+-        }
+-    }
+     InitInputEvent(aKeyEvent, modifierState);
+ 
+     switch (aGdkKeyEvent->keyval) {
+@@ -1176,11 +871,7 @@ KeymapWrapper::IsLatinGroup(guint8 aGroup)
+ bool
+ KeymapWrapper::IsAutoRepeatableKey(guint aHardwareKeyCode)
+ {
+-    uint8_t indexOfArray = aHardwareKeyCode / 8;
+-    MOZ_ASSERT(indexOfArray < ArrayLength(mKeyboardState.auto_repeats),
+-               "invalid index");
+-    char bitMask = 1 << (aHardwareKeyCode % 8);
+-    return (mKeyboardState.auto_repeats[indexOfArray] & bitMask) != 0;
++    return true;
+ }
+ 
+ /* static */ bool
+diff --git a/widget/gtk/nsGtkKeyUtils.h b/widget/gtk/nsGtkKeyUtils.h
+index 67528d8..f1ecd6b 100644
+--- a/widget/gtk/nsGtkKeyUtils.h
++++ b/widget/gtk/nsGtkKeyUtils.h
+@@ -12,7 +12,7 @@
+ #include "mozilla/EventForwards.h"
+ 
+ #include <gdk/gdk.h>
+-#include <X11/XKBlib.h>
++//#include <X11/XKBlib.h>
+ 
+ namespace mozilla {
+ namespace widget {
+@@ -223,14 +223,6 @@ protected:
+     int mXKBBaseEventCode;
+ 
+     /**
+-     * Only auto_repeats[] stores valid value.  If you need to use other
+-     * members, you need to listen notification events for them.
+-     * See a call of XkbSelectEventDetails() with XkbControlsNotify in
+-     * InitXKBExtension().
+-     */
+-    XKeyboardState mKeyboardState;
+-
+-    /**
+      * Pointer of the singleton instance.
+      */
+     static KeymapWrapper* sInstance;
+@@ -339,15 +331,6 @@ protected:
+     static uint32_t GetDOMKeyCodeFromKeyPairs(guint aGdkKeyval);
+ 
+     /**
+-     * FilterEvents() listens all events on all our windows.
+-     * Be careful, this may make damage to performance if you add expensive
+-     * code in this method.
+-     */
+-    static GdkFilterReturn FilterEvents(GdkXEvent* aXEvent,
+-                                        GdkEvent* aGdkEvent,
+-                                        gpointer aData);
+-
+-    /**
+      * See the document of WillDispatchKeyboardEvent().
+      */
+     void WillDispatchKeyboardEventInternal(WidgetKeyboardEvent& aKeyEvent,
+diff --git a/widget/gtk/nsScreenGtk.cpp b/widget/gtk/nsScreenGtk.cpp
+index 28e7f23..a8eb2be 100644
+--- a/widget/gtk/nsScreenGtk.cpp
++++ b/widget/gtk/nsScreenGtk.cpp
+@@ -8,7 +8,7 @@
+ #include "nsIWidget.h"
+ 
+ #include <gdk/gdk.h>
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include <gdk/gdkx.h>
+ #include <X11/Xatom.h>
+ #endif
+@@ -132,7 +132,7 @@ nsScreenGtk :: Init (GdkWindow *aRootWindow)
+ 
+   return;
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   // We need to account for the taskbar, etc in the available rect.
+   // See http://freedesktop.org/Standards/wm-spec/index.html#id2767771
+ 
+@@ -195,7 +195,7 @@ nsScreenGtk :: Init (GdkWindow *aRootWindow)
+ #endif
+ }
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ void
+ nsScreenGtk :: Init (XineramaScreenInfo *aScreenInfo)
+ {
+diff --git a/widget/gtk/nsScreenGtk.h b/widget/gtk/nsScreenGtk.h
+index d58ea4b..afe468f 100644
+--- a/widget/gtk/nsScreenGtk.h
++++ b/widget/gtk/nsScreenGtk.h
+@@ -9,7 +9,7 @@
+ #include "nsBaseScreen.h"
+ #include "nsRect.h"
+ #include "gdk/gdk.h"
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include <X11/Xlib.h>
+ 
+ // from Xinerama.h
+@@ -40,7 +40,7 @@ public:
+   NS_IMETHOD GetDefaultCSSScaleFactor(double* aScaleFactor) override;
+ 
+   void Init(GdkWindow *aRootWindow);
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   void Init(XineramaScreenInfo *aScreenInfo);
+ #endif /* MOZ_X11 */
+ 
+diff --git a/widget/gtk/nsScreenManagerGtk.cpp b/widget/gtk/nsScreenManagerGtk.cpp
+index 98166cc..4dfc0ee 100644
+--- a/widget/gtk/nsScreenManagerGtk.cpp
++++ b/widget/gtk/nsScreenManagerGtk.cpp
+@@ -13,7 +13,7 @@
+ 
+ #define SCREEN_MANAGER_LIBRARY_LOAD_FAILED ((PRLibrary*)1)
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include <gdk/gdkx.h>
+ // prototypes from Xinerama.h
+ typedef Bool (*_XnrmIsActive_fn)(Display *dpy);
+@@ -34,7 +34,7 @@ root_window_event_filter(GdkXEvent *aGdkXEvent, GdkEvent *aGdkEvent,
+                          gpointer aClosure)
+ {
+   nsScreenManagerGtk *manager = static_cast<nsScreenManagerGtk*>(aClosure);
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   XEvent *xevent = static_cast<XEvent*>(aGdkXEvent);
+ 
+   // See comments in nsScreenGtk::Init below.
+@@ -58,7 +58,6 @@ root_window_event_filter(GdkXEvent *aGdkXEvent, GdkEvent *aGdkEvent,
+ nsScreenManagerGtk :: nsScreenManagerGtk ( )
+   : mXineramalib(nullptr)
+   , mRootWindow(nullptr)
+-  , mNetWorkareaAtom(0)
+ {
+   // nothing else to do. I guess we could cache a bunch of information
+   // here, but we want to ask the device at runtime in case anything
+@@ -114,7 +113,7 @@ nsScreenManagerGtk :: EnsureInit()
+ 
+   g_signal_connect(gdk_screen_get_default(), "monitors-changed",
+                    G_CALLBACK(monitors_changed), this);
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   gdk_window_add_filter(mRootWindow, root_window_event_filter, this);
+   if (GDK_IS_X11_DISPLAY(gdk_display_get_default()))
+       mNetWorkareaAtom =
+@@ -127,7 +126,7 @@ nsScreenManagerGtk :: EnsureInit()
+ nsresult
+ nsScreenManagerGtk :: Init()
+ {
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   XineramaScreenInfo *screenInfo = nullptr;
+   int numScreens;
+ 
+@@ -170,7 +169,7 @@ nsScreenManagerGtk :: Init()
+     }
+ 
+     screen->Init(mRootWindow);
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   }
+   // If Xinerama is enabled and there's more than one screen, fill
+   // in the info for all of the screens.  If that's not the case
+diff --git a/widget/gtk/nsScreenManagerGtk.h b/widget/gtk/nsScreenManagerGtk.h
+index 9afb3bf..60c016d 100644
+--- a/widget/gtk/nsScreenManagerGtk.h
++++ b/widget/gtk/nsScreenManagerGtk.h
+@@ -12,7 +12,7 @@
+ #include "nsCOMArray.h"
+ #include "prlink.h"
+ #include "gdk/gdk.h"
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include <X11/Xlib.h>
+ #endif
+ 
+@@ -26,7 +26,7 @@ public:
+   NS_DECL_ISUPPORTS
+   NS_DECL_NSISCREENMANAGER
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   Atom NetWorkareaAtom() { return mNetWorkareaAtom; }
+ #endif
+   
+@@ -44,7 +44,7 @@ private:
+   PRLibrary *mXineramalib;
+ 
+   GdkWindow *mRootWindow;
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   Atom mNetWorkareaAtom;
+ #endif
+ };
+diff --git a/widget/gtk/nsWidgetFactory.cpp b/widget/gtk/nsWidgetFactory.cpp
+index 7e42743..553fd2e 100644
+--- a/widget/gtk/nsWidgetFactory.cpp
++++ b/widget/gtk/nsWidgetFactory.cpp
+@@ -17,11 +17,11 @@
+ #include "nsWindow.h"
+ #include "nsTransferable.h"
+ #include "nsHTMLFormatConverter.h"
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "nsClipboardHelper.h"
+ #include "nsClipboard.h"
+-#include "nsDragService.h"
+ #endif
++#include "nsDragService.h"
+ #if (MOZ_WIDGET_GTK == 3)
+ #include "nsApplicationChooser.h"
+ #endif
+@@ -44,10 +44,10 @@
+ #include "nsImageToPixbuf.h"
+ #include "nsPrintDialogGTK.h"
+ 
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+ #include "nsIdleServiceGTK.h"
+-#include "GfxInfoX11.h"
+ #endif
++#include "GfxInfoX11.h"
+ 
+ #include "nsNativeThemeGTK.h"
+ 
+@@ -70,12 +70,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildWindow)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIdleServiceGTK, nsIdleServiceGTK::GetInstance)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
+ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsClipboard, Init)
+-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
+ #endif
++NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerGtk)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageToPixbuf)
+@@ -202,11 +202,11 @@ NS_DEFINE_NAMED_CID(NS_APPLICATIONCHOOSER_CID);
+ #endif
+ NS_DEFINE_NAMED_CID(NS_SOUND_CID);
+ NS_DEFINE_NAMED_CID(NS_TRANSFERABLE_CID);
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ NS_DEFINE_NAMED_CID(NS_CLIPBOARD_CID);
+ NS_DEFINE_NAMED_CID(NS_CLIPBOARDHELPER_CID);
+-NS_DEFINE_NAMED_CID(NS_DRAGSERVICE_CID);
+ #endif
++NS_DEFINE_NAMED_CID(NS_DRAGSERVICE_CID);
+ NS_DEFINE_NAMED_CID(NS_HTMLFORMATCONVERTER_CID);
+ NS_DEFINE_NAMED_CID(NS_BIDIKEYBOARD_CID);
+ NS_DEFINE_NAMED_CID(NS_SCREENMANAGER_CID);
+@@ -219,10 +219,10 @@ NS_DEFINE_NAMED_CID(NS_DEVICE_CONTEXT_SPEC_CID);
+ NS_DEFINE_NAMED_CID(NS_PRINTDIALOGSERVICE_CID);
+ #endif
+ NS_DEFINE_NAMED_CID(NS_IMAGE_TO_PIXBUF_CID);
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+ NS_DEFINE_NAMED_CID(NS_IDLE_SERVICE_CID);
+-NS_DEFINE_NAMED_CID(NS_GFXINFO_CID);
+ #endif
++NS_DEFINE_NAMED_CID(NS_GFXINFO_CID);
+ 
+ 
+ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
+@@ -236,11 +236,11 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
+ #endif
+     { &kNS_SOUND_CID, false, nullptr, nsSoundConstructor, Module::MAIN_PROCESS_ONLY },
+     { &kNS_TRANSFERABLE_CID, false, nullptr, nsTransferableConstructor },
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     { &kNS_CLIPBOARD_CID, false, nullptr, nsClipboardConstructor, Module::MAIN_PROCESS_ONLY },
+     { &kNS_CLIPBOARDHELPER_CID, false, nullptr, nsClipboardHelperConstructor },
+-    { &kNS_DRAGSERVICE_CID, false, nullptr, nsDragServiceConstructor, Module::MAIN_PROCESS_ONLY },
+ #endif
++    { &kNS_DRAGSERVICE_CID, false, nullptr, nsDragServiceConstructor, Module::MAIN_PROCESS_ONLY },
+     { &kNS_HTMLFORMATCONVERTER_CID, false, nullptr, nsHTMLFormatConverterConstructor },
+     { &kNS_BIDIKEYBOARD_CID, false, nullptr, nsBidiKeyboardConstructor },
+     { &kNS_SCREENMANAGER_CID, false, nullptr, nsScreenManagerGtkConstructor,
+@@ -254,10 +254,10 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
+     { &kNS_PRINTDIALOGSERVICE_CID, false, nullptr, nsPrintDialogServiceGTKConstructor },
+ #endif
+     { &kNS_IMAGE_TO_PIXBUF_CID, false, nullptr, nsImageToPixbufConstructor },
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+     { &kNS_IDLE_SERVICE_CID, false, nullptr, nsIdleServiceGTKConstructor },
+-    { &kNS_GFXINFO_CID, false, nullptr, mozilla::widget::GfxInfoConstructor },
+ #endif
++    { &kNS_GFXINFO_CID, false, nullptr, mozilla::widget::GfxInfoConstructor },
+     { nullptr }
+ };
+ 
+@@ -272,11 +272,11 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
+ #endif
+     { "@mozilla.org/sound;1", &kNS_SOUND_CID, Module::MAIN_PROCESS_ONLY },
+     { "@mozilla.org/widget/transferable;1", &kNS_TRANSFERABLE_CID },
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     { "@mozilla.org/widget/clipboard;1", &kNS_CLIPBOARD_CID, Module::MAIN_PROCESS_ONLY },
+     { "@mozilla.org/widget/clipboardhelper;1", &kNS_CLIPBOARDHELPER_CID },
+-    { "@mozilla.org/widget/dragservice;1", &kNS_DRAGSERVICE_CID, Module::MAIN_PROCESS_ONLY },
+ #endif
++    { "@mozilla.org/widget/dragservice;1", &kNS_DRAGSERVICE_CID, Module::MAIN_PROCESS_ONLY },
+     { "@mozilla.org/widget/htmlformatconverter;1", &kNS_HTMLFORMATCONVERTER_CID },
+     { "@mozilla.org/widget/bidikeyboard;1", &kNS_BIDIKEYBOARD_CID,
+       Module::MAIN_PROCESS_ONLY },
+@@ -291,10 +291,10 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
+     { NS_PRINTDIALOGSERVICE_CONTRACTID, &kNS_PRINTDIALOGSERVICE_CID },
+ #endif
+     { "@mozilla.org/widget/image-to-gdk-pixbuf;1", &kNS_IMAGE_TO_PIXBUF_CID },
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+     { "@mozilla.org/widget/idleservice;1", &kNS_IDLE_SERVICE_CID },
+-    { "@mozilla.org/gfx/info;1", &kNS_GFXINFO_CID },
+ #endif
++    { "@mozilla.org/gfx/info;1", &kNS_GFXINFO_CID },
+     { nullptr }
+ };
+ 
+diff --git a/widget/gtk/nsWindow.cpp b/widget/gtk/nsWindow.cpp
+index 9942399..811b13f 100644
+--- a/widget/gtk/nsWindow.cpp
++++ b/widget/gtk/nsWindow.cpp
+@@ -41,11 +41,12 @@
+ #if (MOZ_WIDGET_GTK == 3)
+ #include <gtk/gtkx.h>
+ #endif
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include <gdk/gdkx.h>
+ #include <X11/Xatom.h>
+ #include <X11/extensions/XShm.h>
+ #include <X11/extensions/shape.h>
++#endif /* MOZ_X11 */
+ #if (MOZ_WIDGET_GTK == 3)
+ #include <gdk/gdkkeysyms-compat.h>
+ #endif
+@@ -53,7 +54,6 @@
+ #if (MOZ_WIDGET_GTK == 2)
+ #include "gtk2xtbin.h"
+ #endif
+-#endif /* MOZ_X11 */
+ #include <gdk/gdkkeysyms.h>
+ #if (MOZ_WIDGET_GTK == 2)
+ #include <gtk/gtkprivate.h>
+@@ -121,7 +121,7 @@ using namespace mozilla::widget;
+ #include "mozilla/layers/CompositorBridgeParent.h"
+ #include "mozilla/layers/CompositorThread.h"
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "X11CompositorWidget.h"
+ #include "gfxXlibSurface.h"
+ #include "WindowSurfaceX11Image.h"
+@@ -136,6 +136,7 @@ using namespace mozilla::widget;
+ #include "NativeKeyBindings.h"
+ 
+ #include <dlfcn.h>
++#include <sys/time.h>
+ 
+ #include "mozilla/layers/APZCTreeManager.h"
+ 
+@@ -243,7 +244,7 @@ static nsWindow* GetFirstNSWindowForGDKWindow (GdkWindow *aGdkWindow);
+ #ifdef __cplusplus
+ extern "C" {
+ #endif /* __cplusplus */
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ static GdkFilterReturn popup_take_focus_filter (GdkXEvent *gdk_xevent,
+                                                 GdkEvent *event,
+                                                 gpointer data);
+@@ -308,47 +309,20 @@ public:
+ 
+     guint32 GetCurrentTime() const
+     {
+-        return gdk_x11_get_server_time(mWindow);
++        return g_get_monotonic_time()/1000;
+     }
+ 
+     void GetTimeAsyncForPossibleBackwardsSkew(const TimeStamp& aNow)
+     {
+-        // Check for in-flight request
+-        if (!mAsyncUpdateStart.IsNull()) {
+-            return;
+-        }
+-        mAsyncUpdateStart = aNow;
+-
+-        Display* xDisplay = GDK_WINDOW_XDISPLAY(mWindow);
+-        Window xWindow = GDK_WINDOW_XID(mWindow);
+-        unsigned char c = 'a';
+-        Atom timeStampPropAtom = TimeStampPropAtom();
+-        XChangeProperty(xDisplay, xWindow, timeStampPropAtom,
+-                        timeStampPropAtom, 8, PropModeReplace, &c, 1);
+-        XFlush(xDisplay);
+     }
+ 
+     gboolean PropertyNotifyHandler(GtkWidget* aWidget,
+                                    GdkEventProperty* aEvent)
+     {
+-        if (aEvent->atom !=
+-            gdk_x11_xatom_to_atom(TimeStampPropAtom())) {
+-            return FALSE;
+-        }
+-
+-        guint32 eventTime = aEvent->time;
+-        TimeStamp lowerBound = mAsyncUpdateStart;
+-
+-        TimeConverter().CompensateForBackwardsSkew(eventTime, lowerBound);
+-        mAsyncUpdateStart = TimeStamp();
+-        return TRUE;
++        return FALSE;
+     }
+ 
+ private:
+-    static Atom TimeStampPropAtom() {
+-        return gdk_x11_get_xatom_by_name_for_display(
+-            gdk_display_get_default(), "GDK_TIMESTAMP_PROP");
+-    }
+ 
+     // This is safe because this class is stored as a member of mWindow and
+     // won't outlive it.
+@@ -440,7 +414,7 @@ nsWindow::nsWindow()
+     mHandleTouchEvent    = false;
+ #endif
+     mIsDragPopup         = false;
+-    mIsX11Display        = GDK_IS_X11_DISPLAY(gdk_display_get_default());
++    mIsX11Display        = false;
+ 
+     mContainer           = nullptr;
+     mGdkWindow           = nullptr;
+@@ -454,7 +428,7 @@ nsWindow::nsWindow()
+     mLastSizeMode        = nsSizeMode_Normal;
+     mSizeConstraints.mMaxSize = GetSafeWindowSize(mSizeConstraints.mMaxSize);
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     mOldFocusWindow      = 0;
+ 
+     mXDisplay = nullptr;
+@@ -734,7 +708,7 @@ nsWindow::Destroy()
+     // destroys the the gl context attached to it).
+     DestroyCompositor();
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     // Ensure any resources assigned to the window get cleaned up first
+     // to avoid double-freeing.
+     mSurfaceProvider.CleanupResources();
+@@ -1356,7 +1330,7 @@ SetUserTimeAndStartupIDForActivatedWindow(GtkWidget* aWindow)
+         return;
+     }
+ 
+-#if defined(MOZ_ENABLE_STARTUP_NOTIFICATION)
++#if defined(MOZ_ENABLE_STARTUP_NOTIFICATION_no)
+     // TODO - Implement for non-X11 Gtk backends (Bug 726479)
+     if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+         GdkWindow* gdkWindow = gtk_widget_get_window(aWindow);
+@@ -1405,14 +1379,7 @@ nsWindow::GetLastUserInputTime()
+     // drags, WM_DELETE_WINDOW delete events, but not usually mouse motion nor
+     // button and key releases.  Therefore use the most recent of
+     // gdk_x11_display_get_user_time and the last time that we have seen.
+-    guint32 timestamp =
+-            gdk_x11_display_get_user_time(gdk_display_get_default());
+-    if (sLastUserInputTime != GDK_CURRENT_TIME &&
+-        TimestampIsNewerThan(sLastUserInputTime, timestamp)) {
+-        return sLastUserInputTime;
+-    }
+-
+-    return timestamp;
++    return sLastUserInputTime;
+ }
+ 
+ NS_IMETHODIMP
+@@ -1555,41 +1522,7 @@ nsWindow::UpdateClientOffset()
+ {
+     PROFILER_LABEL("nsWindow", "UpdateClientOffset", js::ProfileEntry::Category::GRAPHICS);
+ 
+-    if (!mIsTopLevel || !mShell || !mGdkWindow || !mIsX11Display ||
+-        gtk_window_get_window_type(GTK_WINDOW(mShell)) == GTK_WINDOW_POPUP) {
+-        mClientOffset = nsIntPoint(0, 0);
+-        return;
+-    }
+-
+-    GdkAtom cardinal_atom = gdk_x11_xatom_to_atom(XA_CARDINAL);
+-
+-    GdkAtom type_returned;
+-    int format_returned;
+-    int length_returned;
+-    long *frame_extents;
+-
+-    if (!gdk_property_get(mGdkWindow,
+-                          gdk_atom_intern ("_NET_FRAME_EXTENTS", FALSE),
+-                          cardinal_atom,
+-                          0, // offset
+-                          4*4, // length
+-                          FALSE, // delete
+-                          &type_returned,
+-                          &format_returned,
+-                          &length_returned,
+-                          (guchar **) &frame_extents) ||
+-        length_returned/sizeof(glong) != 4) {
+-        mClientOffset = nsIntPoint(0, 0);
+-        return;
+-    }
+-
+-    // data returned is in the order left, right, top, bottom
+-    int32_t left = int32_t(frame_extents[0]);
+-    int32_t top = int32_t(frame_extents[2]);
+-
+-    g_free(frame_extents);
+-
+-    mClientOffset = nsIntPoint(left, top);
++    return;
+ }
+ 
+ LayoutDeviceIntPoint
+@@ -1751,7 +1684,7 @@ nsWindow::GetNativeData(uint32_t aDataType)
+ 
+     case NS_NATIVE_DISPLAY: {
+         GdkDisplay* gdkDisplay = gdk_display_get_default();
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+         if (GDK_IS_X11_DISPLAY(gdkDisplay)) {
+           return GDK_DISPLAY_XDISPLAY(gdkDisplay);
+         }
+@@ -1767,7 +1700,7 @@ nsWindow::GetNativeData(uint32_t aDataType)
+         return GetToplevelWidget();
+ 
+     case NS_NATIVE_SHAREABLE_WINDOW:
+-        return (void *) GDK_WINDOW_XID(gdk_window_get_toplevel(mGdkWindow));
++        return (void *) NULL;
+     case NS_NATIVE_PLUGIN_OBJECT_PTR:
+         return (void *) mPluginNativeWindow;
+     case NS_RAW_NATIVE_IME_CONTEXT: {
+@@ -1985,7 +1918,7 @@ nsWindow::HasPendingInputEvent()
+     // anything except expose events.  Reordering expose and others should be
+     // ok, hopefully.
+     bool haveEvent = false;
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     XEvent ev;
+     if (mIsX11Display) {
+         Display *display = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
+@@ -2020,7 +1953,7 @@ nsWindow::HasPendingInputEvent()
+ #define WANT_PAINT_FLASHING \
+ (debug_WantPaintFlashing() && CAPS_LOCK_IS_ON)
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ static void
+ gdk_window_flash(GdkWindow *    aGdkWindow,
+                  unsigned int   aTimes,
+@@ -2206,10 +2139,6 @@ nsWindow::OnExposeEvent(cairo_t *cr)
+       clientLayers->SetNeedsComposite(false);
+     }
+ 
+-    LOGDRAW(("sending expose event [%p] %p 0x%lx (rects follow):\n",
+-             (void *)this, (void *)mGdkWindow,
+-             gdk_x11_window_get_xid(mGdkWindow)));
+-
+     // Our bounds may have changed after calling WillPaintWindow.  Clip
+     // to the new bounds here.  The region is relative to this
+     // window.
+@@ -2531,7 +2460,7 @@ nsWindow::OnSizeAllocate(GtkAllocation *aAllocation)
+ 
+     mBounds.SizeTo(size);
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     // Notify the X11CompositorWidget of a ClientSizeChange
+     if (mCompositorWidgetDelegate) {
+       mCompositorWidgetDelegate->NotifyClientSizeChanged(GetClientSize());
+@@ -2645,7 +2574,7 @@ nsWindow::OnMotionNotifyEvent(GdkEventMotion *aEvent)
+     // XXXldb Why skip every other motion event when we have multiple,
+     // but not more than that?
+     bool synthEvent = false;
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     XEvent xevent;
+ 
+     if (mIsX11Display) {
+@@ -2681,7 +2610,7 @@ nsWindow::OnMotionNotifyEvent(GdkEventMotion *aEvent)
+ 
+     guint modifierState;
+     if (synthEvent) {
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+         event.mRefPoint.x = nscoord(xevent.xmotion.x);
+         event.mRefPoint.y = nscoord(xevent.xmotion.y);
+ 
+@@ -3746,7 +3675,7 @@ nsWindow::Create(nsIWidget* aParent,
+                 // WM_HINTS input field is set to False to tell the window
+                 // manager not to set input focus to this window ...
+                 gtk_window_set_accept_focus(GTK_WINDOW(mShell), FALSE);
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+                 // ... but when the window manager offers focus through
+                 // WM_TAKE_FOCUS, focus is requested on the parent window.
+                 gtk_widget_realize(mShell);
+@@ -4032,9 +3961,6 @@ nsWindow::Create(nsIWidget* aParent,
+ 
+     LOG(("nsWindow [%p]\n", (void *)this));
+     if (mShell) {
+-        LOG(("\tmShell %p mContainer %p mGdkWindow %p 0x%lx\n",
+-             mShell, mContainer, mGdkWindow,
+-             gdk_x11_window_get_xid(mGdkWindow)));
+     } else if (mContainer) {
+         LOG(("\tmContainer %p mGdkWindow %p\n", mContainer, mGdkWindow));
+     }
+@@ -4047,7 +3973,7 @@ nsWindow::Create(nsIWidget* aParent,
+     if (!mIsTopLevel)
+         Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, false);
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     if (mIsX11Display && mGdkWindow) {
+       mXDisplay = GDK_WINDOW_XDISPLAY(mGdkWindow);
+       mXWindow = gdk_x11_window_get_xid(mGdkWindow);
+@@ -4102,7 +4028,7 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
+ 
+   gdk_window_set_role(mGdkWindow, role);
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   if (mIsX11Display) {
+       XClassHint *class_hint = XAllocClassHint();
+       if (!class_hint) {
+@@ -4164,7 +4090,7 @@ nsWindow::NativeResize()
+         gdk_window_resize(mGdkWindow, size.width, size.height);
+     }
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     // Notify the X11CompositorWidget of a ClientSizeChange
+     // This is different than OnSizeAllocate to catch initial sizing
+     if (mCompositorWidgetDelegate) {
+@@ -4220,7 +4146,7 @@ nsWindow::NativeMoveResize()
+                                topLeft.x, topLeft.y, size.width, size.height);
+     }
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     // Notify the X11CompositorWidget of a ClientSizeChange
+     // This is different than OnSizeAllocate to catch initial sizing
+     if (mCompositorWidgetDelegate) {
+@@ -4610,7 +4536,7 @@ void UpdateMaskBits(gchar* aMaskBits, int32_t aMaskWidth, int32_t aMaskHeight,
+ void
+ nsWindow::ApplyTransparencyBitmap()
+ {
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     // We use X11 calls where possible, because GDK handles expose events
+     // for shaped windows in a way that's incompatible with us (Bug 635903).
+     // It doesn't occur when the shapes are set through X.
+@@ -4668,7 +4594,7 @@ nsWindow::ClearTransparencyBitmap()
+     if (!mShell)
+         return;
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     if (!mGdkWindow)
+         return;
+ 
+@@ -4842,31 +4768,7 @@ nsWindow::SetUrgencyHint(GtkWidget *top_window, bool state)
+ void *
+ nsWindow::SetupPluginPort(void)
+ {
+-    if (!mGdkWindow)
+-        return nullptr;
+-
+-    if (gdk_window_is_destroyed(mGdkWindow) == TRUE)
+-        return nullptr;
+-
+-    Window window = gdk_x11_window_get_xid(mGdkWindow);
+-
+-    // we have to flush the X queue here so that any plugins that
+-    // might be running on separate X connections will be able to use
+-    // this window in case it was just created
+-#ifdef MOZ_X11
+-    XWindowAttributes xattrs;
+-    Display *display = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
+-    XGetWindowAttributes(display, window, &xattrs);
+-    XSelectInput (display, window,
+-                  xattrs.your_event_mask |
+-                  SubstructureNotifyMask);
+-
+-    gdk_window_add_filter(mGdkWindow, plugin_window_filter_func, this);
+-
+-    XSync(display, False);
+-#endif /* MOZ_X11 */
+-
+-    return (void *)window;
++    return nullptr;
+ }
+ 
+ void
+@@ -4881,66 +4783,10 @@ nsWindow::SetPluginType(PluginType aPluginType)
+     mPluginType = aPluginType;
+ }
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ void
+ nsWindow::SetNonXEmbedPluginFocus()
+ {
+-    if (gPluginFocusWindow == this || mPluginType!=PluginType_NONXEMBED) {
+-        return;
+-    }
+-
+-    if (gPluginFocusWindow) {
+-        RefPtr<nsWindow> kungFuDeathGrip = gPluginFocusWindow;
+-        gPluginFocusWindow->LoseNonXEmbedPluginFocus();
+-    }
+-
+-    LOGFOCUS(("nsWindow::SetNonXEmbedPluginFocus\n"));
+-
+-    Window curFocusWindow;
+-    int focusState;
+-
+-    GdkDisplay *gdkDisplay = gdk_window_get_display(mGdkWindow);
+-    XGetInputFocus(gdk_x11_display_get_xdisplay(gdkDisplay),
+-                   &curFocusWindow,
+-                   &focusState);
+-
+-    LOGFOCUS(("\t curFocusWindow=%p\n", curFocusWindow));
+-
+-    GdkWindow* toplevel = gdk_window_get_toplevel(mGdkWindow);
+-#if (MOZ_WIDGET_GTK == 2)
+-    GdkWindow *gdkfocuswin = gdk_window_lookup(curFocusWindow);
+-#else
+-    GdkWindow *gdkfocuswin = gdk_x11_window_lookup_for_display(gdkDisplay,
+-                                                               curFocusWindow);
+-#endif
+-
+-    // lookup with the focus proxy window is supposed to get the
+-    // same GdkWindow as toplevel. If the current focused window
+-    // is not the focus proxy, we return without any change.
+-    if (gdkfocuswin != toplevel) {
+-        return;
+-    }
+-
+-    // switch the focus from the focus proxy to the plugin window
+-    mOldFocusWindow = curFocusWindow;
+-    XRaiseWindow(GDK_WINDOW_XDISPLAY(mGdkWindow),
+-                 gdk_x11_window_get_xid(mGdkWindow));
+-    gdk_error_trap_push();
+-    XSetInputFocus(GDK_WINDOW_XDISPLAY(mGdkWindow),
+-                   gdk_x11_window_get_xid(mGdkWindow),
+-                   RevertToNone,
+-                   CurrentTime);
+-    gdk_flush();
+-#if (MOZ_WIDGET_GTK == 3)
+-    gdk_error_trap_pop_ignored();
+-#else
+-    gdk_error_trap_pop();
+-#endif
+-    gPluginFocusWindow = this;
+-    gdk_window_add_filter(nullptr, plugin_client_message_filter, this);
+-
+-    LOGFOCUS(("nsWindow::SetNonXEmbedPluginFocus oldfocus=%p new=%p\n",
+-              mOldFocusWindow, gdk_x11_window_get_xid(mGdkWindow)));
+ }
+ 
+ void
+@@ -4948,44 +4794,6 @@ nsWindow::LoseNonXEmbedPluginFocus()
+ {
+     LOGFOCUS(("nsWindow::LoseNonXEmbedPluginFocus\n"));
+ 
+-    // This method is only for the nsWindow which contains a
+-    // Non-XEmbed plugin, for example, JAVA plugin.
+-    if (gPluginFocusWindow != this || mPluginType!=PluginType_NONXEMBED) {
+-        return;
+-    }
+-
+-    Window curFocusWindow;
+-    int focusState;
+-
+-    XGetInputFocus(GDK_WINDOW_XDISPLAY(mGdkWindow),
+-                   &curFocusWindow,
+-                   &focusState);
+-
+-    // we only switch focus between plugin window and focus proxy. If the
+-    // current focused window is not the plugin window, just removing the
+-    // event filter that blocks the WM_TAKE_FOCUS is enough. WM and gtk2
+-    // will take care of the focus later.
+-    if (!curFocusWindow ||
+-        curFocusWindow == gdk_x11_window_get_xid(mGdkWindow)) {
+-
+-        gdk_error_trap_push();
+-        XRaiseWindow(GDK_WINDOW_XDISPLAY(mGdkWindow),
+-                     mOldFocusWindow);
+-        XSetInputFocus(GDK_WINDOW_XDISPLAY(mGdkWindow),
+-                       mOldFocusWindow,
+-                       RevertToParent,
+-                       CurrentTime);
+-        gdk_flush();
+-#if (MOZ_WIDGET_GTK == 3)
+-        gdk_error_trap_pop_ignored();
+-#else
+-        gdk_error_trap_pop();
+-#endif
+-    }
+-    gPluginFocusWindow = nullptr;
+-    mOldFocusWindow = 0;
+-    gdk_window_remove_filter(nullptr, plugin_client_message_filter, this);
+-
+     LOGFOCUS(("nsWindow::LoseNonXEmbedPluginFocus end\n"));
+ }
+ #endif /* MOZ_X11 */
+@@ -5138,7 +4946,7 @@ nsWindow::PerformFullscreenTransition(FullscreenTransitionStage aStage,
+ static bool
+ IsFullscreenSupported(GtkWidget* aShell)
+ {
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     GdkScreen* screen = gtk_widget_get_screen(aShell);
+     GdkAtom atom = gdk_atom_intern("_NET_WM_STATE_FULLSCREEN", FALSE);
+     if (!gdk_x11_screen_supports_net_wm_hint(screen, atom)) {
+@@ -5217,7 +5025,7 @@ nsWindow::HideWindowChrome(bool aShouldHide)
+     // and flush the queue here so that we don't end up with a BadWindow
+     // error later when this happens (when the persistence timer fires
+     // and GetWindowPos is called)
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     XSync(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()) , False);
+ #else
+     gdk_flush ();
+@@ -5822,7 +5630,7 @@ focus_out_event_cb(GtkWidget *widget, GdkEventFocus *event)
+     return FALSE;
+ }
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ // For long-lived popup windows that don't really take focus themselves but
+ // may have elements that accept keyboard input when the parent window is
+ // active, focus is handled specially.  These windows include noautohide
+@@ -6004,7 +5812,7 @@ key_press_event_cb(GtkWidget *widget, GdkEventKey *event)
+ 
+     RefPtr<nsWindow> focusWindow = gFocusWindow ? gFocusWindow : window;
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     // Keyboard repeat can cause key press events to queue up when there are
+     // slow event handlers (bug 301029).  Throttle these events by removing
+     // consecutive pending duplicate KeyPress events to the same window.
+@@ -6632,14 +6440,13 @@ nsWindow::GetDrawTargetForGdkDrawable(GdkDrawable* aDrawable,
+ already_AddRefed<DrawTarget>
+ nsWindow::StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion, BufferMode* aBufferMode)
+ {
+-  return mSurfaceProvider.StartRemoteDrawingInRegion(aInvalidRegion, aBufferMode);
++  return NULL;
+ }
+ 
+ void
+ nsWindow::EndRemoteDrawingInRegion(DrawTarget* aDrawTarget,
+                                    LayoutDeviceIntRegion& aInvalidRegion)
+ {
+-  mSurfaceProvider.EndRemoteDrawingInRegion(aDrawTarget, aInvalidRegion);
+ }
+ 
+ // Code shared begin BeginMoveDrag and BeginResizeDrag
+diff --git a/widget/gtk/nsWindow.h b/widget/gtk/nsWindow.h
+index e571bed..aa0d03f 100644
+--- a/widget/gtk/nsWindow.h
++++ b/widget/gtk/nsWindow.h
+@@ -20,7 +20,7 @@
+ #include <gdk/gdk.h>
+ #include <gtk/gtk.h>
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include <gdk/gdkx.h>
+ #endif /* MOZ_X11 */
+ #ifdef MOZ_WAYLAND
+@@ -246,7 +246,7 @@ public:
+     };
+ 
+     void               SetPluginType(PluginType aPluginType);
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     void               SetNonXEmbedPluginFocus(void);
+     void               LoseNonXEmbedPluginFocus(void);
+ #endif /* MOZ_X11 */
+@@ -255,7 +255,7 @@ public:
+     void               OnDPIChanged(void);
+     void               OnCheckResize(void);
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     Window             mOldFocusWindow;
+ #endif /* MOZ_X11 */
+ 
+@@ -464,17 +464,17 @@ private:
+     nsRefPtrHashtable<nsPtrHashKey<GdkEventSequence>, mozilla::dom::Touch> mTouches;
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     Display*            mXDisplay;
+     Window              mXWindow;
+     Visual*             mXVisual;
+     int                 mXDepth;
++#endif
+ #ifdef MOZ_WAYLAND
+     wl_display*         mWaylandDisplay;
+     wl_surface*         mWaylandSurface;
+ #endif
+     mozilla::widget::WindowSurfaceProvider mSurfaceProvider;
+-#endif
+     // Upper bound on pending ConfigureNotify events to be dispatched to the
+     // window. See bug 1225044.
+     unsigned int mPendingConfigures;
+diff --git a/widget/moz.build b/widget/moz.build
+index f2f2f2e..2c341a5 100644
+--- a/widget/moz.build
++++ b/widget/moz.build
+@@ -210,10 +210,10 @@ if CONFIG['MOZ_X11']:
+     UNIFIED_SOURCES += [
+         'GfxInfoX11.cpp'
+     ]
+-    SOURCES += [
+-        'nsShmImage.cpp',
+-        'WindowSurfaceX11SHM.cpp',
+-    ]
++    #SOURCES += [
++    #    'nsShmImage.cpp',
++    #    'WindowSurfaceX11SHM.cpp',
++    #]
+ 
+ if toolkit in ('cocoa', 'windows'):
+     UNIFIED_SOURCES += [
+diff --git a/widget/nsShmImage.h b/widget/nsShmImage.h
+index dae09c6..adfe56f 100644
+--- a/widget/nsShmImage.h
++++ b/widget/nsShmImage.h
+@@ -7,7 +7,7 @@
+ #ifndef __mozilla_widget_nsShmImage_h__
+ #define __mozilla_widget_nsShmImage_h__
+ 
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+ #  define MOZ_HAVE_SHMIMAGE
+ #endif
+ 
+diff --git a/widget/x11/keysym2ucs.h b/widget/x11/keysym2ucs.h
+index d3c49a6..b3db16d 100644
+--- a/widget/x11/keysym2ucs.h
++++ b/widget/x11/keysym2ucs.h
+@@ -11,7 +11,7 @@
+  * (UCS, Unicode) values.
+  */
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include <X11/X.h>
+ #else
+ #define KeySym unsigned int

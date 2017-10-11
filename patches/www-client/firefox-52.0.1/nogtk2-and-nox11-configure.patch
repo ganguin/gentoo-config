@@ -1,0 +1,177 @@
+diff --git a/dom/plugins/ipc/PluginInstanceChild.cpp b/dom/plugins/ipc/PluginInstanceChild.cpp
+index af9db91..2640fdd 100644
+--- a/dom/plugins/ipc/PluginInstanceChild.cpp
++++ b/dom/plugins/ipc/PluginInstanceChild.cpp
+@@ -52,7 +52,9 @@ using namespace std;
+ #include <gtk/gtk.h>
+ #include <gdk/gdkx.h>
+ #include <gdk/gdk.h>
++#if (MOZ_WIDGET_GTK == 2)
+ #include "gtk2xtbin.h"
++#endif
+ 
+ #elif defined(OS_WIN)
+ 
+@@ -152,7 +154,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
+     , mAsyncInvalidateTask(0)
+     , mCachedWindowActor(nullptr)
+     , mCachedElementActor(nullptr)
+-#ifdef MOZ_WIDGET_GTK
++#if (MOZ_WIDGET_GTK == 2)
+     , mXEmbed(false)
+ #endif // MOZ_WIDGET_GTK
+ #if defined(OS_WIN)
+@@ -201,7 +203,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
+ #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
+     mWindow.ws_info = &mWsInfo;
+     memset(&mWsInfo, 0, sizeof(mWsInfo));
+-#ifdef MOZ_WIDGET_GTK
++#if (MOZ_WIDGET_GTK == 2)
+     mWsInfo.display = nullptr;
+     mXtClient.top_widget = nullptr;
+ #else
+@@ -607,7 +609,7 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
+             return NPERR_GENERIC_ERROR;
+ 
+         NPWindowType newWindowType = windowed ? NPWindowTypeWindow : NPWindowTypeDrawable;
+-#ifdef MOZ_WIDGET_GTK
++#if (MOZ_WIDGET_GTK == 2)
+         if (mWindow.type != newWindowType && mWsInfo.display) {
+            // plugin type has been changed but we already have a valid display
+            // so update it for the recent plugin mode
+@@ -1199,7 +1201,7 @@ bool PluginInstanceChild::CreateWindow(const NPRemoteWindow& aWindow)
+                       aWindow.x, aWindow.y,
+                       aWindow.width, aWindow.height));
+ 
+-#ifdef MOZ_WIDGET_GTK
++#if (MOZ_WIDGET_GTK == 2)
+     if (mXEmbed) {
+         mWindow.window = reinterpret_cast<void*>(aWindow.window);
+     }
+@@ -1228,7 +1230,7 @@ void PluginInstanceChild::DeleteWindow()
+   if (!mWindow.window)
+       return;
+ 
+-#ifdef MOZ_WIDGET_GTK
++#if (MOZ_WIDGET_GTK == 2)
+   if (mXtClient.top_widget) {     
+       xt_client_unrealize(&mXtClient);
+       xt_client_destroy(&mXtClient); 
+@@ -1310,7 +1312,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
+         CreateWindow(aWindow);
+     }
+ 
+-#ifdef MOZ_WIDGET_GTK
++#if (MOZ_WIDGET_GTK == 2)
+     if (mXEmbed && gtk_check_version(2,18,7) != nullptr) { // older
+         if (aWindow.type == NPWindowTypeWindow) {
+             GdkWindow* socket_window = gdk_window_lookup(static_cast<GdkNativeWindow>(aWindow.window));
+@@ -1438,7 +1440,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
+ bool
+ PluginInstanceChild::Initialize()
+ {
+-#ifdef MOZ_WIDGET_GTK
++#if (MOZ_WIDGET_GTK == 2)
+     NPError rv;
+ 
+     if (mWsInfo.display) {
+@@ -4649,7 +4651,7 @@ PluginInstanceChild::Destroy()
+ 
+     mPendingAsyncCalls.Clear();
+     
+-#ifdef MOZ_WIDGET_GTK
++#if (MOZ_WIDGET_GTK == 2)
+     if (mWindow.type == NPWindowTypeWindow && !mXEmbed) {
+       xt_client_xloop_destroy();
+     }
+diff --git a/dom/plugins/ipc/PluginInstanceChild.h b/dom/plugins/ipc/PluginInstanceChild.h
+index 0ad6e14..a3526ab 100644
+--- a/dom/plugins/ipc/PluginInstanceChild.h
++++ b/dom/plugins/ipc/PluginInstanceChild.h
+@@ -35,7 +35,7 @@
+ 
+ #include <map>
+ 
+-#ifdef MOZ_WIDGET_GTK
++#if (MOZ_WIDGET_GTK == 2)
+ #include "gtk2xtbin.h"
+ #endif
+ 
+@@ -458,7 +458,7 @@ private:
+ 
+ #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
+     NPSetWindowCallbackStruct mWsInfo;
+-#ifdef MOZ_WIDGET_GTK
++#if (MOZ_WIDGET_GTK == 2)
+     bool mXEmbed;
+     XtClient mXtClient;
+ #endif
+diff --git a/old-configure.in b/old-configure.in
+index 68433b0..ab65dc4 100644
+--- a/old-configure.in
++++ b/old-configure.in
+@@ -2522,8 +2522,6 @@ if test "$COMPILE_ENVIRONMENT"; then
+     AC_DEFINE_UNQUOTED(GLIB_VERSION_MIN_REQUIRED,$GLIB_VERSION_MIN_REQUIRED)
+     AC_DEFINE_UNQUOTED(GLIB_VERSION_MAX_ALLOWED,$GLIB_VERSION_MAX_ALLOWED)
+ 
+-    PKG_CHECK_MODULES(MOZ_GTK2, gtk+-2.0 >= $GTK2_VERSION gtk+-unix-print-2.0 glib-2.0 >= $GLIB_VERSION gobject-2.0 $GDK_PACKAGES)
+-    MOZ_GTK2_CFLAGS="-I${_topsrcdir}/widget/gtk/compat $MOZ_GTK2_CFLAGS"
+   fi
+   if test "$MOZ_WIDGET_TOOLKIT" = gtk2; then
+     TK_CFLAGS=$MOZ_GTK2_CFLAGS
+@@ -2897,7 +2895,7 @@ dnl enable once PeerConnection lands
+     AC_DEFINE(MOZ_SCTP)
+     AC_DEFINE(MOZ_SRTP)
+     if test -n "$MOZ_X11"; then
+-      MOZ_WEBRTC_X11_LIBS="-lXext -lXdamage -lXfixes -lXcomposite"
++      MOZ_WEBRTC_X11_LIBS=""
+     fi
+ else
+     MOZ_SYNTH_PICO=
+@@ -5154,13 +5152,8 @@ else
+     PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VERSION)
+     MOZ_CAIRO_CFLAGS="$CAIRO_CFLAGS"
+     MOZ_CAIRO_LIBS="$CAIRO_LIBS"
+     PKG_CHECK_MODULES(CAIRO_TEE, cairo-tee >= $CAIRO_VERSION)
+-    if test "$MOZ_X11"; then
+-        PKG_CHECK_MODULES(CAIRO_XRENDER, cairo-xlib-xrender >= $CAIRO_VERSION)
+-        MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $XLDFLAGS $CAIRO_XRENDER_LIBS"
+         MOZ_CAIRO_OSLIBS="$MOZ_CAIRO_LIBS"
+-        MOZ_CAIRO_CFLAGS="$MOZ_CAIRO_CFLAGS $CAIRO_XRENDER_CFLAGS"
+-    fi
+ fi
+ 
+ case "$MOZ_WIDGET_TOOLKIT" in
+@@ -5705,7 +5696,7 @@ if test -n "$COMPILE_ENVIRONMENT"; then
+ AC_CHECK_FUNCS(posix_fadvise posix_fallocate)
+ 
+ dnl Check for missing components
+-if test "$MOZ_X11"; then
++if test "$MOZ_X11_no"; then
+     dnl ====================================================
+     dnl = Check if X headers exist
+     dnl ====================================================
+diff --git a/widget/gtk/mozgtk/moz.build b/widget/gtk/mozgtk/moz.build
+index 528e2e9..d32ee82 100644
+--- a/widget/gtk/mozgtk/moz.build
++++ b/widget/gtk/mozgtk/moz.build
+@@ -4,4 +4,4 @@
+ # License, v. 2.0. If a copy of the MPL was not distributed with this
+ # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ 
+-DIRS += ['stub', 'gtk2', 'gtk3']
++DIRS += ['stub', 'gtk3']
+diff --git a/widget/moz.build b/widget/moz.build
+index 0919217..f2f2f2e 100644
+--- a/widget/moz.build
++++ b/widget/moz.build
+@@ -52,9 +52,6 @@ TEST_DIRS += ['tests']
+ if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+     DIRS += ['gtk']
+ 
+-    if CONFIG['MOZ_X11']:
+-        DIRS += ['gtkxtbin']
+-
+ XPIDL_SOURCES += [
+     'nsIAppShell.idl',
+     'nsIBaseWindow.idl',

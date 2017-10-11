@@ -1,0 +1,80 @@
+diff --git a/dom/plugins/ipc/PluginModuleChild.cpp b/dom/plugins/ipc/PluginModuleChild.cpp
+index 06379d2..282e4a3 100644
+--- a/dom/plugins/ipc/PluginModuleChild.cpp
++++ b/dom/plugins/ipc/PluginModuleChild.cpp
+@@ -543,6 +543,17 @@ PluginModuleChild::ExitedCxxStack()
+     mNestedLoopTimerId = 0;
+ }
+ 
++#else
++void
++PluginModuleChild::EnteredCxxStack()
++{
++}
++
++void
++PluginModuleChild::ExitedCxxStack()
++{
++}
++
+ #endif
+ 
+ bool
+diff --git a/gfx/thebes/gfxPlatformGtk.cpp b/gfx/thebes/gfxPlatformGtk.cpp
+index 840e35a..a5fcc77 100644
+--- a/gfx/thebes/gfxPlatformGtk.cpp
++++ b/gfx/thebes/gfxPlatformGtk.cpp
+@@ -878,6 +878,7 @@ gfxPlatformGtk::CreateHardwareVsyncSource()
+   }
+   return gfxPlatform::CreateHardwareVsyncSource();
+ }
++#endif
+ 
+ bool
+ gfxPlatformGtk::SupportsApzTouchInput() const
+@@ -886,4 +887,3 @@ gfxPlatformGtk::SupportsApzTouchInput() const
+   return value == 1 || value == 2;
+ }
+ 
+-#endif
+diff --git a/widget/InProcessCompositorWidget.cpp b/widget/InProcessCompositorWidget.cpp
+index 3531b7f..c01144f 100644
+--- a/widget/InProcessCompositorWidget.cpp
++++ b/widget/InProcessCompositorWidget.cpp
+@@ -10,7 +10,7 @@ namespace widget {
+ 
+ // Platforms with no OOP compositor process support use
+ // InProcessCompositorWidget by default.
+-#if !defined(MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING)
++#if !defined(MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING_no)
+ /* static */ RefPtr<CompositorWidget>
+ CompositorWidget::CreateLocal(const CompositorWidgetInitData& aInitData, nsIWidget* aWidget)
+ {
+diff --git a/widget/moz.build b/widget/moz.build
+index 51c8a09..275bf1b 100644
+--- a/widget/moz.build
++++ b/widget/moz.build
+@@ -205,15 +205,15 @@ if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:
+ 
+ EXPORTS.ipc = ['nsGUIEventIPC.h']
+ 
+-if CONFIG['MOZ_X11_no']:
++if CONFIG['MOZ_X11']:
+     DIRS += ['x11']
+-    UNIFIED_SOURCES += [
+-        'GfxInfoX11.cpp'
+-    ]
+-    SOURCES += [
+-        'nsShmImage.cpp',
+-        'WindowSurfaceX11SHM.cpp',
+-    ]
++    #UNIFIED_SOURCES += [
++    #    'GfxInfoX11.cpp'
++    #]
++    #SOURCES += [
++    #    'nsShmImage.cpp',
++    #    'WindowSurfaceX11SHM.cpp',
++    #]
+ 
+ if toolkit in ('cocoa', 'windows'):
+     UNIFIED_SOURCES += [

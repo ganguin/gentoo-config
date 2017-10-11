@@ -1,0 +1,11 @@
+--- /var/tmp/portage/www-client/chromium-56.0.2924.76/work/chromium-56.0.2924.76/chrome/browser/ui/views/frame/browser_frame.cc.orig	2017-01-28 20:26:10.127079320 +0100
++++ /var/tmp/portage/www-client/chromium-56.0.2924.76/work/chromium-56.0.2924.76/chrome/browser/ui/views/frame/browser_frame.cc	2017-01-28 20:16:05.684377126 +0100
+@@ -42,7 +42,7 @@
+ #endif
+ 
+ #if defined(OS_LINUX) && !defined(OS_CHROMEOS)
+-#include "ui/views/widget/desktop_aura/x11_desktop_handler.h"
++//#include "ui/views/widget/desktop_aura/x11_desktop_handler.h"
+ #endif
+ 
+ ////////////////////////////////////////////////////////////////////////////////

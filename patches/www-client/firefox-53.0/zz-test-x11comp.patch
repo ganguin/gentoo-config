@@ -1,0 +1,185 @@
+diff --git a/widget/gtk/CompositorWidgetParent.h b/widget/gtk/CompositorWidgetParent.h
+index 4f70cb3..90ddb70 100644
+--- a/widget/gtk/CompositorWidgetParent.h
++++ b/widget/gtk/CompositorWidgetParent.h
+@@ -6,15 +6,15 @@
+ #ifndef widget_gtk_CompositorWidgetParent_h
+ #define widget_gtk_CompositorWidgetParent_h
+ 
+-//#include "X11CompositorWidget.h"
++#include "X11CompositorWidget.h"
+ #include "mozilla/widget/PCompositorWidgetParent.h"
+ 
+ namespace mozilla {
+ namespace widget {
+ 
+ class CompositorWidgetParent final
+- : public PCompositorWidgetParent//,
+-   //public X11CompositorWidget
++ : public PCompositorWidgetParent,
++   public X11CompositorWidget
+ {
+ public:
+   explicit CompositorWidgetParent(const CompositorWidgetInitData& aInitData,
+diff --git a/widget/gtk/WindowSurfaceProvider.h b/widget/gtk/WindowSurfaceProvider.h
+index 73b2303..7b69e4f 100644
+--- a/widget/gtk/WindowSurfaceProvider.h
++++ b/widget/gtk/WindowSurfaceProvider.h
+@@ -12,7 +12,7 @@
+ #include "mozilla/gfx/2D.h"
+ #include "Units.h"
+ 
+-#include <X11/Xlib.h> // for Window, Display, Visual, etc.
++//#include <X11/Xlib.h> // for Window, Display, Visual, etc.
+ 
+ namespace mozilla {
+ namespace widget {
+@@ -33,11 +33,11 @@ public:
+    * own the Display, Window, etc, and they must continue to exist
+    * while WindowSurfaceProvider is used.
+    */
+-  void Initialize(
+-      Display* aDisplay,
+-      Window aWindow,
+-      Visual* aVisual,
+-      int aDepth);
++//  void Initialize(
++//      Display* aDisplay,
++//      Window aWindow,
++//      Visual* aVisual,
++//      int aDepth);
+ 
+   /**
+    * Releases any surfaces created by this provider.
+@@ -55,10 +55,10 @@ public:
+ private:
+   UniquePtr<WindowSurface> CreateWindowSurface();
+ 
+-  Display*  mXDisplay;
+-  Window    mXWindow;
+-  Visual*   mXVisual;
+-  int       mXDepth;
++//  Display*  mXDisplay;
++//  Window    mXWindow;
++//  Visual*   mXVisual;
++//  int       mXDepth;
+ 
+   UniquePtr<WindowSurface> mWindowSurface;
+ };
+diff --git a/widget/gtk/X11CompositorWidget.h b/widget/gtk/X11CompositorWidget.h
+index a4d5763..9d09476 100644
+--- a/widget/gtk/X11CompositorWidget.h
++++ b/widget/gtk/X11CompositorWidget.h
+@@ -50,8 +50,8 @@ public:
+   X11CompositorWidget* AsX11() override { return this; }
+   CompositorWidgetDelegate* AsDelegate() override { return this; }
+ 
+-  Display* XDisplay() const { return mXDisplay; }
+-  Window XWindow() const { return mXWindow; }
++  //Display* XDisplay() const { return mXDisplay; }
++  //Window XWindow() const { return mXWindow; }
+ 
+ protected:
+   nsWindow* mWidget;
+@@ -59,8 +59,8 @@ protected:
+ private:
+   LayoutDeviceIntSize mClientSize;
+ 
+-  Display* mXDisplay;
+-  Window   mXWindow;
++  //Display* mXDisplay;
++  //Window   mXWindow;
+   WindowSurfaceProvider mProvider;
+ };
+ 
+diff --git a/widget/gtk/X11CompositorWidget.cpp b/widget/gtk/X11CompositorWidget.cpp
+index 864f821..41cedd9 100644
+--- a/widget/gtk/X11CompositorWidget.cpp
++++ b/widget/gtk/X11CompositorWidget.cpp
+@@ -15,34 +15,34 @@ namespace mozilla {
+ namespace widget {
+ 
+ X11CompositorWidget::X11CompositorWidget(const CompositorWidgetInitData& aInitData,
+-                                         const CompositorOptions& aOptions,
++                                         const layers::CompositorOptions& aOptions,
+                                          nsWindow* aWindow)
+       : CompositorWidget(aOptions)
+       , mWidget(aWindow)
+ {
+   // If we have a nsWindow, then grab the already existing display connection
+   // If we don't, then use the init data to connect to the display
+-  if (aWindow) {
+-    mXDisplay = aWindow->XDisplay();
+-  } else {
+-    mXDisplay = XOpenDisplay(aInitData.XDisplayString().get());
+-  }
+-  mXWindow = (Window)aInitData.XWindow();
++  //if (aWindow) {
++  //  mXDisplay = aWindow->XDisplay();
++  //} else {
++  //  mXDisplay = XOpenDisplay(aInitData.XDisplayString().get());
++  //}
++  //mXWindow = (Window)aInitData.XWindow();
+ 
+   // Grab the window's visual and depth
+-  XWindowAttributes windowAttrs;
+-  XGetWindowAttributes(mXDisplay, mXWindow, &windowAttrs);
++  //XWindowAttributes windowAttrs;
++  //XGetWindowAttributes(mXDisplay, mXWindow, &windowAttrs);
+ 
+-  Visual*   visual = windowAttrs.visual;
+-  int       depth = windowAttrs.depth;
++  //Visual*   visual = windowAttrs.visual;
++  //int       depth = windowAttrs.depth;
+ 
+   // Initialize the window surface provider
+-  mProvider.Initialize(
+-    mXDisplay,
+-    mXWindow,
+-    visual,
+-    depth
+-    );
++  //mProvider.Initialize(
++  //  mXDisplay,
++  //  mXWindow,
++  //  visual,
++  //  depth
++  //  );
+ 
+   mClientSize = aInitData.InitialClientSize();
+ }
+@@ -52,10 +52,10 @@ X11CompositorWidget::~X11CompositorWidget()
+   mProvider.CleanupResources();
+ 
+   // If we created our own display connection, we need to destroy it
+-  if (!mWidget && mXDisplay) {
+-    XCloseDisplay(mXDisplay);
+-    mXDisplay = nullptr;
+-  }
++  //if (!mWidget && mXDisplay) {
++  //  XCloseDisplay(mXDisplay);
++  //  mXDisplay = nullptr;
++  //}
+ }
+ 
+ already_AddRefed<gfx::DrawTarget>
+diff --git a/widget/gtk/moz.build b/widget/gtk/moz.build
+index 1a2c11c..299e4d8 100644
+--- a/widget/gtk/moz.build
++++ b/widget/gtk/moz.build
+@@ -49,13 +49,13 @@ if CONFIG['MOZ_X11']:
+         'CompositorWidgetParent.cpp',
+         #'InProcessX11CompositorWidget.cpp',
+         #'nsIdleServiceGTK.cpp',
+-        #'X11CompositorWidget.cpp',
++        'X11CompositorWidget.cpp',
+     ]
+     EXPORTS.mozilla.widget += [
+         'CompositorWidgetChild.h',
+         'CompositorWidgetParent.h',
+         #'InProcessX11CompositorWidget.h',
+-        #'X11CompositorWidget.h',
++        'X11CompositorWidget.h',
+     ]
+ 
+ if CONFIG['NS_PRINTING']:

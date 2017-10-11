@@ -1,0 +1,153 @@
+diff --git a/js/src/jsapi.cpp b/js/src/jsapi.cpp
+index 7ba4ea6..a31567c 100644
+--- a/js/src/jsapi.cpp
++++ b/js/src/jsapi.cpp
+@@ -3985,7 +3985,7 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
+     AutoIdVector props(cx);
+     JSIdArray *ida;
+     if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, &props) || !VectorToIdArray(cx, props, &ida))
+-        return false;
++        return NULL;
+     for (size_t n = 0; n < size_t(ida->length); ++n)
+         JS_ASSERT(js_CheckForStringIndex(ida->vector[n]) == ida->vector[n]);
+     return ida;
+diff --git a/js/src/jsfun.cpp b/js/src/jsfun.cpp
+index d9dd529..3dec9b7 100644
+--- a/js/src/jsfun.cpp
++++ b/js/src/jsfun.cpp
+@@ -2051,7 +2051,7 @@ fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent)
+ 
+     JSString *str = JS_DecompileFunction(cx, fun, indent);
+     if (!str)
+-        return false;
++        return NULL;
+ 
+     if (!indent)
+         cx->compartment->toSourceCache.put(fun, str);
+@@ -2657,7 +2657,7 @@ LookupInterpretedFunctionPrototype(JSContext *cx, JSObject *funobj)
+     const Shape *shape = funobj->nativeLookup(id);
+     if (!shape) {
+         if (!ResolveInterpretedFunctionPrototype(cx, funobj))
+-            return false;
++            return NULL;
+         shape = funobj->nativeLookup(id);
+     }
+     JS_ASSERT(!shape->configurable());
+diff --git a/js/src/jsiter.cpp b/js/src/jsiter.cpp
+index 876dc83..5fe3c52 100644
+--- a/js/src/jsiter.cpp
++++ b/js/src/jsiter.cpp
+@@ -425,7 +425,7 @@ NewIteratorObject(JSContext *cx, uintN flags)
+          */
+         JSObject *obj = js_NewGCObject(cx, FINALIZE_OBJECT0);
+         if (!obj)
+-            return false;
++            return NULL;
+         obj->init(cx, &js_IteratorClass, NULL, NULL, NULL, false);
+         obj->setMap(cx->compartment->emptyEnumeratorShape);
+         return obj;
+diff --git a/js/src/jsparse.cpp b/js/src/jsparse.cpp
+index c735970..b9cc2aa 100644
+--- a/js/src/jsparse.cpp
++++ b/js/src/jsparse.cpp
+@@ -3352,7 +3352,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
+     if (!outertc->inFunction() && bodyLevel && funAtom && !lambda && outertc->compiling()) {
+         JS_ASSERT(pn->pn_cookie.isFree());
+         if (!DefineGlobal(pn, outertc->asCodeGenerator(), funAtom))
+-            return false;
++            return NULL;
+     }
+ 
+     pn->pn_blockid = outertc->blockid();
+diff --git a/js/src/jsstr.cpp b/js/src/jsstr.cpp
+index 96cefb9..266ffaf 100644
+--- a/js/src/jsstr.cpp
++++ b/js/src/jsstr.cpp
+@@ -1734,7 +1734,7 @@ class RegExpGuard
+         if (flat) {
+             patstr = flattenPattern(cx, fm.patstr);
+             if (!patstr)
+-                return false;
++                return NULL;
+         } else {
+             patstr = fm.patstr;
+         }
+@@ -3408,7 +3408,7 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
+                                  UndefinedValue(), NULL, NULL,
+                                  JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED, 0, 0,
+                                  NULL)) {
+-        return JS_FALSE;
++        return NULL;
+     }
+ 
+     return proto;
+diff --git a/js/src/jstypedarray.cpp b/js/src/jstypedarray.cpp
+index 8975fb1..64e5e3f 100644
+--- a/js/src/jstypedarray.cpp
++++ b/js/src/jstypedarray.cpp
+@@ -1334,7 +1334,7 @@ class TypedArrayTemplate
+         if (size != 0 && count >= INT32_MAX / size) {
+             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                  JSMSG_NEED_DIET, "size and count");
+-            return false;
++            return NULL;
+         }
+ 
+         int32 bytelen = size * count;
+@@ -1668,7 +1668,7 @@ TypedArrayConstruct(JSContext *cx, jsint atype, uintN argc, Value *argv)
+ 
+       default:
+         JS_NOT_REACHED("shouldn't have gotten here");
+-        return false;
++        return NULL;
+     }
+ }
+ 
+diff --git a/js/src/jsxml.cpp b/js/src/jsxml.cpp
+index 7fa3bc1..71bcc54 100644
+--- a/js/src/jsxml.cpp
++++ b/js/src/jsxml.cpp
+@@ -282,7 +282,7 @@ NewXMLNamespace(JSContext *cx, JSLinearString *prefix, JSLinearString *uri, JSBo
+ 
+     obj = NewBuiltinClassInstanceXML(cx, &js_NamespaceClass);
+     if (!obj)
+-        return JS_FALSE;
++        return NULL;
+     JS_ASSERT(JSVAL_IS_VOID(obj->getNamePrefixVal()));
+     JS_ASSERT(JSVAL_IS_VOID(obj->getNameURIVal()));
+     JS_ASSERT(JSVAL_IS_VOID(obj->getNamespaceDeclared()));
+@@ -431,7 +431,7 @@ ConvertQNameToString(JSContext *cx, JSObject *obj)
+         size_t length = str->length();
+         jschar *chars = (jschar *) cx->malloc((length + 2) * sizeof(jschar));
+         if (!chars)
+-            return JS_FALSE;
++            return NULL;
+         *chars = '@';
+         const jschar *strChars = str->getChars(cx);
+         if (!strChars) {
+diff --git a/js/src/methodjit/InvokeHelpers.cpp b/js/src/methodjit/InvokeHelpers.cpp
+index 59ac8c6..d017c2a 100644
+--- a/js/src/methodjit/InvokeHelpers.cpp
++++ b/js/src/methodjit/InvokeHelpers.cpp
+@@ -728,7 +728,7 @@ AtSafePoint(JSContext *cx)
+ {
+     JSStackFrame *fp = cx->fp();
+     if (fp->hasImacropc())
+-        return false;
++        return NULL;
+ 
+     JSScript *script = fp->script();
+     return script->maybeNativeCodeForPC(fp->isConstructing(), cx->regs->pc);
+diff --git a/js/src/nanojit/NativeX64.cpp b/js/src/nanojit/NativeX64.cpp
+index 39fd4e0..eba4110 100644
+--- a/js/src/nanojit/NativeX64.cpp
++++ b/js/src/nanojit/NativeX64.cpp
+@@ -1899,7 +1899,7 @@ namespace nanojit
+          }
+     }
+ 
+-    static const AVMPLUS_ALIGN16(int64_t) negateMask[] = {0x8000000000000000LL,0};
++    static const AVMPLUS_ALIGN16(uint64_t) negateMask[] = {0x8000000000000000LL,0};
+ 
+     void Assembler::asm_fneg(LIns *ins) {
+         Register rr, ra;

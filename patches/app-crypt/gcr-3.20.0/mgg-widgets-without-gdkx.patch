@@ -1,0 +1,179 @@
+diff --git a/configure.ac b/configure.ac
+index c360234..990b575 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -116,7 +116,7 @@ AC_ARG_WITH(gtk, [
+ AM_CONDITIONAL(WITH_GTK, test "$with_gtk" != "no")
+ 
+ if test "x$with_gtk" != "xno"; then
+-	PKG_CHECK_MODULES(GTK, gtk+-3.0 >= $GTK_REQ gtk+-x11-3.0 >= $GTK_REQ)
++	PKG_CHECK_MODULES(GTK, gtk+-3.0 >= $GTK_REQ)
+ 	AC_SUBST(GTK_CFLAGS)
+ 	AC_SUBST(GTK_LIBS)
+ fi
+diff --git a/ui/gcr-prompter-tool.c b/ui/gcr-prompter-tool.c
+index 0a22238..d32b76a 100644
+--- a/ui/gcr-prompter-tool.c
++++ b/ui/gcr-prompter-tool.c
+@@ -27,7 +27,7 @@
+ 
+ #include <glib/gi18n.h>
+ #include <gtk/gtk.h>
+-#include <gdk/gdkx.h>
++//#include <gdk/gdkx.h>
+ #include <pango/pango.h>
+ 
+ #include <locale.h>
+diff --git a/configure b/configure
+index 0ed3262..87ed57c 100755
+--- a/configure
++++ b/configure
+@@ -15851,12 +15851,12 @@ if test -n "$GTK_CFLAGS"; then
+     pkg_cv_GTK_CFLAGS="$GTK_CFLAGS"
+  elif test -n "$PKG_CONFIG"; then
+     if test -n "$PKG_CONFIG" && \
+-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"gtk+-3.0 >= \$GTK_REQ gtk+-x11-3.0 >= \$GTK_REQ\""; } >&5
+-  ($PKG_CONFIG --exists --print-errors "gtk+-3.0 >= $GTK_REQ gtk+-x11-3.0 >= $GTK_REQ") 2>&5
++    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"gtk+-3.0 >= \$GTK_REQ\""; } >&5
++  ($PKG_CONFIG --exists --print-errors "gtk+-3.0 >= $GTK_REQ") 2>&5
+   ac_status=$?
+   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+   test $ac_status = 0; }; then
+-  pkg_cv_GTK_CFLAGS=`$PKG_CONFIG --cflags "gtk+-3.0 >= $GTK_REQ gtk+-x11-3.0 >= $GTK_REQ" 2>/dev/null`
++  pkg_cv_GTK_CFLAGS=`$PKG_CONFIG --cflags "gtk+-3.0 >= $GTK_REQ" 2>/dev/null`
+ 		      test "x$?" != "x0" && pkg_failed=yes
+ else
+   pkg_failed=yes
+@@ -15868,12 +15868,12 @@ if test -n "$GTK_LIBS"; then
+     pkg_cv_GTK_LIBS="$GTK_LIBS"
+  elif test -n "$PKG_CONFIG"; then
+     if test -n "$PKG_CONFIG" && \
+-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"gtk+-3.0 >= \$GTK_REQ gtk+-x11-3.0 >= \$GTK_REQ\""; } >&5
+-  ($PKG_CONFIG --exists --print-errors "gtk+-3.0 >= $GTK_REQ gtk+-x11-3.0 >= $GTK_REQ") 2>&5
++    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"gtk+-3.0 >= \$GTK_REQ\""; } >&5
++  ($PKG_CONFIG --exists --print-errors "gtk+-3.0 >= $GTK_REQ") 2>&5
+   ac_status=$?
+   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+   test $ac_status = 0; }; then
+-  pkg_cv_GTK_LIBS=`$PKG_CONFIG --libs "gtk+-3.0 >= $GTK_REQ gtk+-x11-3.0 >= $GTK_REQ" 2>/dev/null`
++  pkg_cv_GTK_LIBS=`$PKG_CONFIG --libs "gtk+-3.0 >= $GTK_REQ" 2>/dev/null`
+ 		      test "x$?" != "x0" && pkg_failed=yes
+ else
+   pkg_failed=yes
+@@ -15894,14 +15894,14 @@ else
+         _pkg_short_errors_supported=no
+ fi
+         if test $_pkg_short_errors_supported = yes; then
+-	        GTK_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "gtk+-3.0 >= $GTK_REQ gtk+-x11-3.0 >= $GTK_REQ" 2>&1`
++	        GTK_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "gtk+-3.0 >= $GTK_REQ" 2>&1`
+         else
+-	        GTK_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "gtk+-3.0 >= $GTK_REQ gtk+-x11-3.0 >= $GTK_REQ" 2>&1`
++	        GTK_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "gtk+-3.0 >= $GTK_REQ" 2>&1`
+         fi
+ 	# Put the nasty error message in config.log where it belongs
+ 	echo "$GTK_PKG_ERRORS" >&5
+ 
+-	as_fn_error $? "Package requirements (gtk+-3.0 >= $GTK_REQ gtk+-x11-3.0 >= $GTK_REQ) were not met:
++	as_fn_error $? "Package requirements (gtk+-3.0 >= $GTK_REQ) were not met:
+ 
+ $GTK_PKG_ERRORS
+ 
+diff --git a/ui/gcr-prompt-dialog.c b/ui/gcr-prompt-dialog.c
+index 48088d7..4bb3349 100644
+--- a/ui/gcr-prompt-dialog.c
++++ b/ui/gcr-prompt-dialog.c
+@@ -27,7 +27,7 @@
+ #include "gcr-secure-entry-buffer.h"
+ 
+ #include <gtk/gtk.h>
+-#include <gdk/gdkx.h>
++//#include <gdk/gdkx.h>
+ #include <glib/gi18n.h>
+ 
+ /**
+@@ -126,38 +126,7 @@ G_DEFINE_TYPE_WITH_CODE (GcrPromptDialog, gcr_prompt_dialog, GTK_TYPE_DIALOG,
+ static void
+ update_transient_for (GcrPromptDialog *self)
+ {
+-	GdkDisplay *display;
+-	GdkWindow *transient_for;
+-	GdkWindow *window;
+-	gint64 handle;
+-	gchar *end;
+-
+-	if (self->pv->caller_window == NULL || g_str_equal (self->pv->caller_window, "")) {
+-		gtk_window_set_modal (GTK_WINDOW (self), FALSE);
+-		return;
+-	}
+-
+-	window = gtk_widget_get_window (GTK_WIDGET (self));
+-	if (window == NULL)
+-		return;
+-
+-	handle = g_ascii_strtoll (self->pv->caller_window, &end, 10);
+-	if (!end || *end != '\0') {
+-		g_warning ("couldn't parse caller-window property: %s", self->pv->caller_window);
+-		return;
+-	}
+-
+-	display = gtk_widget_get_display (GTK_WIDGET (self));
+-	transient_for = gdk_x11_window_foreign_new_for_display (display, (Window)handle);
+-	if (transient_for == NULL) {
+-		g_warning ("caller-window property doesn't represent a window on current display: %s",
+-		           self->pv->caller_window);
+-	} else {
+-		gdk_window_set_transient_for (window, transient_for);
+-		g_object_unref (transient_for);
+-	}
+-
+-	gtk_window_set_modal (GTK_WINDOW (self), TRUE);
++	gtk_window_set_modal (GTK_WINDOW (self), FALSE);
+ }
+ 
+ static void
+--- a/ui/frob-system-prompt.c.orig	2016-07-29 15:03:49.756546759 +0200
++++ b/ui/frob-system-prompt.c	2016-07-29 15:02:32.472543072 +0200
+@@ -26,7 +26,7 @@
+ #include "egg/egg-testing.h"
+ 
+ #include <gtk/gtk.h>
+-#include <gdk/gdkx.h>
++//#include <gdk/gdkx.h>
+ 
+ #include <unistd.h>
+ #include <string.h>
+@@ -54,10 +54,6 @@
+ 	gcr_prompt_set_message (GCR_PROMPT (prompt), "This is the message");
+ 	gcr_prompt_set_description (GCR_PROMPT (prompt), "This is the description");
+ 
+-	caller_id = g_strdup_printf ("%lu", (gulong)GDK_WINDOW_XID (gtk_widget_get_window (parent)));
+-	gcr_prompt_set_caller_window (GCR_PROMPT (prompt), caller_id);
+-	g_free (caller_id);
+-
+ 	password = gcr_prompt_password_run (GCR_PROMPT (prompt), NULL, &error);
+ 	if (error != NULL) {
+ 		g_warning ("couldn't prompt for password: %s", error->message);
+--- a/ui/frob-prompt.c.orig	2016-07-29 15:03:59.440547221 +0200
++++ b/ui/frob-prompt.c	2016-07-29 15:01:12.736539268 +0200
+@@ -25,7 +25,7 @@
+ #include "gcr/gcr-base.h"
+ 
+ #include <gtk/gtk.h>
+-#include <gdk/gdkx.h>
++//#include <gdk/gdkx.h>
+ 
+ #include <err.h>
+ 
+@@ -77,12 +77,6 @@
+ 	if (error != NULL)
+ 		errx (1, "couldn't create prompt: %s", error->message);
+ 
+-	if (parent) {
+-		caller_id = g_strdup_printf ("%lu", (gulong)GDK_WINDOW_XID (gtk_widget_get_window (parent)));
+-		gcr_prompt_set_caller_window (GCR_PROMPT (prompt), caller_id);
+-		g_free (caller_id);
+-	}
+-
+ 	loop = g_main_loop_new (NULL, FALSE);
+ 	groups = g_key_file_get_groups (file, NULL);
+ 	for (i = 0; cont && groups[i] != NULL; i++) {

@@ -1,0 +1,1197 @@
+diff --git a/dom/ipc/ContentChild.cpp b/dom/ipc/ContentChild.cpp
+index da3e88e..a86138e 100644
+--- a/dom/ipc/ContentChild.cpp
++++ b/dom/ipc/ContentChild.cpp
+@@ -161,7 +161,7 @@
+ #include "mozilla/widget/AudioSession.h"
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "mozilla/X11Util.h"
+ #endif
+ 
+@@ -564,7 +564,7 @@ ContentChild::Init(MessageLoop* aIOLoop,
+   }
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   // Do this after initializing GDK, or GDK will install its own handler.
+   XRE_InstallX11ErrorHandler();
+ #endif
+@@ -591,7 +591,7 @@ ContentChild::Init(MessageLoop* aIOLoop,
+   GetIPCChannel()->SetChannelFlags(MessageChannel::REQUIRE_A11Y_REENTRY);
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   // Send the parent our X socket to act as a proxy reference for our X
+   // resources.
+   int xSocketFd = ConnectionNumber(DefaultXDisplay());
+diff --git a/dom/plugins/base/npapi.h b/dom/plugins/base/npapi.h
+index ebc53a8..fabf6fd 100644
+--- a/dom/plugins/base/npapi.h
++++ b/dom/plugins/base/npapi.h
+@@ -43,7 +43,7 @@
+ 
+ #if defined(XP_UNIX)
+ #include <stdio.h>
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+ #include <X11/Xlib.h>
+ #include <X11/Xutil.h>
+ #include "X11UndefineNone.h"
+@@ -243,7 +243,7 @@ typedef struct
+ typedef struct
+ {
+   int32_t      type;
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+   Display*     display;
+   Visual*      visual;
+   Colormap     colormap;
+@@ -539,7 +539,7 @@ typedef struct _NPEvent
+   uintptr_t wParam;
+   uintptr_t lParam;
+ } NPEvent;
+-#elif defined(XP_UNIX) && defined(MOZ_X11)
++#elif defined(XP_UNIX) && defined(MOZ_X11_no)
+ typedef XEvent NPEvent;
+ #else
+ typedef void*  NPEvent;
+@@ -553,7 +553,7 @@ typedef RgnHandle NPQDRegion;
+ typedef CGPathRef NPCGRegion;
+ #elif defined(XP_WIN)
+ typedef HRGN NPRegion;
+-#elif defined(XP_UNIX) && defined(MOZ_X11)
++#elif defined(XP_UNIX) && defined(MOZ_X11_no)
+ typedef Region NPRegion;
+ #elif defined(XP_SYMBIAN)
+ typedef QRegion* NPRegion;
+diff --git a/dom/plugins/base/nsPluginInstanceOwner.h b/dom/plugins/base/nsPluginInstanceOwner.h
+index 589bcb0..66609b4 100644
+--- a/dom/plugins/base/nsPluginInstanceOwner.h
++++ b/dom/plugins/base/nsPluginInstanceOwner.h
+@@ -45,7 +45,7 @@ class PuppetWidget;
+ 
+ using mozilla::widget::PuppetWidget;
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "gfxXlibNativeRenderer.h"
+ #endif
+ 
+@@ -214,7 +214,7 @@ public:
+     return mPluginWindow->type == NPWindowTypeDrawable &&
+     (MatchPluginName("Shockwave Flash") ||
+      MatchPluginName("Test Plug-in"));
+-#elif defined(MOZ_X11) || defined(XP_MACOSX)
++#elif defined(MOZ_X11_no) || defined(XP_MACOSX)
+     return true;
+ #else
+     return false;
+@@ -393,7 +393,7 @@ private:
+ 
+   int mLastMouseDownButtonType;
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   class Renderer : public gfxXlibNativeRenderer
+   {
+   public:
+diff --git a/dom/plugins/ipc/NPEventUnix.h b/dom/plugins/ipc/NPEventUnix.h
+index 4cc9a54..fe0e295 100644
+--- a/dom/plugins/ipc/NPEventUnix.h
++++ b/dom/plugins/ipc/NPEventUnix.h
+@@ -9,7 +9,7 @@
+ 
+ #include "npapi.h"
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "mozilla/X11Util.h"
+ #endif
+ 
+@@ -61,7 +61,7 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>     // synonym for XEvent
+             return false;
+         }
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+         SetXDisplay(aResult->event);
+ #endif
+         return true;
+@@ -73,7 +73,7 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>     // synonym for XEvent
+         aLog->append(L"(XEvent)");
+     }
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ private:
+     static void SetXDisplay(XEvent& ev)
+     {
+diff --git a/dom/plugins/ipc/PluginMessageUtils.h b/dom/plugins/ipc/PluginMessageUtils.h
+index 25343d1..96e7392 100644
+--- a/dom/plugins/ipc/PluginMessageUtils.h
++++ b/dom/plugins/ipc/PluginMessageUtils.h
+@@ -89,7 +89,7 @@ struct NPRemoteWindow
+   uint32_t height;
+   NPRect clipRect;
+   NPWindowType type;
+-#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
++#if defined(MOZ_X11_no) && defined(XP_UNIX) && !defined(XP_MACOSX)
+   VisualID visualID;
+   Colormap colormap;
+ #endif /* XP_UNIX */
+@@ -104,6 +104,8 @@ typedef HWND NativeWindowHandle;
+ typedef XID NativeWindowHandle;
+ #elif defined(XP_DARWIN) || defined(ANDROID)
+ typedef intptr_t NativeWindowHandle; // never actually used, will always be 0
++#elif defined(XP_UNIX)
++typedef intptr_t NativeWindowHandle;
+ #else
+ #error Need NativeWindowHandle for this platform
+ #endif
+@@ -342,7 +344,7 @@ struct ParamTraits<mozilla::plugins::NPRemoteWindow>
+     WriteParam(aMsg, aParam.height);
+     WriteParam(aMsg, aParam.clipRect);
+     WriteParam(aMsg, aParam.type);
+-#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
++#if defined(MOZ_X11_no) && defined(XP_UNIX) && !defined(XP_MACOSX)
+     aMsg->WriteULong(aParam.visualID);
+     aMsg->WriteULong(aParam.colormap);
+ #endif
+@@ -367,7 +369,7 @@ struct ParamTraits<mozilla::plugins::NPRemoteWindow>
+           ReadParam(aMsg, aIter, &type)))
+       return false;
+ 
+-#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
++#if defined(MOZ_X11_no) && defined(XP_UNIX) && !defined(XP_MACOSX)
+     unsigned long visualID;
+     unsigned long colormap;
+     if (!(aMsg->ReadULong(aIter, &visualID) &&
+@@ -388,7 +390,7 @@ struct ParamTraits<mozilla::plugins::NPRemoteWindow>
+     aResult->height = height;
+     aResult->clipRect = clipRect;
+     aResult->type = type;
+-#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
++#if defined(MOZ_X11_no) && defined(XP_UNIX) && !defined(XP_MACOSX)
+     aResult->visualID = visualID;
+     aResult->colormap = colormap;
+ #endif
+diff --git a/dom/plugins/ipc/PluginModuleChild.h b/dom/plugins/ipc/PluginModuleChild.h
+index 25f4a09..cd6ff3a 100644
+--- a/dom/plugins/ipc/PluginModuleChild.h
++++ b/dom/plugins/ipc/PluginModuleChild.h
+@@ -11,6 +11,7 @@
+ 
+ #include <string>
+ #include <vector>
++#include <glib.h>
+ 
+ #include "base/basictypes.h"
+ 
+diff --git a/gfx/angle/include/EGL/eglplatform.h b/gfx/angle/include/EGL/eglplatform.h
+index 6d550da..2099e0d 100755
+--- a/gfx/angle/include/EGL/eglplatform.h
++++ b/gfx/angle/include/EGL/eglplatform.h
+@@ -105,6 +105,13 @@ typedef intptr_t EGLNativeDisplayType;
+ typedef intptr_t EGLNativeWindowType;
+ typedef intptr_t EGLNativePixmapType;
+ 
++//#elif defined(MESA_EGL_NO_X11_HEADERS)
++#elif defined(__unix__)
++
++typedef void            *EGLNativeDisplayType;
++typedef khronos_uintptr_t EGLNativePixmapType;
++typedef khronos_uintptr_t EGLNativeWindowType;
++
+ #elif defined(__unix__)
+ 
+ /* X11 (tentative)  */
+diff --git a/gfx/gl/GLContextProvider.h b/gfx/gl/GLContextProvider.h
+index 6e096c1..b6ea9b7 100644
+--- a/gfx/gl/GLContextProvider.h
++++ b/gfx/gl/GLContextProvider.h
+@@ -41,18 +41,20 @@ namespace gl {
+   #define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderCGL
+ #endif
+ 
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+   #define GL_CONTEXT_PROVIDER_NAME GLContextProviderGLX
+   #include "GLContextProviderImpl.h"
+   #undef GL_CONTEXT_PROVIDER_NAME
+   #define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderGLX
+ #endif
+ 
+-#define GL_CONTEXT_PROVIDER_NAME GLContextProviderEGL
+-#include "GLContextProviderImpl.h"
+-#undef GL_CONTEXT_PROVIDER_NAME
+-#ifndef GL_CONTEXT_PROVIDER_DEFAULT
+-  #define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderEGL
++#ifndef MOZ_GL_PROVIDER
++  #define GL_CONTEXT_PROVIDER_NAME GLContextProviderEGL
++  #include "GLContextProviderImpl.h"
++  #undef GL_CONTEXT_PROVIDER_NAME
++  #ifndef GL_CONTEXT_PROVIDER_DEFAULT
++    #define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderEGL
++  #endif
+ #endif
+ 
+ #if defined(MOZ_WIDGET_UIKIT)
+diff --git a/gfx/gl/GLContextProviderEGL.cpp b/gfx/gl/GLContextProviderEGL.cpp
+index 8ef607e..bbd5ccf 100644
+--- a/gfx/gl/GLContextProviderEGL.cpp
++++ b/gfx/gl/GLContextProviderEGL.cpp
+@@ -3,7 +3,7 @@
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
+-#if defined(MOZ_WIDGET_GTK)
++#if defined(MOZ_WIDGET_GTK_no)
+     #include <gdk/gdkx.h>
+     // we're using default display for now
+     #define GET_NATIVE_WINDOW(aWidget) ((EGLNativeWindowType)GDK_WINDOW_XID((GdkWindow*)aWidget->GetNativeData(NS_NATIVE_WINDOW)))
+diff --git a/gfx/gl/GLLibraryEGL.h b/gfx/gl/GLLibraryEGL.h
+index fa6ea74..1cbabff 100644
+--- a/gfx/gl/GLLibraryEGL.h
++++ b/gfx/gl/GLLibraryEGL.h
+@@ -5,7 +5,7 @@
+ #ifndef GLLIBRARYEGL_H_
+ #define GLLIBRARYEGL_H_
+ 
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+ #include "mozilla/X11Util.h"
+ #endif
+ 
+@@ -46,7 +46,7 @@
+     #endif
+ #endif
+ 
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+ #define EGL_DEFAULT_DISPLAY  ((EGLNativeDisplayType)mozilla::DefaultXDisplay())
+ #else
+ #define EGL_DEFAULT_DISPLAY  ((EGLNativeDisplayType)0)
+diff --git a/gfx/gl/moz.build b/gfx/gl/moz.build
+index 95c52a4..1d93962 100644
+--- a/gfx/gl/moz.build
++++ b/gfx/gl/moz.build
+@@ -13,10 +13,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'uikit':
+     gl_provider = 'EAGL'
+ elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+-    if CONFIG['MOZ_EGL_XRENDER_COMPOSITE']:
+-        gl_provider = 'EGL'
+-    else:
+-        gl_provider = 'GLX'
++    gl_provider = 'EGL'
+ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+     gl_provider = 'EGL'
+ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+diff --git a/gfx/ipc/GPUProcessManager.cpp b/gfx/ipc/GPUProcessManager.cpp
+index a8467d3..c82f154 100644
+--- a/gfx/ipc/GPUProcessManager.cpp
++++ b/gfx/ipc/GPUProcessManager.cpp
+@@ -16,7 +16,7 @@
+ #include "mozilla/layers/LayerTreeOwnerTracker.h"
+ #include "mozilla/layers/RemoteCompositorSession.h"
+ #include "mozilla/widget/PlatformWidgetTypes.h"
+-#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
++#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING_no
+ # include "mozilla/widget/CompositorWidgetChild.h"
+ #endif
+ #include "nsBaseWidget.h"
+@@ -344,7 +344,7 @@ GPUProcessManager::CreateRemoteSession(nsBaseWidget* aWidget,
+                                        bool aUseExternalSurfaceSize,
+                                        const gfx::IntSize& aSurfaceSize)
+ {
+-#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
++#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING_no
+   ipc::Endpoint<PCompositorBridgeParent> parentPipe;
+   ipc::Endpoint<PCompositorBridgeChild> childPipe;
+ 
+diff --git a/gfx/layers/client/TextureClient.cpp b/gfx/layers/client/TextureClient.cpp
+index 986b986..ba3924a 100644
+--- a/gfx/layers/client/TextureClient.cpp
++++ b/gfx/layers/client/TextureClient.cpp
+@@ -42,7 +42,7 @@
+ #include "gfxWindowsPlatform.h"
+ #include "gfx2DGlue.h"
+ #endif
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "mozilla/layers/TextureClientX11.h"
+ #ifdef GL_PROVIDER_GLX
+ #include "GLXLibrary.h"
+@@ -1074,7 +1074,7 @@ TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
+   }
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   gfxSurfaceType type =
+     gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType();
+ 
+diff --git a/gfx/layers/composite/TextureHost.cpp b/gfx/layers/composite/TextureHost.cpp
+index a2f6eea..1047060 100644
+--- a/gfx/layers/composite/TextureHost.cpp
++++ b/gfx/layers/composite/TextureHost.cpp
+@@ -39,7 +39,7 @@
+ #include "../opengl/GrallocTextureHost.h"
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "mozilla/layers/X11TextureHost.h"
+ #endif
+ 
+@@ -247,7 +247,7 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
+         return CreateTextureHostBasic(aDesc, aDeallocator, aFlags);
+       }
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     case SurfaceDescriptor::TSurfaceDescriptorX11: {
+       const SurfaceDescriptorX11& desc = aDesc.get_SurfaceDescriptorX11();
+       return MakeAndAddRef<X11TextureHost>(aFlags, desc);
+diff --git a/gfx/layers/ipc/CompositorBridgeChild.cpp b/gfx/layers/ipc/CompositorBridgeChild.cpp
+index c4cf7f6..3b209b0 100644
+--- a/gfx/layers/ipc/CompositorBridgeChild.cpp
++++ b/gfx/layers/ipc/CompositorBridgeChild.cpp
+@@ -38,7 +38,7 @@
+ #include "WinUtils.h"
+ #endif
+ #include "mozilla/widget/CompositorWidget.h"
+-#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
++#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING_no
+ # include "mozilla/widget/CompositorWidgetChild.h"
+ #endif
+ #include "VsyncSource.h"
+@@ -1008,7 +1008,7 @@ CompositorBridgeChild::AllocPCompositorWidgetChild(const CompositorWidgetInitDat
+ bool
+ CompositorBridgeChild::DeallocPCompositorWidgetChild(PCompositorWidgetChild* aActor)
+ {
+-#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
++#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING_no
+   delete aActor;
+   return true;
+ #else
+diff --git a/gfx/layers/ipc/CompositorBridgeParent.cpp b/gfx/layers/ipc/CompositorBridgeParent.cpp
+index cf936a0..fcc546d 100644
+--- a/gfx/layers/ipc/CompositorBridgeParent.cpp
++++ b/gfx/layers/ipc/CompositorBridgeParent.cpp
+@@ -52,7 +52,7 @@
+ #include "mozilla/media/MediaSystemResourceService.h" // for MediaSystemResourceService
+ #include "mozilla/mozalloc.h"           // for operator new, etc
+ #include "mozilla/Telemetry.h"
+-#ifdef MOZ_WIDGET_GTK
++#ifdef MOZ_WIDGET_GTK_no
+ #include "basic/X11BasicCompositor.h" // for X11BasicCompositor
+ #endif
+ #include "nsCOMPtr.h"                   // for already_AddRefed
+@@ -81,7 +81,7 @@
+ #include "VsyncSource.h"
+ #endif
+ #include "mozilla/widget/CompositorWidget.h"
+-#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
++#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING_no
+ # include "mozilla/widget/CompositorWidgetParent.h"
+ #endif
+ 
+@@ -1721,7 +1721,7 @@ CompositorBridgeParent::NewCompositor(const nsTArray<LayersBackend>& aBackendHin
+                                      mEGLSurfaceSize.height,
+                                      mUseExternalSurfaceSize);
+     } else if (aBackendHints[i] == LayersBackend::LAYERS_BASIC) {
+-#ifdef MOZ_WIDGET_GTK
++#ifdef MOZ_WIDGET_GTK_no
+       if (gfxVars::UseXRender()) {
+         compositor = new X11BasicCompositor(this, mWidget);
+       } else
+@@ -2008,7 +2008,7 @@ CompositorBridgeParent::PostInsertVsyncProfilerMarker(TimeStamp aVsyncTimestamp)
+ widget::PCompositorWidgetParent*
+ CompositorBridgeParent::AllocPCompositorWidgetParent(const CompositorWidgetInitData& aInitData)
+ {
+-#if defined(MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING)
++#if defined(MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING_no)
+   if (mWidget) {
+     // Should not create two widgets on the same compositor.
+     return nullptr;
+@@ -2029,7 +2029,7 @@ CompositorBridgeParent::AllocPCompositorWidgetParent(const CompositorWidgetInitD
+ bool
+ CompositorBridgeParent::DeallocPCompositorWidgetParent(PCompositorWidgetParent* aActor)
+ {
+-#if defined(MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING)
++#if defined(MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING_no)
+   static_cast<widget::CompositorWidgetParent*>(aActor)->Release();
+   return true;
+ #else
+diff --git a/gfx/layers/ipc/ShadowLayerUtils.h b/gfx/layers/ipc/ShadowLayerUtils.h
+index c93a6b9..8569cbf 100644
+--- a/gfx/layers/ipc/ShadowLayerUtils.h
++++ b/gfx/layers/ipc/ShadowLayerUtils.h
+@@ -17,7 +17,7 @@
+ #define MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS
+ #endif
+ 
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+ # include "mozilla/layers/ShadowLayerUtilsX11.h"
+ #else
+ namespace mozilla { namespace layers {
+diff --git a/gfx/layers/moz.build b/gfx/layers/moz.build
+index 22490e8..85a39ff 100644
+--- a/gfx/layers/moz.build
++++ b/gfx/layers/moz.build
+@@ -201,7 +201,7 @@ EXPORTS.mozilla.layers += [
+     'TransactionIdAllocator.h',
+ ]
+ 
+-if CONFIG['MOZ_X11']:
++if CONFIG['MOZ_X11_no']:
+     EXPORTS.mozilla.layers += [
+         'basic/TextureClientX11.h',
+         'basic/X11TextureSourceBasic.h',
+diff --git a/gfx/src/moz.build b/gfx/src/moz.build
+index 3678eee..dc48470 100644
+--- a/gfx/src/moz.build
++++ b/gfx/src/moz.build
+@@ -51,7 +51,7 @@ EXPORTS.mozilla.gfx += [
+     'TiledRegion.h',
+ ]
+ 
+-if CONFIG['MOZ_X11']:
++if CONFIG['MOZ_X11_no']:
+     EXPORTS.mozilla += ['X11Util.h']
+     SOURCES += [
+         'X11Util.cpp',
+diff --git a/gfx/thebes/gfxASurface.cpp b/gfx/thebes/gfxASurface.cpp
+index 31f1855..fdbac19 100644
+--- a/gfx/thebes/gfxASurface.cpp
++++ b/gfx/thebes/gfxASurface.cpp
+@@ -29,7 +29,7 @@
+ #include "gfxWindowsSurface.h"
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "gfxXlibSurface.h"
+ #endif
+ 
+@@ -160,7 +160,7 @@ gfxASurface::Wrap (cairo_surface_t *csurf, const IntSize& aSize)
+         result = new gfxWindowsSurface(csurf);
+     }
+ #endif
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     else if (stype == CAIRO_SURFACE_TYPE_XLIB) {
+         result = new gfxXlibSurface(csurf);
+     }
+diff --git a/gfx/thebes/gfxDrawable.cpp b/gfx/thebes/gfxDrawable.cpp
+index 7d25cc9..aebf654 100644
+--- a/gfx/thebes/gfxDrawable.cpp
++++ b/gfx/thebes/gfxDrawable.cpp
+@@ -8,7 +8,7 @@
+ #include "gfxContext.h"
+ #include "gfxPlatform.h"
+ #include "gfx2DGlue.h"
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "cairo.h"
+ #include "gfxXlibSurface.h"
+ #endif
+diff --git a/gfx/thebes/gfxFcPlatformFontList.cpp b/gfx/thebes/gfxFcPlatformFontList.cpp
+index 9f56842..fe0d42d 100644
+--- a/gfx/thebes/gfxFcPlatformFontList.cpp
++++ b/gfx/thebes/gfxFcPlatformFontList.cpp
+@@ -33,7 +33,7 @@
+ #include "gfxPlatformGtk.h"
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "mozilla/X11Util.h"
+ #endif
+ 
+@@ -719,7 +719,7 @@ gfxFontconfigFontEntry::CreateScaledFont(FcPattern* aRenderPattern,
+ static void ApplyGdkScreenFontOptions(FcPattern *aPattern);
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ static bool
+ GetXftInt(Display* aDisplay, const char* aName, int* aResult)
+ {
+@@ -771,7 +771,7 @@ PreparePattern(FcPattern* aPattern, bool aIsPrinterFont)
+        ApplyGdkScreenFontOptions(aPattern);
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+         FcValue value;
+         int lcdfilter;
+         if (FcPatternGet(aPattern, FC_LCD_FILTER, 0, &value)
+diff --git a/gfx/thebes/gfxGdkNativeRenderer.cpp b/gfx/thebes/gfxGdkNativeRenderer.cpp
+index f8964ad..4b27491 100644
+--- a/gfx/thebes/gfxGdkNativeRenderer.cpp
++++ b/gfx/thebes/gfxGdkNativeRenderer.cpp
+@@ -7,7 +7,7 @@
+ #include "gfxContext.h"
+ #include "gfxPlatformGtk.h"
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include <gdk/gdkx.h>
+ #include "cairo-xlib.h"
+ #include "gfxXlibSurface.h"
+diff --git a/gfx/thebes/gfxGdkNativeRenderer.h b/gfx/thebes/gfxGdkNativeRenderer.h
+index d95b1fe..4c465d6 100644
+--- a/gfx/thebes/gfxGdkNativeRenderer.h
++++ b/gfx/thebes/gfxGdkNativeRenderer.h
+@@ -8,7 +8,7 @@
+ 
+ #include <gdk/gdk.h>
+ #include "nsSize.h"
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "gfxXlibNativeRenderer.h"
+ #endif
+ 
+@@ -21,7 +21,7 @@ class gfxContext;
+  * to all Thebes transformations, clipping etc.
+  */
+ class gfxGdkNativeRenderer
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     : private gfxXlibNativeRenderer
+ #endif
+ {
+@@ -46,7 +46,7 @@ public:
+         // will be set and there is no dependence on what the existing pixels
+         // in the drawable are set to.
+         DRAW_IS_OPAQUE =
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+             gfxXlibNativeRenderer::DRAW_IS_OPAQUE
+ #else
+             0x1
+@@ -54,7 +54,7 @@ public:
+         // If set, then numClipRects can be zero or one.
+         // If not set, then numClipRects will be zero.
+         , DRAW_SUPPORTS_CLIP_RECT =
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+             gfxXlibNativeRenderer::DRAW_SUPPORTS_CLIP_RECT
+ #else
+             0x2
+@@ -73,7 +73,7 @@ public:
+ #endif
+ 
+ private:
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     // for gfxXlibNativeRenderer:
+     virtual nsresult DrawWithXlib(cairo_surface_t* surface,
+                                   nsIntPoint offset,
+diff --git a/gfx/thebes/gfxPlatformGtk.cpp b/gfx/thebes/gfxPlatformGtk.cpp
+index 9d7f512..840e35a 100644
+--- a/gfx/thebes/gfxPlatformGtk.cpp
++++ b/gfx/thebes/gfxPlatformGtk.cpp
+@@ -36,11 +36,11 @@
+ 
+ #include "gfxImageSurface.h"
+ #ifdef MOZ_X11
+-#include <gdk/gdkx.h>
+-#include "gfxXlibSurface.h"
+-#include "cairo-xlib.h"
++//#include <gdk/gdkx.h>
++//#include "gfxXlibSurface.h"
++//#include "cairo-xlib.h"
+ #include "mozilla/Preferences.h"
+-#include "mozilla/X11Util.h"
++//#include "mozilla/X11Util.h"
+ 
+ #ifdef GL_PROVIDER_GLX
+ #include "GLContextProvider.h"
+@@ -86,7 +86,7 @@ gfxPlatformGtk::gfxPlatformGtk()
+ 
+     mMaxGenericSubstitutions = UNINITIALIZED_VALUE;
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     if (XRE_IsParentProcess()) {
+       if (GDK_IS_X11_DISPLAY(gdk_display_get_default()) &&
+           mozilla::Preferences::GetBool("gfx.xrender.enabled"))
+@@ -106,12 +106,7 @@ gfxPlatformGtk::gfxPlatformGtk()
+                      contentMask, BackendType::CAIRO);
+ 
+ #ifdef MOZ_X11
+-    if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+-      mCompositorDisplay = XOpenDisplay(nullptr);
+-      MOZ_ASSERT(mCompositorDisplay, "Failed to create compositor display!");
+-    } else {
+       mCompositorDisplay = nullptr;
+-    }
+ #endif // MOZ_X11
+ }
+ 
+@@ -123,7 +118,7 @@ gfxPlatformGtk::~gfxPlatformGtk()
+         gfxPangoFontGroup::Shutdown();
+     }
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     if (mCompositorDisplay) {
+       XCloseDisplay(mCompositorDisplay);
+     }
+@@ -133,9 +128,9 @@ gfxPlatformGtk::~gfxPlatformGtk()
+ void
+ gfxPlatformGtk::FlushContentDrawing()
+ {
+-    if (gfxVars::UseXRender()) {
+-        XFlush(DefaultXDisplay());
+-    }
++//    if (gfxVars::UseXRender()) {
++//        XFlush(DefaultXDisplay());
++//    }
+ }
+ 
+ already_AddRefed<gfxASurface>
+@@ -156,24 +151,12 @@ gfxPlatformGtk::CreateOffscreenSurface(const IntSize& aSize,
+     if (gdkScreen) {
+         // When forcing PaintedLayers to use image surfaces for content,
+         // force creation of gfxImageSurface surfaces.
+-        if (gfxVars::UseXRender() && !UseImageOffscreenSurfaces()) {
+-            Screen *screen = gdk_x11_screen_get_xscreen(gdkScreen);
+-            XRenderPictFormat* xrenderFormat =
+-                gfxXlibSurface::FindRenderFormat(DisplayOfScreen(screen),
+-                                                 aFormat);
+-
+-            if (xrenderFormat) {
+-                newSurface = gfxXlibSurface::Create(screen, xrenderFormat,
+-                                                    aSize);
+-            }
+-        } else {
+             // We're not going to use XRender, so we don't need to
+             // search for a render format
+             newSurface = new gfxImageSurface(aSize, aFormat);
+             // The gfxImageSurface ctor zeroes this for us, no need to
+             // waste time clearing again
+             needsClear = false;
+-        }
+     }
+ #endif
+ 
+@@ -462,7 +445,7 @@ gfxPlatformGtk::GetPlatformCMSOutputProfile(void *&mem, size_t &size)
+     mem = nullptr;
+     size = 0;
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     GdkDisplay *display = gdk_display_get_default();
+     if (!GDK_IS_X11_DISPLAY(display))
+         return;
+@@ -615,7 +598,7 @@ gfxPlatformGtk::GetGdkDrawable(cairo_surface_t *target)
+     if (result)
+         return result;
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+     if (cairo_surface_get_type(target) != CAIRO_SURFACE_TYPE_XLIB)
+         return nullptr;
+ 
+diff --git a/gfx/thebes/moz.build b/gfx/thebes/moz.build
+index 82a2ecd..2a565f3 100644
+--- a/gfx/thebes/moz.build
++++ b/gfx/thebes/moz.build
+@@ -131,7 +131,7 @@ elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+         'PrintTargetPS.cpp',
+     ]
+ 
+-    if CONFIG['MOZ_X11']:
++    if CONFIG['MOZ_X11_no']:
+         EXPORTS += [
+             'gfxXlibNativeRenderer.h',
+             'gfxXlibSurface.h',
+diff --git a/layout/generic/nsPluginFrame.cpp b/layout/generic/nsPluginFrame.cpp
+index 156baf0..5d22208 100644
+--- a/layout/generic/nsPluginFrame.cpp
++++ b/layout/generic/nsPluginFrame.cpp
+@@ -74,7 +74,7 @@
+ #include "mozilla/gfx/QuartzSupport.h"
+ #endif
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include "mozilla/X11Util.h"
+ using mozilla::DefaultXDisplay;
+ #endif
+diff --git a/toolkit/components/moz.build b/toolkit/components/moz.build
+index ae279eb..f5ce405 100644
+--- a/toolkit/components/moz.build
++++ b/toolkit/components/moz.build
+@@ -5,7 +5,7 @@
+ # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ 
+ # These component dirs are built for all apps (including suite)
+-if CONFIG['MOZ_ENABLE_XREMOTE']:
++if CONFIG['MOZ_ENABLE_XREMOTE_no']:
+     DIRS += ['remote']
+ 
+ DIRS += [
+diff --git a/toolkit/components/remote/nsGTKRemoteService.cpp b/toolkit/components/remote/nsGTKRemoteService.cpp
+index 860efe0..ccd0e5f 100644
+--- a/toolkit/components/remote/nsGTKRemoteService.cpp
++++ b/toolkit/components/remote/nsGTKRemoteService.cpp
+@@ -9,7 +9,7 @@
+ 
+ #include <gtk/gtk.h>
+ #include <gdk/gdk.h>
+-#include <gdk/gdkx.h>
++//#include <gdk/gdkx.h>
+ 
+ #include "nsIBaseWindow.h"
+ #include "nsIDocShell.h"
+diff --git a/toolkit/components/remote/nsGTKRemoteService.h b/toolkit/components/remote/nsGTKRemoteService.h
+index 034a77a..5493fe7 100644
+--- a/toolkit/components/remote/nsGTKRemoteService.h
++++ b/toolkit/components/remote/nsGTKRemoteService.h
+@@ -9,14 +9,14 @@
+ #define __nsGTKRemoteService_h__
+ 
+ #include <gdk/gdk.h>
+-#include <gdk/gdkx.h>
++//#include <gdk/gdkx.h>
+ #include <gtk/gtk.h>
+ 
+ #include "nsInterfaceHashtable.h"
+-#include "nsXRemoteService.h"
++//#include "nsXRemoteService.h"
+ #include "mozilla/Attributes.h"
+ 
+-class nsGTKRemoteService final : public nsXRemoteService
++class nsGTKRemoteService final
+ {
+ public:
+   // We will be a static singleton, so don't use the ordinary methods.
+diff --git a/toolkit/toolkit.mozbuild b/toolkit/toolkit.mozbuild
+index eaae9d3..25ec8d6 100644
+--- a/toolkit/toolkit.mozbuild
++++ b/toolkit/toolkit.mozbuild
+@@ -118,7 +118,7 @@ DIRS += [
+     '/xpfe/components',
+ ]
+ 
+-if CONFIG['MOZ_ENABLE_XREMOTE']:
++if CONFIG['MOZ_ENABLE_XREMOTE_no']:
+     DIRS += ['/widget/xremoteclient']
+ 
+ if CONFIG['MOZ_SPELLCHECK']:
+diff --git a/toolkit/xre/moz.build b/toolkit/xre/moz.build
+index 53b5474..a88f81a 100644
+--- a/toolkit/xre/moz.build
++++ b/toolkit/xre/moz.build
+@@ -58,7 +58,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
+         'nsGDKErrorHandler.cpp',
+     ]
+ 
+-if CONFIG['MOZ_X11']:
++if CONFIG['MOZ_X11_no']:
+     UNIFIED_SOURCES += [
+         'nsX11ErrorHandler.cpp',
+     ]
+diff --git a/toolkit/xre/nsAppRunner.cpp b/toolkit/xre/nsAppRunner.cpp
+index c18075e..8db9506 100644
+--- a/toolkit/xre/nsAppRunner.cpp
++++ b/toolkit/xre/nsAppRunner.cpp
+@@ -165,7 +165,7 @@
+ #endif
+ 
+ // for X remote support
+-#ifdef MOZ_ENABLE_XREMOTE
++#ifdef MOZ_ENABLE_XREMOTE_no
+ #include "XRemoteClient.h"
+ #include "nsIRemoteService.h"
+ #endif
+@@ -241,7 +241,7 @@ nsString gAbsoluteArgv0Path;
+ #include <pango/pangofc-fontmap.h>
+ #endif
+ #include <gtk/gtk.h>
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include <gdk/gdkx.h>
+ #endif /* MOZ_X11 */
+ #include "nsGTKToolkit.h"
+@@ -1593,7 +1593,7 @@ DumpHelp()
+   printf("Usage: %s [ options ... ] [URL]\n"
+          "       where options include:\n\n", gArgv[0]);
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   printf("X11 options\n"
+          "  --display=DISPLAY  X display to use\n"
+          "  --sync             Make X calls synchronous\n");
+@@ -1677,7 +1677,7 @@ DumpVersion()
+   printf("\n");
+ }
+ 
+-#ifdef MOZ_ENABLE_XREMOTE
++#ifdef MOZ_ENABLE_XREMOTE_no
+ static RemoteResult
+ RemoteCommandLine(const char* aDesktopStartupID)
+ {
+@@ -2993,7 +2993,7 @@ public:
+   XREMain() :
+     mStartOffline(false)
+     , mShuttingDown(false)
+-#ifdef MOZ_ENABLE_XREMOTE
++#ifdef MOZ_ENABLE_XREMOTE_no
+     , mDisableRemote(false)
+ #endif
+ #if defined(MOZ_WIDGET_GTK)
+@@ -3016,7 +3016,7 @@ public:
+   nsCOMPtr<nsIFile> mProfD;
+   nsCOMPtr<nsIFile> mProfLD;
+   nsCOMPtr<nsIProfileLock> mProfileLock;
+-#ifdef MOZ_ENABLE_XREMOTE
++#ifdef MOZ_ENABLE_XREMOTE_no
+   nsCOMPtr<nsIRemoteService> mRemoteService;
+ #endif
+ 
+@@ -3029,7 +3029,7 @@ public:
+ 
+   bool mStartOffline;
+   bool mShuttingDown;
+-#ifdef MOZ_ENABLE_XREMOTE
++#ifdef MOZ_ENABLE_XREMOTE_no
+   bool mDisableRemote;
+ #endif
+ 
+@@ -3758,12 +3758,12 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
+     }
+   }
+ #endif /* MOZ_WIDGET_GTK */
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   // Init X11 in thread-safe mode. Must be called prior to the first call to XOpenDisplay
+   // (called inside gdk_display_open). This is a requirement for off main tread compositing.
+   XInitThreads();
+ #endif
+-#if defined(MOZ_WIDGET_GTK)
++#if defined(MOZ_WIDGET_GTK_no)
+   mGdkDisplay = gdk_display_open(display_name);
+   if (!mGdkDisplay) {
+     PR_fprintf(PR_STDERR, "Error: cannot open display: %s\n", display_name);
+@@ -3771,15 +3771,9 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
+   }
+   gdk_display_manager_set_default_display (gdk_display_manager_get(),
+                                            mGdkDisplay);
+-  if (GDK_IS_X11_DISPLAY(mGdkDisplay)) {
+-    if (saveDisplayArg) {
+-      SaveWordToEnv("DISPLAY", nsDependentCString(display_name));
+-    }
+-  } else {
+     mDisableRemote = true;
+-  }
+ #endif
+-#ifdef MOZ_ENABLE_XREMOTE
++#ifdef MOZ_ENABLE_XREMOTE_no
+   // handle --remote now that xpcom is fired up
+   bool newInstance;
+   {
+@@ -3815,7 +3809,7 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
+   gtk_widget_set_default_colormap(gdk_rgb_get_colormap());
+ #endif /* (MOZ_WIDGET_GTK == 2) */
+ #endif /* defined(MOZ_WIDGET_GTK) */
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   // Do this after initializing GDK, or GDK will install its own handler.
+   XRE_InstallX11ErrorHandler();
+ #endif
+@@ -4363,7 +4357,7 @@ XREMain::XRE_mainRun()
+   }
+ 
+   if (!mShuttingDown) {
+-#ifdef MOZ_ENABLE_XREMOTE
++#ifdef MOZ_ENABLE_XREMOTE_no
+     // if we have X remote support, start listening for requests on the
+     // proxy window.
+     if (!mDisableRemote)
+@@ -4551,7 +4545,7 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
+   }
+ 
+   if (!mShuttingDown) {
+-#ifdef MOZ_ENABLE_XREMOTE
++#ifdef MOZ_ENABLE_XREMOTE_no
+     // shut down the x remote proxy window
+     if (mRemoteService) {
+       mRemoteService->Shutdown();
+diff --git a/toolkit/xre/nsEmbedFunctions.cpp b/toolkit/xre/nsEmbedFunctions.cpp
+index 19fb128..4405526 100644
+--- a/toolkit/xre/nsEmbedFunctions.cpp
++++ b/toolkit/xre/nsEmbedFunctions.cpp
+@@ -43,7 +43,7 @@
+ #include "nsVersionComparator.h"
+ #include "chrome/common/mach_ipc_mac.h"
+ #endif
+-#include "nsX11ErrorHandler.h"
++//#include "nsX11ErrorHandler.h"
+ #include "nsGDKErrorHandler.h"
+ #include "base/at_exit.h"
+ #include "base/command_line.h"
+@@ -492,7 +492,7 @@ XRE_InitChildProcess(int aArgc,
+   gArgv = aArgv;
+   gArgc = aArgc;
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   XInitThreads();
+ #endif
+ #if MOZ_WIDGET_GTK == 2
+diff --git a/toolkit/xre/nsGDKErrorHandler.cpp b/toolkit/xre/nsGDKErrorHandler.cpp
+index a01a7c5..89b1c8b 100644
+--- a/toolkit/xre/nsGDKErrorHandler.cpp
++++ b/toolkit/xre/nsGDKErrorHandler.cpp
+@@ -6,14 +6,12 @@
+ #include "nsGDKErrorHandler.h"
+ 
+ #include <gtk/gtk.h>
+-#include <gdk/gdkx.h>
+ #include <errno.h>
+ #include <stdlib.h>
+ #include <string.h>
+ 
+ #include "nsDebug.h"
+ #include "nsString.h"
+-#include "nsX11ErrorHandler.h"
+ 
+ #include "prenv.h"
+ 
+@@ -29,62 +27,8 @@ static void
+ GdkErrorHandler(const gchar *log_domain, GLogLevelFlags log_level,
+                 const gchar *message,  gpointer user_data)
+ {
+-  if (strstr(message, "X Window System error")) {
+-    XErrorEvent event;
+-    nsDependentCString buffer(message);
+-    char *endptr;
+-
+-    /* Parse Gdk X Window error message which has this format:
+-     * (Details: serial XXXX error_code XXXX request_code XXXX (XXXX) minor_code XXXX)
+-     */
+-    NS_NAMED_LITERAL_CSTRING(serialString, "(Details: serial ");
+-    int32_t start = buffer.Find(serialString);
+-    if (start == kNotFound)
+-      NS_RUNTIMEABORT(message);
+-
+-    start += serialString.Length();
+-    errno = 0;
+-    event.serial = strtol(buffer.BeginReading() + start, &endptr, 10);
+-    if (errno)
+-      NS_RUNTIMEABORT(message);
+-
+-    NS_NAMED_LITERAL_CSTRING(errorCodeString, " error_code ");    
+-    if (!StringBeginsWith(Substring(endptr, buffer.EndReading()), errorCodeString))
+-      NS_RUNTIMEABORT(message);
+-
+-    errno = 0;
+-    event.error_code = strtol(endptr + errorCodeString.Length(), &endptr, 10);
+-    if (errno)
+-      NS_RUNTIMEABORT(message);
+-
+-    NS_NAMED_LITERAL_CSTRING(requestCodeString, " request_code ");
+-    if (!StringBeginsWith(Substring(endptr, buffer.EndReading()), requestCodeString))
+-      NS_RUNTIMEABORT(message);
+-
+-    errno = 0;
+-    event.request_code = strtol(endptr + requestCodeString.Length(), &endptr, 10);
+-    if (errno)
+-      NS_RUNTIMEABORT(message);
+-
+-    NS_NAMED_LITERAL_CSTRING(minorCodeString, " minor_code ");
+-    start = buffer.Find(minorCodeString, endptr - buffer.BeginReading());
+-    if (!start)
+-      NS_RUNTIMEABORT(message);
+-
+-    errno = 0;
+-    event.minor_code = strtol(buffer.BeginReading() + start + minorCodeString.Length(), nullptr, 10);
+-    if (errno)
+-      NS_RUNTIMEABORT(message);
+-
+-    event.display = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
+-    // Gdk does not provide resource ID
+-    event.resourceid = 0;
+-
+-    X11Error(event.display, &event);
+-  } else {
+     g_log_default_handler(log_domain, log_level, message, user_data);
+     NS_RUNTIMEABORT(message);
+-  }
+ }
+ 
+ void
+@@ -94,7 +38,4 @@ InstallGdkErrorHandler()
+                     (GLogLevelFlags)(G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION),
+                     GdkErrorHandler,
+                     nullptr);
+-  if (PR_GetEnv("MOZ_X_SYNC")) {
+-    XSynchronize(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), True);
+-  }
+ }
+diff --git a/toolkit/xre/nsNativeAppSupportUnix.cpp b/toolkit/xre/nsNativeAppSupportUnix.cpp
+index a04a799..a0f55f6 100644
+--- a/toolkit/xre/nsNativeAppSupportUnix.cpp
++++ b/toolkit/xre/nsNativeAppSupportUnix.cpp
+@@ -32,7 +32,7 @@
+ #include <glib-object.h>
+ #include <gtk/gtk.h>
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include <gdk/gdkx.h>
+ #include <X11/ICE/ICElib.h>
+ #include <X11/SM/SMlib.h>
+@@ -52,7 +52,7 @@
+ You have GTK+ %d.%d.\nThis application requires GTK+ %d.%d or newer.\n\n\
+ Please upgrade your GTK+ library if you wish to use this application."
+ 
+-#if MOZ_X11
++#if MOZ_X11_no
+ #undef IceSetIOErrorHandler
+ #undef IceAddConnectionWatch
+ #undef IceConnectionNumber
+@@ -126,7 +126,7 @@ static LazyLogModule sMozSMLog("MozSM");
+ class nsNativeAppSupportUnix : public nsNativeAppSupportBase
+ {
+ public:
+-#if MOZ_X11
++#if MOZ_X11_no
+   nsNativeAppSupportUnix(): mSessionConnection(nullptr),
+                             mClientState(STATE_DISCONNECTED) {};
+   ~nsNativeAppSupportUnix()
+@@ -143,7 +143,7 @@ public:
+   NS_IMETHOD Enable();
+ 
+ private:
+-#if MOZ_X11
++#if MOZ_X11_no
+   static void SaveYourselfCB(SmcConn smc_conn, SmPointer client_data,
+                              int save_style, Bool shutdown, int interact_style,
+                              Bool fast);
+@@ -163,7 +163,7 @@ private:
+ #endif
+ };
+ 
+-#if MOZ_X11
++#if MOZ_X11_no
+ static gboolean
+ process_ice_messages(IceConn connection)
+ {
+@@ -479,7 +479,7 @@ nsNativeAppSupportUnix::Start(bool *aRetVal)
+ 
+   *aRetVal = true;
+ 
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+   gboolean sm_disable = FALSE;
+   if (!getenv("SESSION_MANAGER")) {
+     sm_disable = TRUE;
+diff --git a/widget/gtk/CompositorWidgetChild.h b/widget/gtk/CompositorWidgetChild.h
+index 403b905..d8b445d 100644
+--- a/widget/gtk/CompositorWidgetChild.h
++++ b/widget/gtk/CompositorWidgetChild.h
+@@ -6,7 +6,7 @@
+ #ifndef widget_gtk_CompositorWidgetChild_h
+ #define widget_gtk_CompositorWidgetChild_h
+ 
+-#include "X11CompositorWidget.h"
++//#include "X11CompositorWidget.h"
+ #include "mozilla/widget/PCompositorWidgetChild.h"
+ #include "mozilla/widget/CompositorWidgetVsyncObserver.h"
+ 
+diff --git a/widget/gtk/mozgtk/mozgtk.c b/widget/gtk/mozgtk/mozgtk.c
+index 285ad14..17aa8f6 100644
+--- a/widget/gtk/mozgtk/mozgtk.c
++++ b/widget/gtk/mozgtk/mozgtk.c
+@@ -597,7 +597,7 @@ STUB(gtk_color_chooser_get_rgba)
+ STUB(gtk_color_chooser_set_use_alpha)
+ #endif
+ 
+-#ifdef GTK2_SYMBOLS
++#ifdef GTK2_SYMBOLS_no
+ STUB(gdk_drawable_get_screen)
+ STUB(gdk_rgb_get_colormap)
+ STUB(gdk_rgb_get_visual)
+@@ -612,17 +612,4 @@ STUB(gdkx_visual_get)
+ STUB(gtk_object_get_type)
+ #endif
+ 
+-#include <X11/Xlib.h>
+-// Bug 1271100
+-// We need to trick system Cairo into not using the XShm extension due to
+-// a race condition in it that results in frequent BadAccess errors. Cairo
+-// relies upon XShmQueryExtension to initially detect if XShm is available.
+-// So we define our own stub that always indicates XShm not being present.
+-// mozgtk loads before libXext/libcairo and so this stub will take priority.
+-// Our tree usage goes through xcb and remains unaffected by this.
+-MOZ_EXPORT Bool
+-XShmQueryExtension(Display* aDisplay)
+-{
+-  return False;
+-}
+ 
+diff --git a/widget/gtk/nsWindow.cpp b/widget/gtk/nsWindow.cpp
+index 3791eab..3228425 100644
+--- a/widget/gtk/nsWindow.cpp
++++ b/widget/gtk/nsWindow.cpp
+@@ -40,11 +40,12 @@
+ #if (MOZ_WIDGET_GTK == 3)
+ #include <gtk/gtkx.h>
+ #endif
+-#ifdef MOZ_X11
++#ifdef MOZ_X11_no
+ #include <gdk/gdkx.h>
+ #include <X11/Xatom.h>
+ #include <X11/extensions/XShm.h>
+ #include <X11/extensions/shape.h>
++#endif /* MOZ_X11 */
+ #if (MOZ_WIDGET_GTK == 3)
+ #include <gdk/gdkkeysyms-compat.h>
+ #endif
+@@ -52,7 +53,6 @@
+ #if (MOZ_WIDGET_GTK == 2)
+ #include "gtk2xtbin.h"
+ #endif
+-#endif /* MOZ_X11 */
+ #include <gdk/gdkkeysyms.h>
+ #if (MOZ_WIDGET_GTK == 2)
+ #include <gtk/gtkprivate.h>
+diff --git a/widget/moz.build b/widget/moz.build
+index 2229668..51c8a09 100644
+--- a/widget/moz.build
++++ b/widget/moz.build
+@@ -205,7 +205,7 @@ if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:
+ 
+ EXPORTS.ipc = ['nsGUIEventIPC.h']
+ 
+-if CONFIG['MOZ_X11']:
++if CONFIG['MOZ_X11_no']:
+     DIRS += ['x11']
+     UNIFIED_SOURCES += [
+         'GfxInfoX11.cpp'
+diff --git a/widget/nsShmImage.h b/widget/nsShmImage.h
+index 64c0ff5..fca67a3 100644
+--- a/widget/nsShmImage.h
++++ b/widget/nsShmImage.h
+@@ -7,7 +7,7 @@
+ #ifndef __mozilla_widget_nsShmImage_h__
+ #define __mozilla_widget_nsShmImage_h__
+ 
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+ #  define MOZ_HAVE_SHMIMAGE
+ #endif
+ 

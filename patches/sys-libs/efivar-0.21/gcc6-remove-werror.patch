@@ -1,0 +1,13 @@
+diff --git a/Make.defaults b/Make.defaults
+index cc2baa9..8303c33 100644
+--- a/Make.defaults
++++ b/Make.defaults
+@@ -12,7 +12,7 @@ ARCH = $(shell uname -m)
+ clang_cflags =
+ gcc_cflags = -Wmaybe-uninitialized
+ cflags	:= $(CFLAGS) \
+-	-Werror -Wall -Wsign-compare -Wstrict-aliasing \
++	-Wall -Wsign-compare -Wstrict-aliasing \
+ 	-std=gnu11 -fshort-wchar -fPIC \
+ 	-fvisibility=hidden \
+ 	-D_GNU_SOURCE -I${TOPDIR}/src/include/efivar/ \

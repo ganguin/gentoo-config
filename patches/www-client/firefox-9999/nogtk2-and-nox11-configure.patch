@@ -1,0 +1,188 @@
+diff --git a/old-configure.in b/old-configure.in
+index bcc3b79..185bf75 100644
+--- a/old-configure.in
++++ b/old-configure.in
+@@ -2455,8 +2455,6 @@ if test "$COMPILE_ENVIRONMENT"; then
+     AC_DEFINE_UNQUOTED(GLIB_VERSION_MIN_REQUIRED,$GLIB_VERSION_MIN_REQUIRED)
+     AC_DEFINE_UNQUOTED(GLIB_VERSION_MAX_ALLOWED,$GLIB_VERSION_MAX_ALLOWED)
+ 
+-    PKG_CHECK_MODULES(MOZ_GTK2, gtk+-2.0 >= $GTK2_VERSION gtk+-unix-print-2.0 glib-2.0 >= $GLIB_VERSION gobject-2.0 $GDK_PACKAGES)
+-    MOZ_GTK2_CFLAGS="-I${_topsrcdir}/widget/gtk/compat $MOZ_GTK2_CFLAGS"
+   fi
+   if test "$MOZ_WIDGET_TOOLKIT" = gtk2; then
+     TK_CFLAGS=$MOZ_GTK2_CFLAGS
+diff --git a/widget/gtk/mozgtk/moz.build b/widget/gtk/mozgtk/moz.build
+index 528e2e9..d32ee82 100644
+--- a/widget/gtk/mozgtk/moz.build
++++ b/widget/gtk/mozgtk/moz.build
+@@ -4,4 +4,4 @@
+ # License, v. 2.0. If a copy of the MPL was not distributed with this
+ # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ 
+-DIRS += ['stub', 'gtk2', 'gtk3']
++DIRS += ['stub', 'gtk3']
+diff --git a/widget/moz.build b/widget/moz.build
+index ae1694f..da62f78 100644
+--- a/widget/moz.build
++++ b/widget/moz.build
+@@ -51,9 +51,6 @@ TEST_DIRS += ['tests']
+ if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+     DIRS += ['gtk']
+ 
+-    if CONFIG['MOZ_X11']:
+-        DIRS += ['gtkxtbin']
+-
+ XPIDL_SOURCES += [
+     'nsIAppShell.idl',
+     'nsIBaseWindow.idl',
+diff --git a/dom/plugins/ipc/PluginInstanceChild.cpp b/dom/plugins/ipc/PluginInstanceChild.cpp
+index 21b2c1dbf8dc..4ab6d1d15021 100644
+--- a/dom/plugins/ipc/PluginInstanceChild.cpp
++++ b/dom/plugins/ipc/PluginInstanceChild.cpp
+@@ -52,7 +52,9 @@ using namespace mozilla::gfx;
+ #include <gtk/gtk.h>
+ #include <gdk/gdkx.h>
+ #include <gdk/gdk.h>
++#if (MOZ_WIDGET_GTK == 2)
+ #include "gtk2xtbin.h"
++#endif
+ 
+ #elif defined(OS_WIN)
+ 
+diff --git a/dom/plugins/ipc/PluginInstanceChild.h b/dom/plugins/ipc/PluginInstanceChild.h
+index 1836cec193a8..8578780d7012 100644
+--- a/dom/plugins/ipc/PluginInstanceChild.h
++++ b/dom/plugins/ipc/PluginInstanceChild.h
+@@ -35,7 +35,7 @@
+ 
+ #include <map>
+ 
+-#ifdef MOZ_WIDGET_GTK
++#if (MOZ_WIDGET_GTK == 2)
+ #include "gtk2xtbin.h"
+ #endif
+ 
+@@ -445,9 +445,9 @@ private:
+     PluginScriptableObjectChild* mCachedWindowActor;
+     PluginScriptableObjectChild* mCachedElementActor;
+ 
+ #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
+     NPSetWindowCallbackStruct mWsInfo;
+-#ifdef MOZ_WIDGET_GTK
++#ifdef MOZ_WIDGET_GTK2
+     XtClient mXtClient;
+ #endif
+ #elif defined(OS_WIN)
+diff --git a/toolkit/library/moz.build b/toolkit/library/moz.build
+index 3244e6c..f716f0d 100644
+--- a/toolkit/library/moz.build
++++ b/toolkit/library/moz.build
+@@ -253,11 +253,7 @@ if CONFIG['MOZ_ENABLE_DBUS']:
+     OS_LIBS += CONFIG['MOZ_DBUS_GLIB_LIBS']
+ 
+ if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
+-        OS_LIBS += [l for l in CONFIG['TK_LIBS']
+-            if l not in ('-lgtk-3', '-lgdk-3')]
+-    else:
+-        OS_LIBS += CONFIG['TK_LIBS']
++    OS_LIBS += CONFIG['TK_LIBS']
+     OS_LIBS += CONFIG['XLDFLAGS']
+     OS_LIBS += CONFIG['XLIBS']
+     OS_LIBS += CONFIG['XEXT_LIBS']
+diff --git a/dom/plugins/ipc/PluginModuleChild.h b/dom/plugins/ipc/PluginModuleChild.h
+index 857b5bf..f2b5cda 100644
+--- a/dom/plugins/ipc/PluginModuleChild.h
++++ b/dom/plugins/ipc/PluginModuleChild.h
+@@ -11,6 +11,7 @@
+ 
+ #include <string>
+ #include <vector>
++#include <glib.h>
+ 
+ #include "base/basictypes.h"
+ 
+@@ -240,7 +240,7 @@ private:
+     void HookProtectedMode();
+ #endif
+ 
+-#if defined(MOZ_WIDGET_GTK)
++#if defined(MOZ_WIDGET_GTK2)
+     static gboolean DetectNestedEventLoop(gpointer data);
+     static gboolean ProcessBrowserEvents(gpointer data);
+ 
+diff --git a/dom/plugins/ipc/moz.build b/dom/plugins/ipc/moz.build
+index 5e14d18..ea8a900 100644
+--- a/dom/plugins/ipc/moz.build
++++ b/dom/plugins/ipc/moz.build
+@@ -138,11 +138,7 @@ if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
+ 
+ DEFINES['FORCE_PR_LOG'] = True
+ 
+-if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gtk3':
+-    CXXFLAGS += CONFIG['TK_CFLAGS']
+-else:
+-    # Force build against gtk+2 for struct offsets and such.
+-    CXXFLAGS += CONFIG['MOZ_GTK2_CFLAGS']
++CXXFLAGS += CONFIG['TK_CFLAGS']
+ 
+ CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
+ 
+diff --git a/dom/plugins/ipc/PluginModuleChild.cpp b/dom/plugins/ipc/PluginModuleChild.cpp
+index 147c57a..e6d52b5 100644
+--- a/dom/plugins/ipc/PluginModuleChild.cpp
++++ b/dom/plugins/ipc/PluginModuleChild.cpp
+@@ -11,7 +11,7 @@
+ 
+ #include "mozilla/ipc/MessageChannel.h"
+ 
+-#ifdef MOZ_WIDGET_GTK
++#ifdef MOZ_WIDGET_GTK2
+ #include <gtk/gtk.h>
+ #endif
+ 
+@@ -133,7 +133,7 @@ PluginModuleChild::PluginModuleChild(bool aIsChrome)
+   , mInitializeFunc(0)
+ #if defined(OS_WIN) || defined(OS_MACOSX)
+   , mGetEntryPointsFunc(0)
+-#elif defined(MOZ_WIDGET_GTK)
++#elif defined(MOZ_WIDGET_GTK2)
+   , mNestedLoopTimerId(0)
+ #endif
+ #ifdef OS_WIN
+@@ -331,7 +331,7 @@ PluginModuleChild::InitForChrome(const std::string& aPluginFilename,
+     return true;
+ }
+ 
+-#if defined(MOZ_WIDGET_GTK)
++#if defined(MOZ_WIDGET_GTK2)
+ 
+ typedef void (*GObjectDisposeFn)(GObject*);
+ typedef gboolean (*GtkWidgetScrollEventFn)(GtkWidget*, GdkEventScroll*);
+@@ -580,7 +580,7 @@ PluginModuleChild::ShouldContinueFromReplyTimeout()
+ bool
+ PluginModuleChild::InitGraphics()
+ {
+-#if defined(MOZ_WIDGET_GTK)
++#if defined(MOZ_WIDGET_GTK2)
+     // Work around plugins that don't interact well with GDK
+     // client-side windows.
+     PR_SetEnv("GDK_NATIVE_WINDOWS=1");
+@@ -1104,7 +1104,7 @@ _getvalue(NPP aNPP,
+     switch (aVariable) {
+         // Copied from nsNPAPIPlugin.cpp
+         case NPNVToolkit:
+-#if defined(MOZ_WIDGET_GTK)
++#if defined(MOZ_WIDGET_GTK2)
+             *static_cast<NPNToolkitType*>(aValue) = NPNVGtk2;
+             return NPERR_NO_ERROR;
+ #endif
+@@ -1128,7 +1128,7 @@ _getvalue(NPP aNPP,
+         case NPNVSupportsWindowless:
+             *(NPBool*)aValue = true;
+             return NPERR_NO_ERROR;
+-#if defined(MOZ_WIDGET_GTK)
++#if defined(MOZ_WIDGET_GTK2)
+         case NPNVxDisplay: {
+             if (!aNPP) {
+                 return NPERR_INVALID_INSTANCE_ERROR;

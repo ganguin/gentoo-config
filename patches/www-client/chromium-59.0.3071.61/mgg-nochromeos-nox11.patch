@@ -1,0 +1,13 @@
+diff --git a/chrome/browser/ui/views/frame/browser_frame.cc b/chrome/browser/ui/views/frame/browser_frame.cc
+index 0df9950..834d3c9 100644
+--- a/chrome/browser/ui/views/frame/browser_frame.cc
++++ b/chrome/browser/ui/views/frame/browser_frame.cc
+@@ -41,7 +41,7 @@
+ #endif
+ 
+ #if defined(OS_LINUX) && !defined(OS_CHROMEOS)
+-#include "ui/views/widget/desktop_aura/x11_desktop_handler.h"
++//#include "ui/views/widget/desktop_aura/x11_desktop_handler.h"
+ #endif
+ 
+ ////////////////////////////////////////////////////////////////////////////////

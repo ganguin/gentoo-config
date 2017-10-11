@@ -1,0 +1,3538 @@
+diff --git a/setup.py b/setup.py
+index 89916b5..1a28068 100755
+--- a/setup.py
++++ b/setup.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python2
++#!/usr/bin/python3.6
+ # Copyright (C) 2013, 2014 Red Hat, Inc.
+ 
+ import glob
+@@ -78,11 +78,11 @@ class my_build_i18n(distutils.command.build.build):
+         potpath = "po/POTFILES.in"
+ 
+         try:
+-            print "Writing %s" % potpath
+-            file(potpath, "w").write(potfiles)
++            print("Writing %s" % potpath)
++            open(potpath, "w").write(potfiles)
+             self._run()
+         finally:
+-            print "Removing %s" % potpath
++            print("Removing %s" % potpath)
+             os.unlink(potpath)
+ 
+     def _run(self):
+@@ -168,8 +168,8 @@ class my_build(distutils.command.build.build):
+             wrapper += "exec \"%s\" \"$@\"" % (sharepath)
+ 
+             newpath = os.path.abspath(os.path.join("build", app))
+-            print "Generating %s" % newpath
+-            file(newpath, "w").write(wrapper)
++            print("Generating %s" % newpath)
++            open(newpath, "w").write(wrapper)
+ 
+ 
+     def _make_man_pages(self):
+@@ -179,7 +179,7 @@ class my_build(distutils.command.build.build):
+             newpath = os.path.join(os.path.dirname(path),
+                                    appname + ".1")
+ 
+-            print "Generating %s" % newpath
++            print("Generating %s" % newpath)
+             ret = os.system('pod2man '
+                             '--center "Virtual Machine Manager" '
+                             '--release %s --name %s '
+@@ -235,17 +235,17 @@ class my_install(distutils.command.install.install):
+     def finalize_options(self):
+         if self.prefix is None:
+             if CLIConfig.prefix != sysprefix:
+-                print "Using configured prefix=%s instead of sysprefix=%s" % (
+-                    CLIConfig.prefix, sysprefix)
++                print("Using configured prefix=%s instead of sysprefix=%s" % (
++                    CLIConfig.prefix, sysprefix))
+                 self.prefix = CLIConfig.prefix
+             else:
+-                print "Using sysprefix=%s" % sysprefix
++                print("Using sysprefix=%s" % sysprefix)
+                 self.prefix = sysprefix
+ 
+         elif self.prefix != CLIConfig.prefix:
+-            print("Install prefix=%s doesn't match configure prefix=%s\n"
++            print(("Install prefix=%s doesn't match configure prefix=%s\n"
+                   "Pass matching --prefix to 'setup.py configure'" %
+-                  (self.prefix, CLIConfig.prefix))
++                  (self.prefix, CLIConfig.prefix)))
+             sys.exit(1)
+ 
+         distutils.command.install.install.finalize_options(self)
+@@ -366,8 +366,8 @@ class configure(distutils.core.Command):
+         if self.default_hvs is not None:
+             template += "default_hvs = %s\n" % self.default_hvs
+ 
+-        file(CLIConfig.cfgpath, "w").write(template)
+-        print "Generated %s" % CLIConfig.cfgpath
++        open(CLIConfig.cfgpath, "w").write(template)
++        print("Generated %s" % CLIConfig.cfgpath)
+ 
+ 
+ class TestBaseCommand(distutils.core.Command):
+@@ -442,7 +442,7 @@ class TestBaseCommand(distutils.core.Command):
+             try:
+                 unittest.installHandler()
+             except:
+-                print "installHandler hack failed"
++                print("installHandler hack failed")
+ 
+         tests = unittest.TestLoader().loadTestsFromNames(self._testfiles)
+         if self.only:
+@@ -454,13 +454,13 @@ class TestBaseCommand(distutils.core.Command):
+                             newtests.append(testcase)
+ 
+             if not newtests:
+-                print "--only didn't find any tests"
++                print("--only didn't find any tests")
+                 sys.exit(1)
+             tests = unittest.TestSuite(newtests)
+-            print "Running only:"
++            print("Running only:")
+             for test in newtests:
+-                print "%s" % test
+-            print
++                print("%s" % test)
++            print()
+ 
+         t = unittest.TextTestRunner(verbosity=1)
+ 
+@@ -582,14 +582,14 @@ class CheckPylint(distutils.core.Command):
+         output_format = sys.stdout.isatty() and "colorized" or "text"
+         exclude = ["virtinst/progress.py"]
+ 
+-        print "running pep8"
++        print("running pep8")
+         cmd = "pep8 "
+         cmd += "--config tests/pep8.cfg "
+         cmd += "--exclude %s " % ",".join(exclude)
+         cmd += " ".join(files)
+         os.system(cmd)
+ 
+-        print "running pylint"
++        print("running pylint")
+         cmd = "pylint "
+         cmd += "--rcfile tests/pylint.cfg "
+         cmd += "--output-format=%s " % output_format
+diff --git a/tests/test_inject.py b/tests/test_inject.py
+index 370584f..af5bf6f 100755
+--- a/tests/test_inject.py
++++ b/tests/test_inject.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python2
++#!/usr/bin/python3.6
+ # Copyright (C) 2013, 2014 Red Hat, Inc.
+ 
+ import atexit
+diff --git a/virt-clone b/virt-clone
+index 00d0e30..27b0d5b 100755
+--- a/virt-clone
++++ b/virt-clone
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python2
++#!/usr/bin/python3.6
+ #
+ # Copyright(c) FUJITSU Limited 2007.
+ #
+@@ -52,7 +52,7 @@ def get_original_guest(guest_name, origfile, design):
+         try:
+             design.original_xml = origxml
+             return
+-        except (ValueError, RuntimeError), e:
++        except (ValueError, RuntimeError) as e:
+             fail(e)
+ 
+     if not guest_name:
+@@ -209,9 +209,9 @@ def main(conn=None):
+ if __name__ == "__main__":
+     try:
+         sys.exit(main())
+-    except SystemExit, sys_e:
++    except SystemExit as sys_e:
+         sys.exit(sys_e.code)
+     except KeyboardInterrupt:
+         print_stderr(_("Installation aborted at user request"))
+-    except Exception, main_e:
++    except Exception as main_e:
+         fail(main_e)
+diff --git a/virt-convert b/virt-convert
+index dd964f5..b205f86 100755
+--- a/virt-convert
++++ b/virt-convert
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python2
++#!/usr/bin/python3.6
+ #
+ # Copyright 2008, 2013, 2014  Red Hat, Inc.
+ # Joey Boggs <jboggs@redhat.com>
+@@ -133,9 +133,9 @@ def main(conn=None):
+ if __name__ == "__main__":
+     try:
+         sys.exit(main())
+-    except SystemExit, sys_e:
++    except SystemExit as sys_e:
+         sys.exit(sys_e.code)
+     except KeyboardInterrupt:
+         print_stderr(_("Aborted at user request"))
+-    except Exception, main_e:
++    except Exception as main_e:
+         fail(main_e)
+diff --git a/virt-install b/virt-install
+index 817f4b3..5cf8a82 100755
+--- a/virt-install
++++ b/virt-install
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python2
++#!/usr/bin/python3.6
+ #
+ # Copyright 2005-2014 Red Hat, Inc.
+ #
+@@ -367,7 +367,7 @@ def get_guest(conn, options):
+             arch=arch,
+             typ=req_hv_type,
+             machine=options.machine)
+-    except Exception, e:
++    except Exception as e:
+         fail(e)
+ 
+     if (not req_virt_type and
+@@ -400,7 +400,7 @@ def set_install_media(guest, location, cdpath, distro_variant):
+             guest.os_variant = guest.installer.detect_distro(guest)
+         elif distro_variant != "none":
+             guest.os_variant = distro_variant
+-    except ValueError, e:
++    except ValueError as e:
+         fail(_("Error validating install location: %s") % str(e))
+ 
+ 
+@@ -626,7 +626,7 @@ def build_guest_instance(conn, options):
+         guest.os.nvram is None):
+         try:
+             guest.set_uefi_default()
+-        except Exception, e:
++        except Exception as e:
+             logging.debug("Error setting UEFI default for aarch64",
+                 exc_info=True)
+             logging.warn("Couldn't configure UEFI: %s", e)
+@@ -712,7 +712,7 @@ def start_install(guest, options):
+         logging.debug("", exc_info=True)
+         print_stderr(_("Domain install interrupted."))
+         raise
+-    except Exception, e:
++    except Exception as e:
+         fail(e, do_exit=False)
+         if guest.domain is None:
+             guest.cleanup_created_disks(meter)
+@@ -735,7 +735,7 @@ def check_domain(guest, conscb, transient,
+                 fail(_("Domain has crashed."))
+ 
+             return not guest.domain.isActive()
+-        except libvirt.libvirtError, e:
++        except libvirt.libvirtError as e:
+             if transient and e.get_error_code() == libvirt.VIR_ERR_NO_DOMAIN:
+                 logging.debug("transient VM shutdown and disappeared.")
+                 return True
+@@ -994,10 +994,10 @@ def main(conn=None):
+ if __name__ == "__main__":
+     try:
+         sys.exit(main())
+-    except SystemExit, sys_e:
++    except SystemExit as sys_e:
+         sys.exit(sys_e.code)
+     except KeyboardInterrupt:
+         logging.debug("", exc_info=True)
+         print_stderr(_("Installation aborted at user request"))
+-    except Exception, main_e:
++    except Exception as main_e:
+         fail(main_e)
+diff --git a/virt-manager b/virt-manager
+index 53b7356..c1d0350 100755
+--- a/virt-manager
++++ b/virt-manager
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python2
++#!/usr/bin/python3.6
+ #
+ # Copyright (C) 2006, 2014 Red Hat, Inc.
+ # Copyright (C) 2006 Daniel P. Berrange <berrange@redhat.com>
+@@ -44,7 +44,7 @@ warnings.simplefilter("ignore")
+ try:
+     gi.check_version("3.14.0")
+ except (ValueError, AttributeError):
+-    print "pygobject3 3.14.0 or later is required."
++    print("pygobject3 3.14.0 or later is required.")
+     sys.exit(1)
+ 
+ 
+@@ -76,7 +76,7 @@ def _import_gtk(leftovers):
+         leftovers = sys.argv[1:]
+ 
+         if Gtk.check_version(3, 14, 0):
+-            print "gtk3 3.14.0 or later is required."
++            print("gtk3 3.14.0 or later is required.")
+             sys.exit(1)
+ 
+         # This will error if Gtk wasn't correctly initialized
+@@ -84,7 +84,7 @@ def _import_gtk(leftovers):
+ 
+         globals()["Gtk"] = Gtk
+         import virtManager.config
+-    except Exception, e:
++    except Exception as e:
+         # Don't just let the exception raise here. abrt reports bugs
+         # when users mess up su/sudo and DISPLAY isn't set. Printing
+         # it avoids the issue
+@@ -93,7 +93,7 @@ def _import_gtk(leftovers):
+         if display:
+             msg += ": Could not open display: %s" % display
+         logging.debug("".join(traceback.format_exc()))
+-        print msg
++        print(msg)
+         sys.exit(1)
+     finally:
+         sys.argv = origargv
+@@ -278,7 +278,7 @@ if __name__ == "__main__":
+         logging.debug("Received KeyboardInterrupt. Exiting application.")
+     except SystemExit:
+         raise
+-    except Exception, run_e:
++    except Exception as run_e:
+         if "Gtk" not in globals():
+             raise
+         _show_startup_error(str(run_e), "".join(traceback.format_exc()))
+diff --git a/virt-xml b/virt-xml
+index 39ca18e..2ab37b3 100755
+--- a/virt-xml
++++ b/virt-xml
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python2
++#!/usr/bin/python3.6
+ #
+ # Copyright 2013-2014 Red Hat, Inc.
+ # Cole Robinson <crobinso@redhat.com>
+@@ -94,7 +94,7 @@ def get_domain_and_guest(conn, domstr):
+             domain = conn.lookupByUUIDString(domstr)
+         else:
+             domain = conn.lookupByName(domstr)
+-    except libvirt.libvirtError, e:
++    except libvirt.libvirtError as e:
+         fail(_("Could not find domain '%s': %s") % (domstr, e))
+ 
+     state = domain.info()[0]
+@@ -294,7 +294,7 @@ def update_changes(domain, devs, action, confirm):
+                 domain.detachDeviceFlags(xml, libvirt.VIR_DOMAIN_AFFECT_LIVE)
+             elif action == "update":
+                 domain.updateDeviceFlags(xml, libvirt.VIR_DOMAIN_AFFECT_LIVE)
+-        except libvirt.libvirtError, e:
++        except libvirt.libvirtError as e:
+             fail(_("Error attempting device %s: %s") % (action, e))
+ 
+         print_stdout(_("Device %s successful.") % action)
+@@ -474,10 +474,10 @@ def main(conn=None):
+ if __name__ == "__main__":
+     try:
+         sys.exit(main())
+-    except SystemExit, sys_e:
++    except SystemExit as sys_e:
+         sys.exit(sys_e.code)
+     except KeyboardInterrupt:
+         logging.debug("", exc_info=True)
+         print_stderr(_("Aborted at user request"))
+-    except Exception, main_e:
++    except Exception as main_e:
+         fail(main_e)
+diff --git a/virtManager/addhardware.py b/virtManager/addhardware.py
+index aab9095..46bbe35 100644
+--- a/virtManager/addhardware.py
++++ b/virtManager/addhardware.py
+@@ -59,7 +59,7 @@ PAGE_USBREDIR,
+ PAGE_TPM,
+ PAGE_RNG,
+ PAGE_PANIC,
+-) = range(0, 17)
++) = list(range(0, 17))
+ 
+ 
+ class vmmAddHardware(vmmGObjectUI):
+@@ -766,7 +766,7 @@ class vmmAddHardware(vmmGObjectUI):
+             else:
+                 # Guest XML editing
+                 define_func(**define_args)
+-        except Exception, e:
++        except Exception as e:
+             err.show_err((_("Error changing VM configuration: %s") %
+                               str(e)))
+             return False
+@@ -784,7 +784,7 @@ class vmmAddHardware(vmmGObjectUI):
+             elif hotplug_args:
+                 did_hotplug = True
+                 vm.hotplug(**hotplug_args)
+-        except Exception, e:
++        except Exception as e:
+             did_hotplug = True
+             logging.debug("Hotplug failed: %s", str(e))
+             hotplug_err = ((str(e), "".join(traceback.format_exc())))
+@@ -1146,7 +1146,7 @@ class vmmAddHardware(vmmGObjectUI):
+         self._dev = VirtualTPMDevice(self.conn.get_backend())
+         self._dev.type = devtype
+ 
+-        for param_name, widget_name in tpm_widget_mappings.items():
++        for param_name, widget_name in list(tpm_widget_mappings.items()):
+             make_visible = self._dev.supports_property(param_name)
+             uiutil.set_grid_row_visible(self.widget(widget_name + "-label"),
+                                            make_visible)
+@@ -1200,7 +1200,7 @@ class vmmAddHardware(vmmGObjectUI):
+         self._dev = char_class(self.conn.get_backend())
+         self._dev.type = devtype
+ 
+-        for param_name, widget_name in char_widget_mappings.items():
++        for param_name, widget_name in list(char_widget_mappings.items()):
+             make_visible = self._dev.supports_property(param_name)
+             uiutil.set_grid_row_visible(self.widget(widget_name + "-label"),
+                                            make_visible)
+@@ -1298,7 +1298,7 @@ class vmmAddHardware(vmmGObjectUI):
+             if controller is not None:
+                 self.vm.attach_device(controller)
+             self.vm.attach_device(self._dev)
+-        except Exception, e:
++        except Exception as e:
+             logging.debug("Device could not be hotplugged: %s", str(e))
+             attach_err = (str(e), "".join(traceback.format_exc()))
+ 
+@@ -1322,7 +1322,7 @@ class vmmAddHardware(vmmGObjectUI):
+             if controller is not None:
+                 self.vm.add_device(controller)
+             self.vm.add_device(self._dev)
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Error adding device: %s") % str(e))
+             return True
+ 
+@@ -1333,7 +1333,7 @@ class vmmAddHardware(vmmGObjectUI):
+         if not error:
+             try:
+                 failure = self._add_device()
+-            except Exception, e:
++            except Exception as e:
+                 failure = True
+                 error = _("Unable to add device: %s") % str(e)
+                 details = "".join(traceback.format_exc())
+@@ -1353,7 +1353,7 @@ class vmmAddHardware(vmmGObjectUI):
+         try:
+             if self._validate() is False:
+                 return
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Uncaught error validating hardware "
+                                 "input: %s") % str(e))
+             return
+@@ -1477,7 +1477,7 @@ class vmmAddHardware(vmmGObjectUI):
+         try:
+             disk = self.addstorage.validate_storage(self.vm.get_name(),
+                 collidelist=collidelist, device=device)
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(_("Storage parameter error."), e)
+ 
+         if disk is False:
+@@ -1500,7 +1500,7 @@ class vmmAddHardware(vmmGObjectUI):
+                 disk, controller_model, disks)
+ 
+             disk.generate_target(used, prefer_ctrl)
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(_("Storage parameter error."), e)
+ 
+         if self.addstorage.validate_disk_object(disk) is False:
+@@ -1552,7 +1552,7 @@ class vmmAddHardware(vmmGObjectUI):
+             self._dev.tlsPort = tlsport
+             if keymap:
+                 self._dev.keymap = keymap
+-        except ValueError, e:
++        except ValueError as e:
+             self.err.val_err(_("Graphics device parameter error"), e)
+ 
+     def _validate_page_sound(self):
+@@ -1561,7 +1561,7 @@ class vmmAddHardware(vmmGObjectUI):
+         try:
+             self._dev = virtinst.VirtualAudio(self.conn.get_backend())
+             self._dev.model = smodel
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(_("Sound device parameter error"), e)
+ 
+     def _validate_page_hostdev(self):
+@@ -1587,7 +1587,7 @@ class vmmAddHardware(vmmGObjectUI):
+                     return False
+             dev.set_from_nodedev(nodedev)
+             self._dev = dev
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(_("Host device parameter error"), e)
+ 
+     def _validate_page_char(self):
+@@ -1646,13 +1646,13 @@ class vmmAddHardware(vmmGObjectUI):
+         try:
+             self._dev = devclass
+ 
+-            for param_name, val in value_mappings.items():
++            for param_name, val in list(value_mappings.items()):
+                 if self._dev.supports_property(param_name) and val is not None:
+                     setattr(self._dev, param_name, val)
+ 
+             # Dump XML for sanity checking
+             self._dev.get_xml_config()
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(
+                     _("%s device parameter error") %
+                     char_class.virtual_device_type.capitalize(), e)
+@@ -1664,7 +1664,7 @@ class vmmAddHardware(vmmGObjectUI):
+         try:
+             self._dev = VirtualVideoDevice(conn)
+             self._dev.model = model
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(_("Video device parameter error"), e)
+ 
+     def _validate_page_watchdog(self):
+@@ -1676,7 +1676,7 @@ class vmmAddHardware(vmmGObjectUI):
+             self._dev = VirtualWatchdog(conn)
+             self._dev.model = model
+             self._dev.action = action
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(_("Watchdog parameter error"), e)
+ 
+     def _validate_page_filesystem(self):
+@@ -1691,7 +1691,7 @@ class vmmAddHardware(vmmGObjectUI):
+         try:
+             self._dev = VirtualSmartCardDevice(conn)
+             self._dev.mode = mode
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(_("Smartcard device parameter error"), e)
+ 
+     def _validate_page_usbredir(self):
+@@ -1710,7 +1710,7 @@ class vmmAddHardware(vmmGObjectUI):
+                 self._dev.host = host
+             if service:
+                 self._dev.service = service
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(_("USB redirected device parameter error"),
+                                     str(e))
+ 
+@@ -1727,10 +1727,10 @@ class vmmAddHardware(vmmGObjectUI):
+         try:
+             self._dev = VirtualTPMDevice(conn)
+             self._dev.type = typ
+-            for param_name, val in value_mappings.items():
++            for param_name, val in list(value_mappings.items()):
+                 if self._dev.supports_property(param_name):
+                     setattr(self._dev, param_name, val)
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(_("TPM device parameter error"), e)
+ 
+     def _validate_page_panic(self):
+@@ -1746,9 +1746,9 @@ class vmmAddHardware(vmmGObjectUI):
+             self._dev = VirtualPanicDevice(conn)
+             if not iobase:
+                 iobase = self._dev.IOBASE_DEFAULT
+-            for param_name, val in value_mappings.items():
++            for param_name, val in list(value_mappings.items()):
+                 setattr(self._dev, param_name, val)
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(_("Panic device parameter error"), e)
+ 
+     def _validate_page_controller(self):
+@@ -1838,10 +1838,10 @@ class vmmAddHardware(vmmGObjectUI):
+         try:
+             self._dev = virtinst.VirtualRNGDevice(self.conn.get_backend())
+             self._dev.type = rtype
+-            for param_name, val in value_mappings.items():
++            for param_name, val in list(value_mappings.items()):
+                 if self._dev.supports_property(param_name):
+                     setattr(self._dev, param_name, val)
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(_("RNG device parameter error"), e)
+ 
+ 
+diff --git a/virtManager/addstorage.py b/virtManager/addstorage.py
+index 8c58344..1d79c4f 100644
+--- a/virtManager/addstorage.py
++++ b/virtManager/addstorage.py
+@@ -117,7 +117,7 @@ class vmmAddStorage(vmmGObjectUI):
+             try:
+                 default_pool.start()
+                 logging.info("Started pool '%s'", default_pool.get_name())
+-            except Exception, e:
++            except Exception as e:
+                 return self.err.show_err(_("Could not start storage_pool "
+                                       "'%s': %s") %
+                                     (default_pool.get_name(), str(e)))
+@@ -163,7 +163,7 @@ class vmmAddStorage(vmmGObjectUI):
+         errmsg = _("Errors were encountered changing permissions for the "
+                    "following directories:")
+         details = ""
+-        for path, error in errors.items():
++        for path, error in list(errors.items()):
+             if path not in broken_paths:
+                 continue
+             details += "%s : %s\n" % (path, error)
+@@ -175,7 +175,7 @@ class vmmAddStorage(vmmGObjectUI):
+                              _("Don't ask about these directories again."))
+ 
+         if chkres:
+-            src.config.add_perms_fix_ignore(errors.keys())
++            src.config.add_perms_fix_ignore(list(errors.keys()))
+ 
+     def reset_state(self):
+         self._update_host_space()
+diff --git a/virtManager/asyncjob.py b/virtManager/asyncjob.py
+index 0fd3bee..672dd04 100644
+--- a/virtManager/asyncjob.py
++++ b/virtManager/asyncjob.py
+@@ -86,7 +86,7 @@ class vmmMeter(virtinst.progress.BaseMeter):
+ def cb_wrapper(callback, asyncjob, *args, **kwargs):
+     try:
+         callback(asyncjob, *args, **kwargs)
+-    except Exception, e:
++    except Exception as e:
+         # If job is cancelled, don't report error to user.
+         if (isinstance(e, libvirt.libvirtError) and
+             asyncjob.can_cancel() and
+diff --git a/virtManager/choosecd.py b/virtManager/choosecd.py
+index d952492..32542c3 100644
+--- a/virtManager/choosecd.py
++++ b/virtManager/choosecd.py
+@@ -116,7 +116,7 @@ class vmmChooseCD(vmmGObjectUI):
+ 
+         try:
+             self.disk.path = path
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(_("Invalid Media Path"), e)
+ 
+         names = self.disk.is_conflict_disk()
+diff --git a/virtManager/clone.py b/virtManager/clone.py
+index 28daf02..12fd2c6 100644
+--- a/virtManager/clone.py
++++ b/virtManager/clone.py
+@@ -327,7 +327,7 @@ class vmmCloneVM(vmmGObjectUI):
+ 
+             build_net_row(label, mac, newmac)
+ 
+-        no_net = bool(len(self.net_list.keys()) == 0)
++        no_net = bool(len(list(self.net_list.keys())) == 0)
+         self.widget("clone-network-box").set_visible(not no_net)
+         self.widget("clone-no-net").set_visible(no_net)
+ 
+@@ -396,7 +396,7 @@ class vmmCloneVM(vmmGObjectUI):
+             try:
+                 cd.skip_target = skip_targets
+                 cd.setup_original()
+-            except Exception, e:
++            except Exception as e:
+                 logging.exception("Disk target '%s' caused clone error",
+                                   force_target)
+                 storage_add(str(e))
+@@ -416,7 +416,7 @@ class vmmCloneVM(vmmGObjectUI):
+ 
+                 cd.clone_paths = clone_path
+                 size = cd.original_disks[0].get_size()
+-            except Exception, e:
++            except Exception as e:
+                 logging.exception("Error setting generated path '%s'",
+                                   clone_path)
+                 storage_add(str(e))
+@@ -445,7 +445,7 @@ class vmmCloneVM(vmmGObjectUI):
+         if cd.clone_name == newname:
+             return
+ 
+-        for row in self.storage_list.values():
++        for row in list(self.storage_list.values()):
+             origpath = row[STORAGE_INFO_ORIG_PATH]
+             if row[STORAGE_INFO_MANUAL_PATH]:
+                 continue
+@@ -454,7 +454,7 @@ class vmmCloneVM(vmmGObjectUI):
+             try:
+                 newpath = self.generate_clone_path_name(origpath, newname)
+                 row[STORAGE_INFO_NEW_PATH] = newpath
+-            except Exception, e:
++            except Exception as e:
+                 logging.debug("Generating new path from clone name failed: " +
+                               str(e))
+ 
+@@ -580,7 +580,7 @@ class vmmCloneVM(vmmGObjectUI):
+         # If any storage cannot be cloned or shared, don't allow cloning
+         clone = True
+         tooltip = ""
+-        for row in self.storage_list.values():
++        for row in list(self.storage_list.values()):
+             can_clone = row[STORAGE_INFO_CAN_CLONE]
+             can_share = row[STORAGE_INFO_CAN_SHARE]
+             if not (can_clone or can_share):
+@@ -676,7 +676,7 @@ class vmmCloneVM(vmmGObjectUI):
+             if msg:
+                 raise RuntimeError(msg)
+             row[NETWORK_INFO_NEW_MAC] = new
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Error changing MAC address: %s") % str(e))
+             return
+ 
+@@ -716,7 +716,7 @@ class vmmCloneVM(vmmGObjectUI):
+             self.populate_storage_lists()
+             row[STORAGE_INFO_NEW_PATH] = new_path
+             row[STORAGE_INFO_MANUAL_PATH] = True
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Error changing storage path: %s") % str(e))
+             return
+ 
+@@ -801,7 +801,7 @@ class vmmCloneVM(vmmGObjectUI):
+         try:
+             if not self.validate():
+                 return
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Uncaught error validating input: %s") % str(e))
+             return
+ 
+diff --git a/virtManager/connect.py b/virtManager/connect.py
+index 30add14..fdb6bf4 100644
+--- a/virtManager/connect.py
++++ b/virtManager/connect.py
+@@ -34,11 +34,11 @@ from .baseclass import vmmGObjectUI
+ HV_XEN,
+ HV_LXC,
+ HV_QEMU_SESSION,
+-HV_BHYVE) = range(5)
++HV_BHYVE) = list(range(5))
+ 
+ (CONN_SSH,
+ CONN_TCP,
+-CONN_TLS) = range(3)
++CONN_TLS) = list(range(3))
+ 
+ 
+ def current_user():
+@@ -98,7 +98,7 @@ class vmmConnect(vmmGObjectUI):
+             # Call any API, so we detect if avahi is even available or not
+             self.avahiserver.GetAPIVersion()
+             logging.debug("Connected to avahi")
+-        except Exception, e:
++        except Exception as e:
+             self.dbus = None
+             self.avahiserver = None
+             logging.debug("Couldn't contact avahi: %s", str(e))
+@@ -230,7 +230,7 @@ class vmmConnect(vmmGObjectUI):
+ 
+             sig = resint.connect("g-signal", cb)
+             self.browser_sigs.append((resint, sig))
+-        except Exception, e:
++        except Exception as e:
+             logging.exception(e)
+ 
+     def remove_service(self, interface, protocol, name, typ, domain, flags):
+@@ -246,7 +246,7 @@ class vmmConnect(vmmGObjectUI):
+             for row in model:
+                 if row[0] == name:
+                     model.remove(row.iter)
+-        except Exception, e:
++        except Exception as e:
+             logging.exception(e)
+ 
+     def add_conn_to_list(self, interface, protocol, name, typ, domain,
+@@ -269,7 +269,7 @@ class vmmConnect(vmmGObjectUI):
+ 
+             host = self.sanitize_hostname(str(host))
+             model.append([str(address), str(host), str(name)])
+-        except Exception, e:
++        except Exception as e:
+             logging.exception(e)
+ 
+     def start_browse(self):
+@@ -444,7 +444,7 @@ class vmmConnect(vmmGObjectUI):
+         if host.startswith("linux-"):
+             tmphost = host[6:]
+             try:
+-                long(tmphost)
++                int(tmphost)
+                 host = ""
+             except ValueError:
+                 pass
+diff --git a/virtManager/connectauth.py b/virtManager/connectauth.py
+index 014a986..3d8fd3c 100644
+--- a/virtManager/connectauth.py
++++ b/virtManager/connectauth.py
+@@ -161,7 +161,7 @@ def acquire_tgt():
+                                 "/org/gnome/KrbAuthDialog",
+                                 "org.freedesktop.KrbAuthDialog", None)
+         ret = ka.acquireTgt("(s)", "")
+-    except Exception, e:
++    except Exception as e:
+         logging.info("Cannot acquire tgt" + str(e))
+         ret = False
+     return ret
+diff --git a/virtManager/connection.py b/virtManager/connection.py
+index 6cb9cc0..820322e 100644
+--- a/virtManager/connection.py
++++ b/virtManager/connection.py
+@@ -188,7 +188,7 @@ class vmmConnection(vmmGObject):
+ 
+     (_STATE_DISCONNECTED,
+      _STATE_CONNECTING,
+-     _STATE_ACTIVE) = range(1, 4)
++     _STATE_ACTIVE) = list(range(1, 4))
+ 
+     def __init__(self, uri):
+         vmmGObject.__init__(self)
+@@ -277,7 +277,7 @@ class vmmConnection(vmmGObject):
+                 for vol in pool.get_volumes():
+                     try:
+                         ret.append(vol.get_xmlobj(refresh_if_nec=False))
+-                    except Exception, e:
++                    except Exception as e:
+                         logging.debug("Fetching volume XML failed: %s", e)
+             return ret
+         self._backend.cb_fetch_all_vols = fetch_all_vols
+@@ -362,7 +362,7 @@ class vmmConnection(vmmGObject):
+         uri = self.get_uri().replace("/", "_")
+         ret = os.path.join(util.get_cache_dir(), uri)
+         if not os.path.exists(ret):
+-            os.makedirs(ret, 0755)
++            os.makedirs(ret, 0o755)
+         return ret
+ 
+     def get_default_storage_format(self):
+@@ -449,7 +449,7 @@ class vmmConnection(vmmGObject):
+                 # Try to create the default storage pool
+                 try:
+                     virtinst.StoragePool.build_default_pool(self.get_backend())
+-                except Exception, e:
++                except Exception as e:
+                     logging.debug("Building default pool failed: %s", str(e))
+ 
+         return self._storage_capable
+@@ -551,7 +551,7 @@ class vmmConnection(vmmGObject):
+                 try:
+                     if vol.get_target_path() == path:
+                         return vol
+-                except Exception, e:
++                except Exception as e:
+                     # Errors can happen if the volume disappeared, bug 1092739
+                     logging.debug("Error looking up volume from path=%s: %s",
+                         path, e)
+@@ -626,7 +626,7 @@ class vmmConnection(vmmGObject):
+         for dev in self.list_nodedevs():
+             try:
+                 xmlobj = dev.get_xmlobj()
+-            except libvirt.libvirtError, e:
++            except libvirt.libvirtError as e:
+                 # Libvirt nodedev XML fetching can be busted
+                 # https://bugzilla.redhat.com/show_bug.cgi?id=1225771
+                 if e.get_error_code() != libvirt.VIR_ERR_NO_NODE_DEVICE:
+@@ -701,12 +701,12 @@ class vmmConnection(vmmGObject):
+         try:
+             # Redefine new domain
+             newobj = define_cb(newxml)
+-        except Exception, renameerr:
++        except Exception as renameerr:
+             try:
+                 logging.debug("Error defining new name %s XML",
+                     obj.class_name(), exc_info=True)
+                 newobj = define_cb(origxml)
+-            except Exception, fixerr:
++            except Exception as fixerr:
+                 logging.debug("Failed to redefine original %s!",
+                     obj.class_name(), exc_info=True)
+                 raise RuntimeError(
+@@ -788,7 +788,7 @@ class vmmConnection(vmmGObject):
+                 self._domain_lifecycle_event, None))
+             self.using_domain_events = True
+             logging.debug("Using domain events")
+-        except Exception, e:
++        except Exception as e:
+             self.using_domain_events = False
+             logging.debug("Error registering domain events: %s", e)
+ 
+@@ -799,7 +799,7 @@ class vmmConnection(vmmGObject):
+                 self._domain_cb_ids.append(
+                     self.get_backend().domainEventRegisterAny(
+                     None, eventid, self._domain_xml_misc_event, None))
+-            except Exception, e:
++            except Exception as e:
+                 logging.debug("Error registering domain %s event: %s",
+                     typestr, e)
+ 
+@@ -825,7 +825,7 @@ class vmmConnection(vmmGObject):
+                 None, eventid, self._network_lifecycle_event, None))
+             self.using_network_events = True
+             logging.debug("Using network events")
+-        except Exception, e:
++        except Exception as e:
+             self.using_network_events = False
+             logging.debug("Error registering network events: %s", e)
+ 
+@@ -903,7 +903,7 @@ class vmmConnection(vmmGObject):
+         try:
+             self._backend.open(self._do_creds_password)
+             return True, None
+-        except Exception, exc:
++        except Exception as exc:
+             tb = "".join(traceback.format_exc())
+             if isinstance(exc, libvirt.libvirtError):
+                 # pylint: disable=no-member
+@@ -948,7 +948,7 @@ class vmmConnection(vmmGObject):
+ 
+         try:
+             self._backend.setKeepAlive(20, 1)
+-        except Exception, e:
++        except Exception as e:
+             if (type(e) is not AttributeError and
+                 not util.is_error_nosupport(e)):
+                 raise
+@@ -980,7 +980,7 @@ class vmmConnection(vmmGObject):
+ 
+             self.idle_add(self._change_state, is_active and
+                 self._STATE_ACTIVE or self._STATE_DISCONNECTED)
+-        except Exception, e:
++        except Exception as e:
+             is_active = False
+             self._schedule_close()
+             connectError = (str(e), "".join(traceback.format_exc()), False)
+@@ -1069,35 +1069,35 @@ class vmmConnection(vmmGObject):
+     def _update_nets(self, dopoll):
+         keymap = dict((o.get_connkey(), o) for o in self.list_nets())
+         if not dopoll or not self.is_network_capable():
+-            return [], [], keymap.values()
++            return [], [], list(keymap.values())
+         return pollhelpers.fetch_nets(self._backend, keymap,
+                     (lambda obj, key: vmmNetwork(self, obj, key)))
+ 
+     def _update_pools(self, dopoll):
+         keymap = dict((o.get_connkey(), o) for o in self.list_pools())
+         if not dopoll or not self.is_storage_capable():
+-            return [], [], keymap.values()
++            return [], [], list(keymap.values())
+         return pollhelpers.fetch_pools(self._backend, keymap,
+                     (lambda obj, key: vmmStoragePool(self, obj, key)))
+ 
+     def _update_interfaces(self, dopoll):
+         keymap = dict((o.get_connkey(), o) for o in self.list_interfaces())
+         if not dopoll or not self.is_interface_capable():
+-            return [], [], keymap.values()
++            return [], [], list(keymap.values())
+         return pollhelpers.fetch_interfaces(self._backend, keymap,
+                     (lambda obj, key: vmmInterface(self, obj, key)))
+ 
+     def _update_nodedevs(self, dopoll):
+         keymap = dict((o.get_connkey(), o) for o in self.list_nodedevs())
+         if not dopoll or not self.is_nodedev_capable():
+-            return [], [], keymap.values()
++            return [], [], list(keymap.values())
+         return pollhelpers.fetch_nodedevs(self._backend, keymap,
+                     (lambda obj, key: vmmNodeDevice(self, obj, key)))
+ 
+     def _update_vms(self, dopoll):
+         keymap = dict((o.get_connkey(), o) for o in self.list_vms())
+         if not dopoll:
+-            return [], [], keymap.values()
++            return [], [], list(keymap.values())
+         return pollhelpers.fetch_vms(self._backend, keymap,
+                     (lambda obj, key: vmmDomain(self, obj, key)))
+ 
+@@ -1202,7 +1202,7 @@ class vmmConnection(vmmGObject):
+                     continue
+ 
+                 obj.tick(stats_update=stats_update)
+-            except Exception, e:
++            except Exception as e:
+                 logging.exception("Tick for %s failed", obj)
+                 if (isinstance(e, libvirt.libvirtError) and
+                     (getattr(e, "get_error_code")() ==
+@@ -1291,7 +1291,7 @@ class vmmConnection(vmmGObject):
+             self._tick(*args, **kwargs)
+         except KeyboardInterrupt:
+             raise
+-        except Exception, e:
++        except Exception as e:
+             pass
+ 
+         if e is None:
+diff --git a/virtManager/console.py b/virtManager/console.py
+index 1d33115..c99c4e0 100644
+--- a/virtManager/console.py
++++ b/virtManager/console.py
+@@ -35,7 +35,7 @@ from .viewers import SpiceViewer, VNCViewer, have_spice_gtk
+ (_CONSOLE_PAGE_UNAVAILABLE,
+  _CONSOLE_PAGE_AUTHENTICATE,
+  _CONSOLE_PAGE_SERIAL,
+- _CONSOLE_PAGE_VIEWER) = range(4)
++ _CONSOLE_PAGE_VIEWER) = list(range(4))
+ 
+ 
+ class _TimedRevealer(vmmGObject):
+@@ -689,7 +689,7 @@ class vmmConsolePages(vmmGObjectUI):
+             gdev = gdevs and gdevs[0] or None
+             if gdev:
+                 ginfo = ConnectionInfo(self.vm.conn, gdev)
+-        except Exception, e:
++        except Exception as e:
+             # We can fail here if VM is destroyed: xen is a bit racy
+             # and can't handle domain lookups that soon after
+             logging.exception("Getting graphics console failed: %s", str(e))
+@@ -732,7 +732,7 @@ class vmmConsolePages(vmmGObjectUI):
+             self._refresh_enable_accel()
+ 
+             self._viewer.console_open()
+-        except Exception, e:
++        except Exception as e:
+             logging.exception("Error connection to graphical console")
+             self._activate_unavailable_page(
+                     _("Error connecting to graphical console") + ":\n%s" % e)
+diff --git a/virtManager/create.py b/virtManager/create.py
+index 737c1fa..27874f7 100644
+--- a/virtManager/create.py
++++ b/virtManager/create.py
+@@ -49,20 +49,20 @@ DEFAULT_MEM = 1024
+  PAGE_INSTALL,
+  PAGE_MEM,
+  PAGE_STORAGE,
+- PAGE_FINISH) = range(5)
++ PAGE_FINISH) = list(range(5))
+ 
+ (INSTALL_PAGE_ISO,
+  INSTALL_PAGE_URL,
+  INSTALL_PAGE_PXE,
+  INSTALL_PAGE_IMPORT,
+  INSTALL_PAGE_CONTAINER_APP,
+- INSTALL_PAGE_CONTAINER_OS) = range(6)
++ INSTALL_PAGE_CONTAINER_OS) = list(range(6))
+ 
+ # Column numbers for os type/version list models
+ (OS_COL_ID,
+  OS_COL_LABEL,
+  OS_COL_IS_SEP,
+- OS_COL_IS_SHOW_ALL) = range(4)
++ OS_COL_IS_SHOW_ALL) = list(range(4))
+ 
+ 
+ #####################
+@@ -452,7 +452,7 @@ class vmmCreate(vmmGObjectUI):
+                 guest.set_uefi_default()
+                 installable_arch = True
+                 logging.debug("UEFI found for aarch64, setting it as default.")
+-            except Exception, e:
++            except Exception as e:
+                 installable_arch = False
+                 logging.debug("Error checking for aarch64 UEFI default",
+                     exc_info=True)
+@@ -668,7 +668,7 @@ class vmmCreate(vmmGObjectUI):
+ 
+         try:
+             self._populate_conn_state()
+-        except Exception, e:
++        except Exception as e:
+             logging.exception("Error setting create wizard conn state.")
+             return self._show_startup_error(str(e))
+ 
+@@ -864,7 +864,7 @@ class vmmCreate(vmmGObjectUI):
+         model.clear()
+ 
+         default = -1
+-        for c in self.engine.conns.values():
++        for c in list(self.engine.conns.values()):
+             connobj = c["conn"]
+             if not connobj.is_active():
+                 continue
+@@ -1615,7 +1615,7 @@ class vmmCreate(vmmGObjectUI):
+         elif pagenum == PAGE_FINISH:
+             try:
+                 self._populate_summary()
+-            except Exception, e:
++            except Exception as e:
+                 self.err.show_err(_("Error populating summary page: %s") %
+                     str(e))
+                 return
+@@ -1649,7 +1649,7 @@ class vmmCreate(vmmGObjectUI):
+         # Generate UUID (makes customize dialog happy)
+         try:
+             guest.uuid = util.randomUUID(guest.conn)
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Error setting UUID: %s") % str(e))
+             return None
+ 
+@@ -1657,7 +1657,7 @@ class vmmCreate(vmmGObjectUI):
+         try:
+             if variant:
+                 guest.os_variant = variant
+-        except ValueError, e:
++        except ValueError as e:
+             self.err.val_err(_("Error setting OS information."), str(e))
+             return None
+ 
+@@ -1679,7 +1679,7 @@ class vmmCreate(vmmGObjectUI):
+                 for_cpu=True)
+ 
+             guest.add_default_devices()
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Error setting up default devices:") + str(e))
+             return None
+ 
+@@ -1697,7 +1697,7 @@ class vmmCreate(vmmGObjectUI):
+                 return self._validate_storage_page()
+             elif pagenum == PAGE_FINISH:
+                 return self._validate_final_page()
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Uncaught error validating install "
+                                 "parameters: %s") % str(e))
+             return
+@@ -1810,7 +1810,7 @@ class vmmCreate(vmmGObjectUI):
+             if not self._guest:
+                 return False
+             self._guest.installer = installer
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(
+                         _("Error setting installer parameters."), e)
+ 
+@@ -1832,7 +1832,7 @@ class vmmCreate(vmmGObjectUI):
+                 fsdev.target = "/"
+                 fsdev.source = fs
+                 self._guest.add_device(fsdev)
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(
+                                 _("Error setting install media location."), e)
+ 
+@@ -1865,7 +1865,7 @@ class vmmCreate(vmmGObjectUI):
+             name = self._generate_default_name(distro, variant)
+             self.widget("create-vm-name").set_text(name)
+             self._guest.name = name
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(_("Error setting default name."), e)
+ 
+         # Kind of wonky, run storage validation now, which will assign
+@@ -1920,14 +1920,14 @@ class vmmCreate(vmmGObjectUI):
+         # VCPUS
+         try:
+             self._guest.vcpus = int(cpus)
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(_("Error setting CPUs."), e)
+ 
+         # Memory
+         try:
+             self._guest.memory = int(mem) * 1024
+             self._guest.maxmemory = int(mem) * 1024
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(_("Error setting guest memory."), e)
+ 
+         return True
+@@ -1968,7 +1968,7 @@ class vmmCreate(vmmGObjectUI):
+             if storage_enabled:
+                 disk = self._addstorage.validate_storage(self._guest.name,
+                     path=path)
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(_("Storage parameter error."), e)
+ 
+         if disk is False:
+@@ -1999,7 +1999,7 @@ class vmmCreate(vmmGObjectUI):
+         if name != self._guest.name:
+             try:
+                 self._guest.name = name
+-            except Exception, e:
++            except Exception as e:
+                 return self.err.val_err(_("Invalid guest name"), str(e))
+             if self._is_default_storage():
+                 logging.debug("User changed VM name and using default "
+@@ -2197,7 +2197,7 @@ class vmmCreate(vmmGObjectUI):
+         logging.debug("User requested 'customize', launching dialog")
+         try:
+             self._show_customize_dialog(guest)
+-        except Exception, e:
++        except Exception as e:
+             self._undo_finish_cursor(self.topwin)
+             self.err.show_err(_("Error starting installation: ") + str(e))
+             return
+@@ -2350,7 +2350,7 @@ class vmmCreate(vmmGObjectUI):
+         try:
+             logging.debug("Install should be completed, starting VM.")
+             vm.startup()
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Error continue install: %s") % str(e))
+ 
+         return True
+diff --git a/virtManager/createinterface.py b/virtManager/createinterface.py
+index 82e69cb..ac85998 100644
+--- a/virtManager/createinterface.py
++++ b/virtManager/createinterface.py
+@@ -387,7 +387,7 @@ class vmmCreateInterface(vmmGObjectUI):
+             Interface.INTERFACE_TYPE_VLAN : "vlan",
+         }
+ 
+-        for key, value in type_dict.items():
++        for key, value in list(type_dict.items()):
+             do_show = (key == itype)
+             self.widget("%s-label" % value).set_visible(do_show)
+             self.widget("%s-box" % value).set_visible(do_show)
+@@ -544,24 +544,24 @@ class vmmCreateInterface(vmmGObjectUI):
+                        active, None, iface.get_mac()]
+             row_dict[name] = row
+ 
+-        for name, row in nodedevs.items():
++        for name, row in list(nodedevs.items()):
+             try:
+                 key = Interface(self.conn.get_backend())
+                 key.type = Interface.INTERFACE_TYPE_ETHERNET
+                 key.name = name
+-            except Exception, e:
++            except Exception as e:
+                 logging.debug("Error creating stub interface '%s': %s",
+                     name, e)
+                 continue
+             row[INTERFACE_ROW_KEY] = key
+             row_dict[name] = row
+ 
+-        for row in row_dict.values():
++        for row in list(row_dict.values()):
+             name = row[INTERFACE_ROW_NAME]
+             row[INTERFACE_ROW_IN_USE_BY] = self.iface_in_use_by(self.conn,
+                                                                 name)
+ 
+-        for row in row_dict.values():
++        for row in list(row_dict.values()):
+             model.append(row)
+ 
+     def get_default_name(self):
+@@ -907,7 +907,7 @@ class vmmCreateInterface(vmmGObjectUI):
+             elif pagenum == PAGE_DETAILS:
+                 return self.validate_details_page()
+ 
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Uncaught error validating install "
+                                 "parameters: %s") % str(e))
+             return
+@@ -1011,7 +1011,7 @@ class vmmCreateInterface(vmmGObjectUI):
+             iobj.validate()
+ 
+             self.interface = iobj
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(
+                             _("Error setting interface parameters."), e)
+ 
+@@ -1078,7 +1078,7 @@ class vmmCreateInterface(vmmGObjectUI):
+     def validate_ip_info(self):
+         try:
+             self.build_ip_info()
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Error validating IP configuration: %s") %
+                               str(e))
+             return False
+diff --git a/virtManager/createnet.py b/virtManager/createnet.py
+index 9fdbc45..fadff53 100644
+--- a/virtManager/createnet.py
++++ b/virtManager/createnet.py
+@@ -34,7 +34,7 @@ from .baseclass import vmmGObjectUI
+ (PAGE_NAME,
+ PAGE_IPV4,
+ PAGE_IPV6,
+-PAGE_MISC) = range(4)
++PAGE_MISC) = list(range(4))
+ 
+ PAGE_MAX = PAGE_MISC
+ 
+@@ -257,7 +257,7 @@ class vmmCreateNetwork(vmmGObjectUI):
+         try:
+             net = self._build_xmlstub()
+             net.name = self.widget("net-name").get_text()
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(_("Invalid network name"), str(e))
+ 
+         return True
+@@ -751,7 +751,7 @@ class vmmCreateNetwork(vmmGObjectUI):
+ 
+         try:
+             net = self._build_xmlobj()
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Error generating network xml: %s") % str(e))
+             return
+ 
+diff --git a/virtManager/createpool.py b/virtManager/createpool.py
+index b17c083..b87fd87 100644
+--- a/virtManager/createpool.py
++++ b/virtManager/createpool.py
+@@ -398,7 +398,7 @@ class vmmCreatePool(vmmGObjectUI):
+                 self.finish()
+             else:
+                 notebook.next_page()
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Uncaught error validating input: %s") % str(e))
+             return
+ 
+@@ -499,7 +499,7 @@ class vmmCreatePool(vmmGObjectUI):
+             else:
+                 self._pool = self._make_stub_pool()
+             self._pool.name = self.get_config_name()
+-        except ValueError, e:
++        except ValueError as e:
+             return self.err.val_err(_("Pool Parameter Error"), e)
+ 
+         return True
+@@ -529,7 +529,7 @@ class vmmCreatePool(vmmGObjectUI):
+                 self._pool.source_name = source_name
+ 
+             self._pool.validate()
+-        except ValueError, e:
++        except ValueError as e:
+             return self.err.val_err(_("Pool Parameter Error"), e)
+ 
+         buildval = self.widget("pool-build").get_active()
+diff --git a/virtManager/createvol.py b/virtManager/createvol.py
+index 68560a4..836e085 100644
+--- a/virtManager/createvol.py
++++ b/virtManager/createvol.py
+@@ -291,7 +291,7 @@ class vmmCreateVolume(vmmGObjectUI):
+         try:
+             if not self.validate():
+                 return
+-        except Exception, e:
++        except Exception as e:
+             self.show_err(_("Uncaught error validating input: %s") % str(e))
+             return
+ 
+@@ -342,7 +342,7 @@ class vmmCreateVolume(vmmGObjectUI):
+             if fmt:
+                 self.vol.format = fmt
+             self.vol.validate()
+-        except ValueError, e:
++        except ValueError as e:
+             return self.val_err(_("Volume Parameter Error"), e)
+         return True
+ 
+diff --git a/virtManager/delete.py b/virtManager/delete.py
+index 8113e14..107cbac 100644
+--- a/virtManager/delete.py
++++ b/virtManager/delete.py
+@@ -180,7 +180,7 @@ class vmmDeleteDialog(vmmGObjectUI):
+                     logging.debug("Deleting path: %s", path)
+                     meter.start(text=_("Deleting path '%s'") % path)
+                     self._async_delete_path(conn, path, meter)
+-                except Exception, e:
++                except Exception as e:
+                     storage_errors.append((str(e),
+                                           "".join(traceback.format_exc())))
+                 meter.end(0)
+@@ -188,7 +188,7 @@ class vmmDeleteDialog(vmmGObjectUI):
+             logging.debug("Removing VM '%s'", self.vm.get_name())
+             self.vm.delete()
+ 
+-        except Exception, e:
++        except Exception as e:
+             error = (_("Error deleting virtual machine '%s': %s") %
+                       (self.vm.get_name(), str(e)))
+             details = "".join(traceback.format_exc())
+@@ -392,7 +392,7 @@ def do_we_default(conn, vm_name, vol, path, ro, shared, is_media):
+                 namestr = append_str(namestr, name, delim="\n- ")
+             info = append_str(info, _("Storage is in use by the following "
+                                       "virtual machines:\n- %s " % namestr))
+-    except Exception, e:
++    except Exception as e:
+         logging.exception("Failed checking disk conflict: %s", str(e))
+ 
+     return (not info, info)
+diff --git a/virtManager/details.py b/virtManager/details.py
+index b2f451d..487541a 100644
+--- a/virtManager/details.py
++++ b/virtManager/details.py
+@@ -104,7 +104,7 @@ EDIT_FS,
+ 
+ EDIT_HOSTDEV_ROMBAR,
+ 
+-) = range(1, 45)
++) = list(range(1, 45))
+ 
+ 
+ # Columns in hw list model
+@@ -112,7 +112,7 @@ EDIT_HOSTDEV_ROMBAR,
+  HW_LIST_COL_ICON_NAME,
+  HW_LIST_COL_ICON_SIZE,
+  HW_LIST_COL_TYPE,
+- HW_LIST_COL_DEVICE) = range(5)
++ HW_LIST_COL_DEVICE) = list(range(5))
+ 
+ # Types for the hw list model: numbers specify what order they will be listed
+ (HW_LIST_TYPE_GENERAL,
+@@ -136,7 +136,7 @@ EDIT_HOSTDEV_ROMBAR,
+  HW_LIST_TYPE_REDIRDEV,
+  HW_LIST_TYPE_TPM,
+  HW_LIST_TYPE_RNG,
+- HW_LIST_TYPE_PANIC) = range(22)
++ HW_LIST_TYPE_PANIC) = list(range(22))
+ 
+ remove_pages = [HW_LIST_TYPE_NIC, HW_LIST_TYPE_INPUT,
+                 HW_LIST_TYPE_GRAPHICS, HW_LIST_TYPE_SOUND, HW_LIST_TYPE_CHAR,
+@@ -151,12 +151,12 @@ remove_pages = [HW_LIST_TYPE_NIC, HW_LIST_TYPE_INPUT,
+  BOOT_LABEL,
+  BOOT_ICON,
+  BOOT_ACTIVE,
+- BOOT_CAN_SELECT) = range(5)
++ BOOT_CAN_SELECT) = list(range(5))
+ 
+ # Main tab pages
+ (DETAILS_PAGE_DETAILS,
+  DETAILS_PAGE_CONSOLE,
+- DETAILS_PAGE_SNAPSHOTS) = range(3)
++ DETAILS_PAGE_SNAPSHOTS) = list(range(3))
+ 
+ _remove_tooltip = _("Remove this device from the virtual machine")
+ 
+@@ -707,7 +707,7 @@ class vmmDetails(vmmGObjectUI):
+         rmHW.connect("activate", self.remove_xml_dev)
+ 
+         self._addhwmenuitems = {"add" : addHW, "remove" : rmHW}
+-        for i in self._addhwmenuitems.values():
++        for i in list(self._addhwmenuitems.values()):
+             self.addhwmenu.add(i)
+ 
+         self.widget("hw-panel").set_show_tabs(False)
+@@ -1187,7 +1187,7 @@ class vmmDetails(vmmGObjectUI):
+                 self.refresh_panic_page()
+             else:
+                 pagetype = -1
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Error refreshing hardware page: %s") % str(e))
+             # Don't return, we want the rest of the bits to run regardless
+ 
+@@ -1376,7 +1376,7 @@ class vmmDetails(vmmGObjectUI):
+                 self.addhw = vmmAddHardware(self.vm, self.is_customize_dialog)
+ 
+             self.addhw.show(self.topwin)
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err((_("Error launching hardware dialog: %s") %
+                                str(e)))
+ 
+@@ -1457,7 +1457,7 @@ class vmmDetails(vmmGObjectUI):
+         ignore = src
+         try:
+             return self._take_screenshot()
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Error taking screenshot: %s") % str(e))
+ 
+     def control_vm_usb_redirection(self, src):
+@@ -1484,7 +1484,7 @@ class vmmDetails(vmmGObjectUI):
+             'tEXt::Generator Version': self.config.get_appversion(),
+         }
+ 
+-        ret = image.save_to_bufferv('png', metadata.keys(), metadata.values())
++        ret = image.save_to_bufferv('png', list(metadata.keys()), list(metadata.values()))
+         # On Fedora 19, ret is (bool, str)
+         # Someday the bindings might be fixed to just return the str, try
+         # and future proof it a bit
+@@ -1780,7 +1780,7 @@ class vmmDetails(vmmGObjectUI):
+     def _eject_media(self, disk):
+         try:
+             self._change_storage_media(disk, None)
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err((_("Error disconnecting media: %s") % e))
+ 
+     def _insert_media(self, disk):
+@@ -1801,7 +1801,7 @@ class vmmDetails(vmmGObjectUI):
+             dialog.disk = disk
+ 
+             dialog.show(self.topwin)
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err((_("Error launching media dialog: %s") % e))
+             return
+ 
+@@ -1867,7 +1867,7 @@ class vmmDetails(vmmGObjectUI):
+                 ret = self.config_hostdev_apply(key)
+             else:
+                 ret = False
+-        except Exception, e:
++        except Exception as e:
+             return self.err.show_err(_("Error apply changes: %s") % e)
+ 
+         if ret is not False:
+@@ -1999,7 +1999,7 @@ class vmmDetails(vmmGObjectUI):
+             auto = self.widget("boot-autostart")
+             try:
+                 self.vm.set_autostart(auto.get_active())
+-            except Exception, e:
++            except Exception as e:
+                 self.err.show_err(
+                     (_("Error changing autostart value: %s") % str(e)))
+                 return False
+@@ -2227,7 +2227,7 @@ class vmmDetails(vmmGObjectUI):
+         # Define the change
+         try:
+             self.vm.remove_device(devobj)
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Error Removing Device: %s") % str(e))
+             return
+ 
+@@ -2236,7 +2236,7 @@ class vmmDetails(vmmGObjectUI):
+         try:
+             if self.vm.is_active():
+                 self.vm.detach_device(devobj)
+-        except Exception, e:
++        except Exception as e:
+             logging.debug("Device could not be hotUNplugged: %s", str(e))
+             detach_err = (str(e), "".join(traceback.format_exc()))
+ 
+@@ -2266,7 +2266,7 @@ class vmmDetails(vmmGObjectUI):
+         try:
+             if self.is_visible():
+                 self.vm.ensure_latest_xml()
+-        except libvirt.libvirtError, e:
++        except libvirt.libvirtError as e:
+             if util.exception_is_libvirt_error(e, "VIR_ERR_NO_DOMAIN"):
+                 self.close()
+                 return
+@@ -2775,7 +2775,7 @@ class vmmDetails(vmmGObjectUI):
+         set_visible("rng-bind-host", is_egd and (udp or bind))
+         set_visible("rng-bind-service", is_egd and (udp or bind))
+ 
+-        for k, prop in values.items():
++        for k, prop in list(values.items()):
+             val = "-"
+             if dev.supports_property(prop):
+                 val = getattr(dev, prop) or "-"
+@@ -3135,7 +3135,7 @@ class vmmDetails(vmmGObjectUI):
+         for dev in self.vm.get_panic_devices():
+             update_hwlist(HW_LIST_TYPE_PANIC, dev)
+ 
+-        devs = range(len(hw_list_model))
++        devs = list(range(len(hw_list_model)))
+         devs.reverse()
+         for i in devs:
+             _iter = hw_list_model.iter_nth_child(None, i)
+diff --git a/virtManager/domain.py b/virtManager/domain.py
+index 3185cf8..c26c49c 100644
+--- a/virtManager/domain.py
++++ b/virtManager/domain.py
+@@ -1447,7 +1447,7 @@ class vmmDomain(vmmLibvirtObject):
+         if self._has_managed_save is None:
+             try:
+                 self._has_managed_save = self._backend.hasManagedSaveImage(0)
+-            except libvirt.libvirtError, e:
++            except libvirt.libvirtError as e:
+                 if not util.exception_is_libvirt_error(e, "VIR_ERR_NO_DOMAIN"):
+                     raise
+                 return False
+@@ -1723,7 +1723,7 @@ class vmmDomain(vmmLibvirtObject):
+     def get_cache_dir(self):
+         ret = os.path.join(self.conn.get_cache_dir(), self.get_uuid())
+         if not os.path.exists(ret):
+-            os.makedirs(ret, 0755)
++            os.makedirs(ret, 0o755)
+         return ret
+ 
+ 
+@@ -1753,7 +1753,7 @@ class vmmDomain(vmmLibvirtObject):
+                 if io:
+                     rx += io[0]
+                     tx += io[4]
+-            except libvirt.libvirtError, err:
++            except libvirt.libvirtError as err:
+                 if util.is_error_nosupport(err):
+                     logging.debug("Net stats not supported: %s", err)
+                     self._stats_net_supported = False
+@@ -1803,7 +1803,7 @@ class vmmDomain(vmmLibvirtObject):
+                 if io:
+                     rd += io[1]
+                     wr += io[3]
+-            except libvirt.libvirtError, err:
++            except libvirt.libvirtError as err:
+                 if util.is_error_nosupport(err):
+                     logging.debug("Disk stats not supported: %s", err)
+                     self._stats_disk_supported = False
+@@ -1835,7 +1835,7 @@ class vmmDomain(vmmLibvirtObject):
+             secs = 5
+             self._backend.setMemoryStatsPeriod(secs,
+                 libvirt.VIR_DOMAIN_AFFECT_LIVE)
+-        except Exception, e:
++        except Exception as e:
+             logging.debug("Error setting memstats period: %s", e)
+ 
+     def _sample_mem_stats(self):
+@@ -1858,7 +1858,7 @@ class vmmDomain(vmmLibvirtObject):
+ 
+             if "unused" in stats:
+                 curmem = max(0, totalmem - stats.get("unused", totalmem))
+-        except libvirt.libvirtError, err:
++        except libvirt.libvirtError as err:
+             logging.error("Error reading mem stats: %s", err)
+ 
+         pcentCurrMem = (curmem / float(totalmem)) * 100
+diff --git a/virtManager/engine.py b/virtManager/engine.py
+index 7e06460..3b5fad5 100644
+--- a/virtManager/engine.py
++++ b/virtManager/engine.py
+@@ -20,7 +20,7 @@
+ 
+ import logging
+ import re
+-import Queue
++import queue
+ import threading
+ import traceback
+ 
+@@ -60,7 +60,7 @@ DETAILS_CONFIG = 2
+ DETAILS_CONSOLE = 3
+ 
+ (PRIO_HIGH,
+- PRIO_LOW) = range(1, 3)
++ PRIO_LOW) = list(range(1, 3))
+ 
+ 
+ class vmmEngine(vmmGObject):
+@@ -104,7 +104,7 @@ class vmmEngine(vmmGObject):
+                                             target=self._handle_tick_queue,
+                                             args=())
+         self._tick_thread.daemon = True
+-        self._tick_queue = Queue.PriorityQueue(100)
++        self._tick_queue = queue.PriorityQueue(100)
+ 
+         self.inspection = None
+         self._create_inspection_thread()
+@@ -153,7 +153,7 @@ class vmmEngine(vmmGObject):
+         self._application.add_action(action)
+ 
+     def _default_startup(self, skip_autostart):
+-        uris = self.conns.keys()
++        uris = list(self.conns.keys())
+         if not uris:
+             logging.debug("No stored URIs found.")
+         else:
+@@ -268,7 +268,7 @@ class vmmEngine(vmmGObject):
+         """
+         We serialize conn autostart, so polkit/ssh-askpass doesn't spam
+         """
+-        queue = Queue.Queue()
++        queue = queue.Queue()
+         auto_conns = [uri for uri in self.conns
+                       if self.conns[uri]["conn"].get_autoconnect()]
+ 
+@@ -325,7 +325,7 @@ class vmmEngine(vmmGObject):
+ 
+         hvuri = conn.get_uri()
+ 
+-        for connkey in self.conns[hvuri]["windowDetails"].keys():
++        for connkey in list(self.conns[hvuri]["windowDetails"].keys()):
+             self.conns[hvuri]["windowDetails"][connkey].cleanup()
+             del(self.conns[hvuri]["windowDetails"][connkey])
+ 
+@@ -364,7 +364,7 @@ class vmmEngine(vmmGObject):
+         self._add_obj_to_tick_queue(conn, True, **kwargs)
+ 
+     def tick(self):
+-        for uri in self.conns.keys():
++        for uri in list(self.conns.keys()):
+             conn = self.conns[uri]["conn"]
+             self._add_obj_to_tick_queue(conn, False,
+                                         stats_update=True, pollvm=True)
+@@ -383,7 +383,7 @@ class vmmEngine(vmmGObject):
+             ignore1, ignore2, conn, kwargs = self._tick_queue.get()
+             try:
+                 conn.tick_from_engine(**kwargs)
+-            except Exception, e:
++            except Exception as e:
+                 tb = "".join(traceback.format_exc())
+                 error_msg = (_("Error polling connection '%s': %s")
+                     % (conn.get_uri(), e))
+@@ -510,10 +510,10 @@ class vmmEngine(vmmGObject):
+         focus, and use that
+         """
+         windowlist = [self.windowManager]
+-        for conndict in self.conns.values():
+-            windowlist.extend(conndict["windowDetails"].values())
++        for conndict in list(self.conns.values()):
++            windowlist.extend(list(conndict["windowDetails"].values()))
+         windowlist.extend(
+-            [conndict["windowHost"] for conndict in self.conns.values()])
++            [conndict["windowHost"] for conndict in list(self.conns.values())])
+ 
+         use_win = None
+         for window in windowlist:
+@@ -589,7 +589,7 @@ class vmmEngine(vmmGObject):
+                 self.conns[uri]["windowClone"].cleanup()
+ 
+             details = self.conns[uri]["windowDetails"]
+-            for win in details.values():
++            for win in list(details.values()):
+                 win.cleanup()
+ 
+             self.conns[uri]["conn"].cleanup()
+@@ -609,7 +609,7 @@ class vmmEngine(vmmGObject):
+         handle_id = vmmGObject.connect(self, name, callback, *args)
+ 
+         if name == "conn-added":
+-            for uri in self.conns.keys():
++            for uri in list(self.conns.keys()):
+                 self.emit("conn-added",
+                           self.conns[uri]["conn"])
+ 
+@@ -718,7 +718,7 @@ class vmmEngine(vmmGObject):
+             if self.windowAbout is None:
+                 self.windowAbout = vmmAbout()
+             self.windowAbout.show()
+-        except Exception, e:
++        except Exception as e:
+             src.err.show_err(_("Error launching 'About' dialog: %s") % str(e))
+ 
+     def _get_preferences(self):
+@@ -732,7 +732,7 @@ class vmmEngine(vmmGObject):
+     def _do_show_preferences(self, src):
+         try:
+             self._get_preferences().show(src.topwin)
+-        except Exception, e:
++        except Exception as e:
+             src.err.show_err(_("Error launching preferences: %s") % str(e))
+ 
+     def _get_host_dialog(self, uri):
+@@ -753,7 +753,7 @@ class vmmEngine(vmmGObject):
+     def _do_show_host(self, src, uri):
+         try:
+             self._get_host_dialog(uri).show()
+-        except Exception, e:
++        except Exception as e:
+             src.err.show_err(_("Error launching host dialog: %s") % str(e))
+ 
+ 
+@@ -766,7 +766,7 @@ class vmmEngine(vmmGObject):
+             return self.connect_to_uri(uri, autoconnect, probe=True)
+ 
+         def cancelled(src):
+-            if len(self.conns.keys()) == 0:
++            if len(list(self.conns.keys())) == 0:
+                 self.exit_app(src)
+ 
+         obj = vmmConnect()
+@@ -779,7 +779,7 @@ class vmmEngine(vmmGObject):
+     def _do_show_connect(self, src, reset_state=True):
+         try:
+             self._get_connect_dialog().show(src.topwin, reset_state)
+-        except Exception, e:
++        except Exception as e:
+             src.err.show_err(_("Error launching connect dialog: %s") % str(e))
+ 
+     def _do_edit_connect(self, src, connection):
+@@ -830,7 +830,7 @@ class vmmEngine(vmmGObject):
+                     details.activate_default_page()
+ 
+             details.show()
+-        except Exception, e:
++        except Exception as e:
+             src.err.show_err(_("Error launching details: %s") % str(e))
+ 
+     def _do_show_vm(self, src, uri, connkey):
+@@ -882,7 +882,7 @@ class vmmEngine(vmmGObject):
+         try:
+             manager = self.get_manager()
+             manager.show()
+-        except Exception, e:
++        except Exception as e:
+             if not src:
+                 raise
+             src.err.show_err(_("Error launching manager: %s") % str(e))
+@@ -901,7 +901,7 @@ class vmmEngine(vmmGObject):
+     def _do_show_create(self, src, uri):
+         try:
+             self._get_create_dialog().show(src.topwin, uri)
+-        except Exception, e:
++        except Exception as e:
+             src.err.show_err(_("Error launching manager: %s") % str(e))
+ 
+     def _do_show_migrate(self, src, uri, connkey):
+@@ -913,7 +913,7 @@ class vmmEngine(vmmGObject):
+                 self.windowMigrate = vmmMigrateDialog(self)
+ 
+             self.windowMigrate.show(src.topwin, vm)
+-        except Exception, e:
++        except Exception as e:
+             src.err.show_err(_("Error launching migrate dialog: %s") % str(e))
+ 
+     def _do_show_clone(self, src, uri, connkey):
+@@ -929,7 +929,7 @@ class vmmEngine(vmmGObject):
+                 clone_window.set_orig_vm(orig_vm)
+ 
+             clone_window.show(src.topwin)
+-        except Exception, e:
++        except Exception as e:
+             src.err.show_err(_("Error setting clone parameters: %s") % str(e))
+ 
+     ##########################################
+@@ -1101,7 +1101,7 @@ class vmmEngine(vmmGObject):
+ 
+         try:
+             vm.abort_job()
+-        except Exception, e:
++        except Exception as e:
+             logging.exception("Error cancelling save job")
+             asyncjob.show_warning(_("Error cancelling save job: %s") % str(e))
+             return
+@@ -1174,7 +1174,7 @@ class vmmEngine(vmmGObject):
+                 try:
+                     vm.remove_saved_image()
+                     self._do_run_domain(src, uri, connkey)
+-                except Exception, e:
++                except Exception as e:
+                     src.err.show_err(_("Error removing domain state: %s")
+                                      % str(e))
+ 
+@@ -1242,5 +1242,5 @@ class vmmEngine(vmmGObject):
+             if not self.delete_dialog:
+                 self.delete_dialog = vmmDeleteDialog()
+             self.delete_dialog.show(vm, src.topwin)
+-        except Exception, e:
++        except Exception as e:
+             src.err.show_err(_("Error launching delete dialog: %s") % str(e))
+diff --git a/virtManager/fsdetails.py b/virtManager/fsdetails.py
+index 2cd49ad..1a93661 100644
+--- a/virtManager/fsdetails.py
++++ b/virtManager/fsdetails.py
+@@ -321,7 +321,7 @@ class vmmFSDetails(vmmGObjectUI):
+                     self._dev.format = fsformat
+             if wrpolicy:
+                 self._dev.wrpolicy = wrpolicy
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(_("Filesystem parameter error"), e)
+ 
+     def _browse_file(self, textent, isdir=False):
+diff --git a/virtManager/graphwidgets.py b/virtManager/graphwidgets.py
+index ac3eab5..cac6975 100644
+--- a/virtManager/graphwidgets.py
++++ b/virtManager/graphwidgets.py
+@@ -25,8 +25,8 @@ from gi.repository import Gtk
+ 
+ def rect_print(name, rect):
+     # For debugging
+-    print("%s: height=%d, width=%d, x=%d, y=%d" %
+-          (name, rect.height, rect.width, rect.x, rect.y))
++    print(("%s: height=%d, width=%d, x=%d, y=%d" %
++          (name, rect.height, rect.width, rect.x, rect.y)))
+ 
+ 
+ def _line_helper(cairo_ct, x, y, w, h, points, for_fill=False):
+diff --git a/virtManager/host.py b/virtManager/host.py
+index 9649963..4dfb6e2 100644
+--- a/virtManager/host.py
++++ b/virtManager/host.py
+@@ -33,6 +33,7 @@ from .createnet import vmmCreateNetwork
+ from .createinterface import vmmCreateInterface
+ from .graphwidgets import Sparkline
+ from .storagelist import vmmStorageList
++from functools import reduce
+ 
+ INTERFACE_PAGE_INFO = 0
+ INTERFACE_PAGE_ERROR = 1
+@@ -41,11 +42,11 @@ EDIT_NET_IDS = (
+ EDIT_NET_NAME,
+ EDIT_NET_AUTOSTART,
+ EDIT_NET_QOS,
+-) = range(3)
++) = list(range(3))
+ 
+ EDIT_INTERFACE_IDS = (
+ EDIT_INTERFACE_STARTMODE,
+-) = range(200, 201)
++) = list(range(200, 201))
+ 
+ 
+ class vmmHost(vmmGObjectUI):
+@@ -407,7 +408,7 @@ class vmmHost(vmmGObjectUI):
+             if self.addnet is None:
+                 self.addnet = vmmCreateNetwork(self.conn)
+             self.addnet.show(self.topwin)
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Error launching network wizard: %s") % str(e))
+ 
+     def net_apply(self):
+@@ -450,7 +451,7 @@ class vmmHost(vmmGObjectUI):
+                         dialog_type=Gtk.MessageType.INFO)
+ 
+ 
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Error changing network settings: %s") % str(e))
+             return
+         finally:
+@@ -522,7 +523,7 @@ class vmmHost(vmmGObjectUI):
+         try:
+             net = self.conn.get_net(connkey)
+             self.populate_net_state(net)
+-        except Exception, e:
++        except Exception as e:
+             logging.exception(e)
+             self.set_net_error_page(_("Error selecting network: %s") % e)
+         finally:
+@@ -759,7 +760,7 @@ class vmmHost(vmmGObjectUI):
+             if self.addinterface is None:
+                 self.addinterface = vmmCreateInterface(self.conn)
+             self.addinterface.show(self.topwin)
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Error launching interface wizard: %s") %
+                               str(e))
+ 
+@@ -786,7 +787,7 @@ class vmmHost(vmmGObjectUI):
+                       interface.get_name())
+         try:
+             interface.set_startmode(newmode)
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Error setting interface startmode: %s") %
+                               str(e))
+             return
+@@ -812,7 +813,7 @@ class vmmHost(vmmGObjectUI):
+ 
+         try:
+             self.populate_interface_state(connkey)
+-        except Exception, e:
++        except Exception as e:
+             logging.exception(e)
+             self.set_interface_error_page(_("Error selecting interface: %s") %
+                                           e)
+@@ -864,7 +865,7 @@ class vmmHost(vmmGObjectUI):
+         used_by = None
+         try:
+             used_by = vmmCreateInterface.iface_in_use_by(self.conn, name)
+-        except Exception, e:
++        except Exception as e:
+             logging.debug("Error looking up iface usage: %s", e)
+         self.widget("interface-inuseby").set_text(used_by or "-")
+ 
+diff --git a/virtManager/inspection.py b/virtManager/inspection.py
+index e8b102d..9576fcd 100644
+--- a/virtManager/inspection.py
++++ b/virtManager/inspection.py
+@@ -17,7 +17,7 @@
+ # MA 02110-1301 USA.
+ #
+ 
+-from Queue import Queue, Empty
++from queue import Queue, Empty
+ from threading import Thread
+ import logging
+ import re
+@@ -116,7 +116,7 @@ class vmmInspection(vmmGObject):
+ 
+     # Any VMs we've not seen yet?  If so, process them.
+     def _process_vms(self):
+-        for conn in self._conns.itervalues():
++        for conn in self._conns.values():
+             for vm in conn.list_vms():
+                 if not conn.is_active():
+                     break
+diff --git a/virtManager/keyring.py b/virtManager/keyring.py
+index d3a300a..8d24f9d 100644
+--- a/virtManager/keyring.py
++++ b/virtManager/keyring.py
+@@ -110,10 +110,10 @@ class vmmKeyring(object):
+             label = iface.get_cached_property("Label").unpack().strip("'")
+             dbusattrs = iface.get_cached_property("Attributes").unpack()
+ 
+-            secret = u"".join([unichr(c) for c in secretbytes])
++            secret = "".join([chr(c) for c in secretbytes])
+ 
+             attrs = {}
+-            for key, val in dbusattrs.items():
++            for key, val in list(dbusattrs.items()):
+                 if key not in ["hvuri", "uuid"]:
+                     continue
+                 attrs["%s" % key] = "%s" % val
+diff --git a/virtManager/libvirtobject.py b/virtManager/libvirtobject.py
+index 3304401..31299b8 100644
+--- a/virtManager/libvirtobject.py
++++ b/virtManager/libvirtobject.py
+@@ -271,7 +271,7 @@ class vmmLibvirtObject(vmmGObject):
+             # status = None forces a signal to be emitted
+             self.__status = None
+             self._refresh_status()
+-        except Exception, e:
++        except Exception as e:
+             # If we hit an exception here, it's often that the object
+             # disappeared, so request the poll loop to be updated
+             logging.debug("Error refreshing %s from events: %s", self, e)
+diff --git a/virtManager/manager.py b/virtManager/manager.py
+index d70f4c4..e5e65e6 100644
+--- a/virtManager/manager.py
++++ b/virtManager/manager.py
+@@ -48,7 +48,7 @@ ROW_IS_CONN_CONNECTED,
+ ROW_IS_VM,
+ ROW_IS_VM_RUNNING,
+ ROW_COLOR,
+-ROW_INSPECTION_OS_ICON) = range(11)
++ROW_INSPECTION_OS_ICON) = list(range(11))
+ 
+ # Columns in the tree view
+ (COL_NAME,
+@@ -56,7 +56,7 @@ COL_GUEST_CPU,
+ COL_HOST_CPU,
+ COL_MEM,
+ COL_DISK,
+-COL_NETWORK) = range(6)
++COL_NETWORK) = list(range(6))
+ 
+ 
+ def _style_get_prop(widget, propname):
+@@ -744,7 +744,7 @@ class vmmManager(vmmGObjectUI):
+ 
+             desc = vm.get_description()
+             row[ROW_HINT] = util.xml_escape(desc)
+-        except libvirt.libvirtError, e:
++        except libvirt.libvirtError as e:
+             if util.exception_is_libvirt_error(e, "VIR_ERR_NO_DOMAIN"):
+                 return
+             raise
+diff --git a/virtManager/mediacombo.py b/virtManager/mediacombo.py
+index 9446dfb..d31e345 100644
+--- a/virtManager/mediacombo.py
++++ b/virtManager/mediacombo.py
+@@ -33,7 +33,7 @@ class vmmMediaCombo(vmmGObjectUI):
+     (OPTICAL_DEV_PATH,
+     OPTICAL_LABEL,
+     OPTICAL_HAS_MEDIA,
+-    OPTICAL_DEV_KEY) = range(OPTICAL_FIELDS)
++    OPTICAL_DEV_KEY) = list(range(OPTICAL_FIELDS))
+ 
+     def __init__(self, conn, builder, topwin, media_type):
+         vmmGObjectUI.__init__(self, None, None, builder=builder, topwin=topwin)
+diff --git a/virtManager/migrate.py b/virtManager/migrate.py
+index ca430dd..6e1bf2b 100644
+--- a/virtManager/migrate.py
++++ b/virtManager/migrate.py
+@@ -36,7 +36,7 @@ from .domain import vmmDomain
+ NUM_COLS = 3
+ (COL_LABEL,
+  COL_URI,
+- COL_CAN_MIGRATE) = range(NUM_COLS)
++ COL_CAN_MIGRATE) = list(range(NUM_COLS))
+ 
+ 
+ class vmmMigrateDialog(vmmGObjectUI):
+@@ -310,7 +310,7 @@ class vmmMigrateDialog(vmmGObjectUI):
+         model.clear()
+ 
+         rows = []
+-        for conn in self._conns.values():
++        for conn in list(self._conns.values()):
+             rows.append(self._build_dest_row(conn))
+ 
+         if not any([row[COL_CAN_MIGRATE] for row in rows]):
+@@ -378,7 +378,7 @@ class vmmMigrateDialog(vmmGObjectUI):
+                 uri = self.widget("migrate-tunnel-uri").get_text()
+             else:
+                 uri = self._build_regular_migrate_uri()
+-        except Exception, e:
++        except Exception as e:
+             details = "".join(traceback.format_exc())
+             self.err.show_err((_("Uncaught error validating input: %s") %
+                                str(e)),
+@@ -413,7 +413,7 @@ class vmmMigrateDialog(vmmGObjectUI):
+ 
+         try:
+             vm.abort_job()
+-        except Exception, e:
++        except Exception as e:
+             logging.exception("Error cancelling migrate job")
+             asyncjob.show_warning(_("Error cancelling migrate job: %s") % e)
+             return
+diff --git a/virtManager/netlist.py b/virtManager/netlist.py
+index bdadbf3..afea757 100644
+--- a/virtManager/netlist.py
++++ b/virtManager/netlist.py
+@@ -194,7 +194,7 @@ class vmmNetworkList(vmmGObjectUI):
+             for slave in slave_names:
+                 netdevs.pop(slave, None)
+ 
+-        for name, is_bridge, slave_names in netdevs.values():
++        for name, is_bridge, slave_names in list(netdevs.values()):
+             if ((name in vnet_taps) or
+                 (name in [v + "-nic" for v in vnet_bridges]) or
+                 (name in skip_ifaces)):
+@@ -360,7 +360,7 @@ class vmmNetworkList(vmmGObjectUI):
+             try:
+                 netobj.start()
+                 logging.info("Started network '%s'", devname)
+-            except Exception, e:
++            except Exception as e:
+                 return self.err.show_err(_("Could not start virtual network "
+                                       "'%s': %s") % (devname, str(e)))
+ 
+@@ -385,7 +385,7 @@ class vmmNetworkList(vmmGObjectUI):
+                 net.virtualport.typeid = vport_typeid or None
+                 net.virtualport.typeidversion = vport_idver or None
+                 net.virtualport.instanceid = vport_instid or None
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(_("Error with network parameters."), e)
+ 
+         # Make sure there is no mac address collision
+diff --git a/virtManager/network.py b/virtManager/network.py
+index cb26049..f6a49ee 100644
+--- a/virtManager/network.py
++++ b/virtManager/network.py
+@@ -103,7 +103,7 @@ class vmmNetwork(vmmLibvirtObject):
+     def set_qos(self, **kwargs):
+         xmlobj = self._make_xmlobj_to_define()
+         q = xmlobj.bandwidth
+-        for key, val in kwargs.items():
++        for key, val in list(kwargs.items()):
+             setattr(q, key, val)
+ 
+         self._redefine_xmlobj(xmlobj)
+diff --git a/virtManager/packageutils.py b/virtManager/packageutils.py
+index 31246e6..ddb15f6 100644
+--- a/virtManager/packageutils.py
++++ b/virtManager/packageutils.py
+@@ -61,7 +61,7 @@ def check_packagekit(parent, errbox, packages):
+             packagekit_install(parent, packages)
+         else:
+             logging.debug("Nothing to install")
+-    except Exception, e:
++    except Exception as e:
+         # PackageKit frontend should report an error for us, so just log
+         # the actual error
+         logging.debug("Error talking to PackageKit: %s", str(e), exc_info=True)
+diff --git a/virtManager/preferences.py b/virtManager/preferences.py
+index 2818b68..fd71907 100644
+--- a/virtManager/preferences.py
++++ b/virtManager/preferences.py
+@@ -121,7 +121,7 @@ class vmmPreferences(vmmGObjectUI):
+         }
+         model.append([-1, _("System default (%s)") %
+             vals[self.config.default_console_resizeguest]])
+-        for key, val in vals.items():
++        for key, val in list(vals.items()):
+             model.append([key, val])
+         combo.set_model(model)
+         uiutil.init_combo_text_column(combo, 1)
+diff --git a/virtManager/serialcon.py b/virtManager/serialcon.py
+index 1711f03..87ac810 100644
+--- a/virtManager/serialcon.py
++++ b/virtManager/serialcon.py
+@@ -411,7 +411,7 @@ class vmmSerialConsole(vmmGObject):
+                 self.console.open(self.lookup_dev(), self.terminal)
+             self.box.set_current_page(0)
+             return True
+-        except Exception, e:
++        except Exception as e:
+             logging.exception("Error opening serial console")
+             self.show_error(_("Error connecting to text console: %s") % e)
+             try:
+diff --git a/virtManager/snapshots.py b/virtManager/snapshots.py
+index 825ee59..299d5e7 100644
+--- a/virtManager/snapshots.py
++++ b/virtManager/snapshots.py
+@@ -22,7 +22,7 @@ import datetime
+ import glob
+ import logging
+ import os
+-import StringIO
++import io
+ 
+ from gi.repository import Gdk
+ from gi.repository import GdkPixbuf
+@@ -44,7 +44,7 @@ mimemap = {
+ 
+ 
+ def _mime_to_ext(val, reverse=False):
+-    for m, e in mimemap.items():
++    for m, e in list(mimemap.items()):
+         if val == m and not reverse:
+             return e
+         if val == e and reverse:
+@@ -221,7 +221,7 @@ class vmmSnapshotPage(vmmGObjectUI):
+ 
+         try:
+             snapshots = self.vm.list_snapshots()
+-        except Exception, e:
++        except Exception as e:
+             logging.exception(e)
+             self._set_error_page(_("Error refreshing snapshot list: %s") %
+                                 str(e))
+@@ -392,7 +392,7 @@ class vmmSnapshotPage(vmmGObjectUI):
+             flags = 0
+             mime = self.vm.get_backend().screenshot(stream, screen, flags)
+ 
+-            ret = StringIO.StringIO()
++            ret = io.StringIO()
+             def _write_cb(_stream, data, userdata):
+                 ignore = stream
+                 ignore = userdata
+@@ -481,7 +481,7 @@ class vmmSnapshotPage(vmmGObjectUI):
+             newsnap.validate()
+             newsnap.get_xml_config()
+             return newsnap
+-        except Exception, e:
++        except Exception as e:
+             return self.err.val_err(_("Error validating snapshot: %s") % e)
+ 
+     def _get_screenshot_data_for_save(self):
+@@ -507,7 +507,7 @@ class vmmSnapshotPage(vmmGObjectUI):
+             basesn = os.path.join(cachedir, "snap-screenshot-%s" % name)
+ 
+             # Remove any pre-existing screenshots so we don't show stale data
+-            for ext in mimemap.values():
++            for ext in list(mimemap.values()):
+                 p = basesn + "." + ext
+                 if os.path.exists(basesn + "." + ext):
+                     os.unlink(p)
+@@ -667,6 +667,6 @@ class vmmSnapshotPage(vmmGObjectUI):
+ 
+         try:
+             self._set_snapshot_state(snap[0])
+-        except Exception, e:
++        except Exception as e:
+             logging.exception(e)
+             self._set_error_page(_("Error selecting snapshot: %s") % str(e))
+diff --git a/virtManager/sshtunnels.py b/virtManager/sshtunnels.py
+index 62eae42..bcced6a 100644
+--- a/virtManager/sshtunnels.py
++++ b/virtManager/sshtunnels.py
+@@ -19,13 +19,14 @@
+ 
+ import logging
+ import os
+-import Queue
++import queue
+ import socket
+ import signal
+ import threading
+ import ipaddr
+ 
+ from .baseclass import vmmGObject
++from functools import reduce
+ 
+ 
+ class ConnectionInfo(object):
+@@ -121,7 +122,7 @@ class _TunnelScheduler(object):
+     """
+     def __init__(self):
+         self._thread = None
+-        self._queue = Queue.Queue()
++        self._queue = queue.Queue()
+         self._lock = threading.Lock()
+ 
+     def _handle_queue(self):
+diff --git a/virtManager/storagelist.py b/virtManager/storagelist.py
+index c16cf5c..2e2398c 100644
+--- a/virtManager/storagelist.py
++++ b/virtManager/storagelist.py
+@@ -36,7 +36,7 @@ from .createvol import vmmCreateVolume
+ EDIT_POOL_IDS = (
+ EDIT_POOL_NAME,
+ EDIT_POOL_AUTOSTART,
+-) = range(2)
++) = list(range(2))
+ 
+ VOL_NUM_COLUMNS = 7
+ (VOL_COLUMN_KEY,
+@@ -45,13 +45,13 @@ VOL_NUM_COLUMNS = 7
+  VOL_COLUMN_SIZESTR,
+  VOL_COLUMN_FORMAT,
+  VOL_COLUMN_INUSEBY,
+- VOL_COLUMN_SENSITIVE) = range(VOL_NUM_COLUMNS)
++ VOL_COLUMN_SENSITIVE) = list(range(VOL_NUM_COLUMNS))
+ 
+ POOL_NUM_COLUMNS = 4
+ (POOL_COLUMN_CONNKEY,
+  POOL_COLUMN_LABEL,
+  POOL_COLUMN_ISACTIVE,
+- POOL_COLUMN_PERCENT) = range(POOL_NUM_COLUMNS)
++ POOL_COLUMN_PERCENT) = list(range(POOL_NUM_COLUMNS))
+ 
+ ICON_RUNNING = "state_running"
+ ICON_SHUTOFF = "state_shutoff"
+@@ -517,7 +517,7 @@ class vmmStorageList(vmmGObjectUI):
+ 
+         try:
+             self._populate_pool_state(connkey)
+-        except Exception, e:
++        except Exception as e:
+             logging.exception(e)
+             self._set_storage_error_page(_("Error selecting pool: %s") % e)
+         self._disable_pool_apply()
+@@ -627,7 +627,7 @@ class vmmStorageList(vmmGObjectUI):
+                 self._addpool = vmmCreatePool(self.conn)
+                 self._addpool.connect("pool-created", self._pool_created)
+             self._addpool.show(self.topwin)
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Error launching pool wizard: %s") % str(e))
+ 
+     def _pool_delete(self, src):
+@@ -671,7 +671,7 @@ class vmmStorageList(vmmGObjectUI):
+             if EDIT_POOL_NAME in self._active_edits:
+                 pool.define_name(self.widget("pool-name-entry").get_text())
+                 self.idle_add(self._populate_pools)
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Error changing pool settings: %s") % str(e))
+             return
+ 
+@@ -710,7 +710,7 @@ class vmmStorageList(vmmGObjectUI):
+             self._addvol.set_modal(self.topwin.get_modal())
+             self._addvol.set_name_hint(self._name_hint)
+             self._addvol.show(self.topwin)
+-        except Exception, e:
++        except Exception as e:
+             self.err.show_err(_("Error launching volume wizard: %s") % str(e))
+ 
+     def _vol_delete(self, src_ignore):
+diff --git a/virtManager/storagepool.py b/virtManager/storagepool.py
+index b099fbe..18ce0e1 100644
+--- a/virtManager/storagepool.py
++++ b/virtManager/storagepool.py
+@@ -47,7 +47,7 @@ class vmmStorageVolume(vmmLibvirtObject):
+     def _XMLDesc(self, flags):
+         try:
+             return self._backend.XMLDesc(flags)
+-        except Exception, e:
++        except Exception as e:
+             logging.debug("XMLDesc for vol=%s failed: %s",
+                 self._backend.key(), e)
+             raise
+diff --git a/virtManager/systray.py b/virtManager/systray.py
+index 07bb6bc..e558bcf 100644
+--- a/virtManager/systray.py
++++ b/virtManager/systray.py
+@@ -199,13 +199,13 @@ class vmmSystray(vmmGObject):
+ 
+     def repopulate_menu_list(self):
+         # Build sorted connection list
+-        connsort = self.conn_menuitems.keys()
++        connsort = list(self.conn_menuitems.keys())
+         connsort.sort()
+         connsort.reverse()
+ 
+         # Empty conn list
+         for child in self.systray_menu.get_children():
+-            if child in self.conn_menuitems.values():
++            if child in list(self.conn_menuitems.values()):
+                 self.systray_menu.remove(child)
+ 
+         # Build sorted conn list
+@@ -265,7 +265,7 @@ class vmmSystray(vmmGObject):
+         for vm in conn.list_vms():
+             vm_mappings[vm.get_name()] = vm.get_connkey()
+ 
+-        vm_names = vm_mappings.keys()
++        vm_names = list(vm_mappings.keys())
+         vm_names.sort()
+ 
+         if len(vm_names) == 0:
+diff --git a/virtManager/viewers.py b/virtManager/viewers.py
+index 403c316..6635e7f 100644
+--- a/virtManager/viewers.py
++++ b/virtManager/viewers.py
+@@ -419,7 +419,7 @@ class VNCViewer(Viewer):
+ 
+             seq = GtkVnc.GrabSequence.new(keys)
+             self._display.set_grab_keys(seq)
+-        except Exception, e:
++        except Exception as e:
+             logging.debug("Error when getting the grab keys combination: %s",
+                           str(e))
+ 
+@@ -473,7 +473,7 @@ class VNCViewer(Viewer):
+             sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+             sock.connect(self._ginfo.gsocket)
+             self._sockfd = sock
+-        except Exception, e:
++        except Exception as e:
+             raise RuntimeError(_("Error opening socket path '%s': %s") %
+                                (self._ginfo.gsocket, e))
+ 
+@@ -677,7 +677,7 @@ class SpiceViewer(Viewer):
+ 
+             seq = SpiceClientGtk.GrabSequence.new(keys)
+             self._display.set_grab_keys(seq)
+-        except Exception, e:
++        except Exception as e:
+             logging.debug("Error when getting the grab keys combination: %s",
+                           str(e))
+ 
+diff --git a/virtcli/cliconfig.py b/virtcli/cliconfig.py
+index ef66ba4..c87bb8b 100644
+--- a/virtcli/cliconfig.py
++++ b/virtcli/cliconfig.py
+@@ -21,11 +21,11 @@
+ Configuration variables that can be set at build time
+ """
+ 
+-import ConfigParser
++import configparser
+ import os
+ 
+ 
+-_cfg = ConfigParser.ConfigParser()
++_cfg = configparser.ConfigParser()
+ _filepath = os.path.abspath(__file__)
+ _srcdir = os.path.abspath(os.path.join(os.path.dirname(_filepath), ".."))
+ _cfgpath = os.path.join(os.path.dirname(_filepath), "cli.cfg")
+@@ -46,7 +46,7 @@ def _get_param(name, default):
+         return default
+     try:
+         return _cfg.get("config", name)
+-    except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
++    except (configparser.NoOptionError, configparser.NoSectionError):
+         return default
+ 
+ 
+diff --git a/virtconv/formats.py b/virtconv/formats.py
+index c253bd1..1f0f838 100644
+--- a/virtconv/formats.py
++++ b/virtconv/formats.py
+@@ -202,7 +202,7 @@ class VirtConverter(object):
+         if print_cb == -1 or print_cb is None:
+             def cb(msg):
+                 if print_cb == -1:
+-                    print msg
++                    print(msg)
+             self.print_cb = cb
+         else:
+             self.print_cb = print_cb
+diff --git a/virtconv/ovf.py b/virtconv/ovf.py
+index fa657d4..de29a85 100644
+--- a/virtconv/ovf.py
++++ b/virtconv/ovf.py
+@@ -90,7 +90,7 @@ def node_list(node):
+     child = node.children
+     while child:
+         child_list.append(child)
+-        child = child.next
++        child = child.__next__
+     return child_list
+ 
+ 
+@@ -269,7 +269,7 @@ def _import_file(doc, ctx, conn, input_file):
+ 
+         if not bool_val(env_node.prop("required")):
+             continue
+-        raise StandardError(_("OVF section '%s' is listed as "
++        raise Exception(_("OVF section '%s' is listed as "
+                               "required, but parser doesn't know "
+                               "how to handle it.") %
+                               env_node.name)
+@@ -370,7 +370,7 @@ class ovf_parser(parser_class):
+ 
+         try:
+             return _xml_parse_wrapper(xml, parse_cb)
+-        except Exception, e:
++        except Exception as e:
+             logging.debug("Error parsing OVF XML: %s", str(e))
+ 
+         return False
+diff --git a/virtconv/vmx.py b/virtconv/vmx.py
+index aa99e35..1da7cc5 100644
+--- a/virtconv/vmx.py
++++ b/virtconv/vmx.py
+@@ -83,7 +83,7 @@ class _VMXFile(object):
+             try:
+                 lineobj = _VMXLine(line)
+                 self.lines.append(lineobj)
+-            except Exception, e:
++            except Exception as e:
+                 raise Exception(_("Syntax error at line %d: %s\n%s") %
+                     (len(self.lines) + 1, line.strip(), e))
+ 
+@@ -270,7 +270,7 @@ class vmx_parser(parser_class):
+ 
+         def _find_keys(prefixes):
+             ret = []
+-            for key, value in config.items():
++            for key, value in list(config.items()):
+                 for p in util.listify(prefixes):
+                     if key.startswith(p):
+                         ret.append((key, value))
+diff --git a/virtinst/cli.py b/virtinst/cli.py
+index 432640b..878b1f1 100644
+--- a/virtinst/cli.py
++++ b/virtinst/cli.py
+@@ -192,8 +192,8 @@ def setupLogging(appname, debug_stdout, do_quiet, cli_app=True):
+                 raise RuntimeError("No write access to directory %s" % vi_dir)
+ 
+             try:
+-                os.makedirs(vi_dir, 0751)
+-            except IOError, e:
++                os.makedirs(vi_dir, 0o751)
++            except IOError as e:
+                 raise RuntimeError("Could not create directory %s: %s" %
+                                    (vi_dir, e))
+ 
+@@ -201,7 +201,7 @@ def setupLogging(appname, debug_stdout, do_quiet, cli_app=True):
+             os.path.exists(logfile) and
+             not os.access(logfile, os.W_OK)):
+             raise RuntimeError("No write access to logfile %s" % logfile)
+-    except Exception, e:
++    except Exception as e:
+         logging.warning("Error setting up logfile: %s", e)
+         logfile = None
+ 
+@@ -284,7 +284,7 @@ def _do_creds_authname(creds):
+ 
+         res = cred[retindex]
+         if credtype == libvirt.VIR_CRED_AUTHNAME:
+-            res = raw_input(prompt)
++            res = input(prompt)
+         elif credtype == libvirt.VIR_CRED_PASSPHRASE:
+             import getpass
+             res = getpass.getpass(prompt)
+@@ -314,12 +314,12 @@ def fail(msg, do_exit=True):
+ 
+ def print_stdout(msg, do_force=False):
+     if do_force or not get_global_state().quiet:
+-        print msg
++        print(msg)
+ 
+ 
+ def print_stderr(msg):
+     logging.debug(msg)
+-    print >> sys.stderr, msg
++    print(msg, file=sys.stderr)
+ 
+ 
+ def _fail_exit():
+@@ -465,7 +465,7 @@ def connect_console(guest, consolecb, wait):
+     # If we connected the console, wait for it to finish
+     try:
+         os.waitpid(child, 0)
+-    except OSError, e:
++    except OSError as e:
+         logging.debug("waitpid: %s: %s", e.errno, e.message)
+ 
+ 
+@@ -830,7 +830,7 @@ class _VirtCLIArgument(object):
+ 
+         VirtAddArg.attrname = attrname
+         VirtAddArg.cliname = cliname
+-        for key, val in kwargs.items():
++        for key, val in list(kwargs.items()):
+             # getattr for validation
+             getattr(VirtAddArg, key)
+             setattr(VirtAddArg, key, val)
+@@ -1068,10 +1068,10 @@ class VirtCLIParser(object):
+         """
+         Print out all _param names, triggered via ex. --disk help
+         """
+-        print "--%s options:" % cls.cli_arg_name
++        print("--%s options:" % cls.cli_arg_name)
+         for arg in sorted(cls._virtargs, key=lambda p: p.cliname):
+-            print "  %s" % arg.cliname
+-        print
++            print("  %s" % arg.cliname)
++        print()
+ 
+ 
+     def __init__(self, guest, optstr):
+@@ -1112,7 +1112,7 @@ class VirtCLIParser(object):
+         """
+         ret = []
+         for param in self._virtargs:
+-            for key in optdict.keys():
++            for key in list(optdict.keys()):
+                 if param.match_name(key):
+                     ret.append(param(key, optdict.pop(key)))
+         return ret
+@@ -1124,7 +1124,7 @@ class VirtCLIParser(object):
+         passed an invalid argument such as --disk idontexist=foo
+         """
+         if optdict:
+-            fail(_("Unknown options %s") % optdict.keys())
++            fail(_("Unknown options %s") % list(optdict.keys()))
+ 
+     def _parse(self, inst):
+         """
+@@ -1174,7 +1174,7 @@ class VirtCLIParser(object):
+                 self.guest.add_child(obj)
+ 
+             ret += util.listify(objs)
+-        except Exception, e:
++        except Exception as e:
+             logging.debug("Exception parsing inst=%s optstr=%s",
+                           inst, self.optstr, exc_info=True)
+             fail(_("Error: --%(cli_arg_name)s %(options)s: %(err)s") %
+@@ -1205,7 +1205,7 @@ class VirtCLIParser(object):
+                 if valid:
+                     ret.append(inst)
+                 self._check_leftover_opts(optdict)
+-        except Exception, e:
++        except Exception as e:
+             logging.debug("Exception parsing inst=%s optstr=%s",
+                           inst, self.optstr, exc_info=True)
+             fail(_("Error: --%(cli_arg_name)s %(options)s: %(err)s") %
+@@ -1430,7 +1430,7 @@ class ParserCPU(VirtCLIParser):
+ 
+     def _parse(self, inst):
+         # Convert +feature, -feature into expected format
+-        for key, value in self.optdict.items():
++        for key, value in list(self.optdict.items()):
+             policy = None
+             if value or len(key) == 1:
+                 continue
+@@ -1547,7 +1547,7 @@ class ParserBoot(VirtCLIParser):
+     def _parse(self, inst):
+         # Build boot order
+         boot_order = []
+-        for cliname in self.optdict.keys():
++        for cliname in list(self.optdict.keys()):
+             if cliname not in inst.os.BOOT_DEVICES:
+                 continue
+ 
+@@ -1794,7 +1794,7 @@ class ParserDisk(VirtCLIParser):
+                 return None
+             try:
+                 return float(val)
+-            except Exception, e:
++            except Exception as e:
+                 fail(_("Improper value for 'size': %s") % str(e))
+ 
+         def convert_perms(val):
+diff --git a/virtinst/cloner.py b/virtinst/cloner.py
+index 5255acf..6de7f51 100644
+--- a/virtinst/cloner.py
++++ b/virtinst/cloner.py
+@@ -103,7 +103,7 @@ class Cloner(object):
+             Guest.validate_name(self.conn, name,
+                                 check_collision=not self.replace,
+                                 validate=False)
+-        except ValueError, e:
++        except ValueError as e:
+             raise ValueError(_("Invalid name for new guest: %s") % e)
+ 
+         self._clone_name = name
+@@ -113,7 +113,7 @@ class Cloner(object):
+     def set_clone_uuid(self, uuid):
+         try:
+             util.validate_uuid(uuid)
+-        except ValueError, e:
++        except ValueError as e:
+             raise ValueError(_("Invalid uuid for new guest: %s") % e)
+ 
+         if util.vm_uuid_collision(self.conn, uuid):
+@@ -145,7 +145,7 @@ class Cloner(object):
+                     disk.set_vol_install(vol_install)
+                 disk.validate()
+                 disklist.append(disk)
+-            except Exception, e:
++            except Exception as e:
+                 logging.debug("Error setting clone path.", exc_info=True)
+                 raise ValueError(_("Could not use path '%s' for cloning: %s") %
+                                  (path, str(e)))
+@@ -452,7 +452,7 @@ class Cloner(object):
+             if self.preserve:
+                 for dst_dev in self.clone_disks:
+                     dst_dev.setup(meter=meter)
+-        except Exception, e:
++        except Exception as e:
+             logging.debug("Duplicate failed: %s", str(e))
+             if dom:
+                 dom.undefine()
+@@ -546,7 +546,7 @@ class Cloner(object):
+                     if newd.wants_storage_creation():
+                         raise ValueError(_("Disk path '%s' does not exist.") %
+                                          newd.path)
+-            except Exception, e:
++            except Exception as e:
+                 logging.debug("Exception creating clone disk objects",
+                     exc_info=True)
+                 raise ValueError(_("Could not determine original disk "
+diff --git a/virtinst/connection.py b/virtinst/connection.py
+index a09f4df..acfd9a4 100644
+--- a/virtinst/connection.py
++++ b/virtinst/connection.py
+@@ -237,7 +237,7 @@ class VirtualConnection(object):
+                 try:
+                     xml = vol.XMLDesc(0)
+                     ret.append(StorageVolume(weakref.ref(self), parsexml=xml))
+-                except Exception, e:
++                except Exception as e:
+                     logging.debug("Fetching volume XML failed: %s", e)
+ 
+         if self.cache_object_fetch:
+@@ -411,7 +411,8 @@ class VirtualConnection(object):
+     # Private helpers #
+     ###################
+ 
+-    def _auth_cb(self, creds, (passwordcb, passwordcreds)):
++    def _auth_cb(self, creds, xxx_todo_changeme):
++        (passwordcb, passwordcreds) = xxx_todo_changeme
+         for cred in creds:
+             if cred[0] not in passwordcreds:
+                 raise RuntimeError("Unknown cred type '%s', expected only "
+diff --git a/virtinst/devicedisk.py b/virtinst/devicedisk.py
+index 2736c9a..b9592db 100644
+--- a/virtinst/devicedisk.py
++++ b/virtinst/devicedisk.py
+@@ -212,7 +212,7 @@ class VirtualDisk(VirtualDevice):
+         try:
+             # Get UID for string name
+             uid = pwd.getpwnam(username)[2]
+-        except Exception, e:
++        except Exception as e:
+             logging.debug("Error looking up username: %s", str(e))
+             return []
+ 
+@@ -316,7 +316,7 @@ class VirtualDisk(VirtualDevice):
+ 
+                     logging.debug("setfacl failed, trying old fashioned way")
+                     fix_perms(dirname, useacl)
+-            except Exception, e:
++            except Exception as e:
+                 errdict[dirname] = str(e)
+ 
+         return errdict
+@@ -995,11 +995,11 @@ class VirtualDisk(VirtualDevice):
+         def get_target():
+             first_found = None
+ 
+-            ran = range(maxnode)
++            ran = list(range(maxnode))
+             if pref_ctrl is not None:
+                 # We assume narrow SCSI bus and libvirt assigning 7
+                 # (1-7, 8-14, etc.) devices per controller
+-                ran = range(pref_ctrl * 7, (pref_ctrl + 1) * 7)
++                ran = list(range(pref_ctrl * 7, (pref_ctrl + 1) * 7))
+ 
+             for i in ran:
+                 gen_t = prefix + self.num_to_target(i + 1)
+diff --git a/virtinst/devicegraphics.py b/virtinst/devicegraphics.py
+index 07b554e..11f2891 100644
+--- a/virtinst/devicegraphics.py
++++ b/virtinst/devicegraphics.py
+@@ -83,7 +83,7 @@ class VirtualGraphics(VirtualDevice):
+         """
+         from . import hostkeymap
+ 
+-        orig_list = hostkeymap.keytable.values()
++        orig_list = list(hostkeymap.keytable.values())
+         sort_list = []
+ 
+         orig_list.sort()
+diff --git a/virtinst/diskbackend.py b/virtinst/diskbackend.py
+index 8cf21ad..790e454 100644
+--- a/virtinst/diskbackend.py
++++ b/virtinst/diskbackend.py
+@@ -55,7 +55,7 @@ def _lookup_vol_by_path(conn, path):
+         vol = conn.storageVolLookupByPath(path)
+         vol.info()
+         return vol, None
+-    except libvirt.libvirtError, e:
++    except libvirt.libvirtError as e:
+         if (hasattr(libvirt, "VIR_ERR_NO_STORAGE_VOL") and
+             e.get_error_code() != libvirt.VIR_ERR_NO_STORAGE_VOL):
+             raise
+@@ -98,7 +98,7 @@ def check_if_path_managed(conn, path):
+                 vol = _lookup_vol_by_basename(pool, path)
+             except:
+                 pass
+-    except Exception, e:
++    except Exception as e:
+         vol = None
+         pool = None
+         verr = str(e)
+@@ -328,7 +328,7 @@ class CloneStorageCreator(_StorageCreator):
+         msg = None
+         vfs = os.statvfs(os.path.dirname(self._path))
+         avail = vfs[statvfs.F_FRSIZE] * vfs[statvfs.F_BAVAIL]
+-        need = long(self._size * 1024L * 1024L * 1024L)
++        need = int(self._size * 1024 * 1024 * 1024)
+         if need > avail:
+             if self._sparse:
+                 msg = _("The filesystem will not have enough free space"
+@@ -348,8 +348,8 @@ class CloneStorageCreator(_StorageCreator):
+         text = (_("Cloning %(srcfile)s") %
+                 {'srcfile' : os.path.basename(self._input_path)})
+ 
+-        size_bytes = long(self.get_size() * 1024L * 1024L * 1024L)
+-        progresscb.start(filename=self._output_path, size=long(size_bytes),
++        size_bytes = int(self.get_size() * 1024 * 1024 * 1024)
++        progresscb.start(filename=self._output_path, size=int(size_bytes),
+                          text=text)
+ 
+         # Plain file clone
+@@ -373,7 +373,7 @@ class CloneStorageCreator(_StorageCreator):
+             sparse = True
+             fd = None
+             try:
+-                fd = os.open(self._output_path, os.O_WRONLY | os.O_CREAT, 0640)
++                fd = os.open(self._output_path, os.O_WRONLY | os.O_CREAT, 0o640)
+                 os.ftruncate(fd, size_bytes)
+             finally:
+                 if fd:
+@@ -393,7 +393,7 @@ class CloneStorageCreator(_StorageCreator):
+             try:
+                 src_fd = os.open(self._input_path, os.O_RDONLY)
+                 dst_fd = os.open(self._output_path,
+-                                 os.O_WRONLY | os.O_CREAT, 0640)
++                                 os.O_WRONLY | os.O_CREAT, 0o640)
+ 
+                 i = 0
+                 while 1:
+@@ -413,7 +413,7 @@ class CloneStorageCreator(_StorageCreator):
+                     i += s
+                     if i < size_bytes:
+                         meter.update(i)
+-            except OSError, e:
++            except OSError as e:
+                 raise RuntimeError(_("Error cloning diskimage %s to %s: %s") %
+                                 (self._input_path, self._output_path, str(e)))
+         finally:
+diff --git a/virtinst/distroinstaller.py b/virtinst/distroinstaller.py
+index 0eee9f3..abb2a00 100644
+--- a/virtinst/distroinstaller.py
++++ b/virtinst/distroinstaller.py
+@@ -66,7 +66,7 @@ def _sanitize_url(url):
+  MEDIA_LOCATION_URL,
+  MEDIA_CDROM_PATH,
+  MEDIA_CDROM_URL,
+- MEDIA_CDROM_IMPLIED) = range(1, 7)
++ MEDIA_CDROM_IMPLIED) = list(range(1, 7))
+ 
+ 
+ class DistroInstaller(Installer):
+@@ -187,7 +187,7 @@ class DistroInstaller(Installer):
+             dev.validate()
+ 
+             val = dev.path
+-        except Exception, e:
++        except Exception as e:
+             logging.debug("Error validating install location", exc_info=True)
+             raise ValueError(_("Validating install media '%s' failed: %s") %
+                 (str(val), e))
+@@ -209,7 +209,7 @@ class DistroInstaller(Installer):
+             try:
+                 try:
+                     fetcher.prepareLocation()
+-                except ValueError, e:
++                except ValueError as e:
+                     logging.debug("Error preparing install location",
+                         exc_info=True)
+                     raise ValueError(_("Invalid install location: ") + str(e))
+diff --git a/virtinst/domcapabilities.py b/virtinst/domcapabilities.py
+index 874fa1e..2733c46 100644
+--- a/virtinst/domcapabilities.py
++++ b/virtinst/domcapabilities.py
+@@ -139,7 +139,7 @@ class DomainCapabilities(XMLBuilder):
+                 return _("BIOS")
+             return _("None")
+ 
+-        for arch, patterns in self._uefi_arch_patterns.items():
++        for arch, patterns in list(self._uefi_arch_patterns.items()):
+             for pattern in patterns:
+                 if re.match(pattern, path):
+                     return (_("UEFI %(arch)s: %(path)s") %
+@@ -151,7 +151,7 @@ class DomainCapabilities(XMLBuilder):
+         """
+         Return True if we know how to setup UEFI for the passed arch
+         """
+-        return self.arch in self._uefi_arch_patterns.keys()
++        return self.arch in list(self._uefi_arch_patterns.keys())
+ 
+     def supports_uefi_xml(self):
+         """
+diff --git a/virtinst/guest.py b/virtinst/guest.py
+index 6a42536..fc87091 100644
+--- a/virtinst/guest.py
++++ b/virtinst/guest.py
+@@ -82,7 +82,7 @@ class Guest(XMLBuilder):
+ 
+             logging.info("Undefining guest '%s'", name)
+             vm.undefine()
+-        except libvirt.libvirtError, e:
++        except libvirt.libvirtError as e:
+             raise RuntimeError(_("Could not remove old vm '%s': %s") %
+                                (str(e)))
+ 
+@@ -402,7 +402,7 @@ class Guest(XMLBuilder):
+         try:
+             logging.debug("XML fetched from libvirt object:\n%s",
+                           self.domain.XMLDesc(0))
+-        except Exception, e:
++        except Exception as e:
+             logging.debug("Error fetching XML from libvirt object: %s", e)
+ 
+ 
+@@ -415,7 +415,7 @@ class Guest(XMLBuilder):
+ 
+         try:
+             self.domain.setAutostart(True)
+-        except libvirt.libvirtError, e:
++        except libvirt.libvirtError as e:
+             if util.is_error_nosupport(e):
+                 logging.warn("Could not set autostart flag: libvirt "
+                              "connection does not support autostart.")
+@@ -491,7 +491,7 @@ class Guest(XMLBuilder):
+                     os.unlink(disk.path)
+ 
+                 meter.end(0)
+-            except Exception, e:
++            except Exception as e:
+                 logging.debug("Failed to remove disk '%s'",
+                     name, exc_info=True)
+                 logging.error("Failed to remove disk '%s': %s", name, e)
+@@ -929,7 +929,7 @@ class Guest(XMLBuilder):
+                                  (str(d), str(addresses[addrstr][addr.function])))
+             addresses[addrstr][addr.function] = d
+ 
+-        for devs in addresses.values():
++        for devs in list(addresses.values()):
+             if len(devs) > 1 and 0 in devs:
+                 devs[0].address.multifunction = True
+ 
+diff --git a/virtinst/hostkeymap.py b/virtinst/hostkeymap.py
+index 904333e..9092de6 100644
+--- a/virtinst/hostkeymap.py
++++ b/virtinst/hostkeymap.py
+@@ -117,7 +117,7 @@ def _default_keymap():
+                 logging.debug("Found keymap=%s in %s", kt, path)
+                 break
+             logging.debug("Didn't find keymap in '%s'", path)
+-        except Exception, e:
++        except Exception as e:
+             logging.debug("Error parsing '%s': %s", path, str(e))
+ 
+     if kt is None:
+@@ -199,7 +199,7 @@ def sanitize_keymap(kt):
+         return len(b) - len(a)
+ 
+     clean_kt = kt.replace("-", "").replace("_", "")
+-    sorted_keys = sorted(keytable.keys(), len_cmp)
++    sorted_keys = sorted(list(keytable.keys()), len_cmp)
+ 
+     for key in sorted_keys:
+         origkey = key
+diff --git a/virtinst/initrdinject.py b/virtinst/initrdinject.py
+index eb5f419..03f3045 100644
+--- a/virtinst/initrdinject.py
++++ b/virtinst/initrdinject.py
+@@ -90,7 +90,7 @@ def perform_initrd_injections(initrd, injections, scratchdir):
+         return
+ 
+     tempdir = tempfile.mkdtemp(dir=scratchdir)
+-    os.chmod(tempdir, 0775)
++    os.chmod(tempdir, 0o775)
+ 
+     for filename in injections:
+         logging.debug("Copying %s to the initrd.", filename)
+diff --git a/virtinst/interface.py b/virtinst/interface.py
+index 8b57ab8..7621751 100644
+--- a/virtinst/interface.py
++++ b/virtinst/interface.py
+@@ -254,21 +254,21 @@ class Interface(XMLBuilder):
+ 
+         try:
+             iface = self.conn.interfaceDefineXML(xml, 0)
+-        except Exception, e:
++        except Exception as e:
+             raise RuntimeError(_("Could not define interface: %s") % str(e))
+ 
+         errmsg = None
+         if create and not errmsg:
+             try:
+                 iface.create(0)
+-            except Exception, e:
++            except Exception as e:
+                 errmsg = _("Could not create interface: %s") % str(e)
+ 
+         if errmsg:
+             # Try and clean up the leftover pool
+             try:
+                 iface.undefine()
+-            except Exception, e:
++            except Exception as e:
+                 logging.debug("Error cleaning up interface after failure: " +
+                               "%s" % str(e))
+             raise RuntimeError(errmsg)
+diff --git a/virtinst/nodedev.py b/virtinst/nodedev.py
+index 6147d70..fa34f14 100644
+--- a/virtinst/nodedev.py
++++ b/virtinst/nodedev.py
+@@ -75,7 +75,7 @@ class NodeDevice(XMLBuilder):
+ 
+         try:
+             return _AddressStringToNodedev(conn, idstring)
+-        except Exception, e:
++        except Exception as e:
+             logging.debug("Error looking up nodedev from idstring=%s",
+                 idstring, exc_info=True)
+             raise RuntimeError(_("Did not find node device matching '%s': %s" %
+diff --git a/virtinst/osdict.py b/virtinst/osdict.py
+index e8c1487..4e34558 100644
+--- a/virtinst/osdict.py
++++ b/virtinst/osdict.py
+@@ -76,7 +76,7 @@ def _sort(tosort, sortpref=None, limit_point_releases=False):
+     retlist = []
+     sortpref = sortpref or []
+ 
+-    for key, osinfo in tosort.items():
++    for key, osinfo in list(tosort.items()):
+         # Libosinfo has some duplicate version numbers here, so append .1
+         # if there's a collision
+         sortby = osinfo.sortby
+@@ -95,12 +95,12 @@ def _sort(tosort, sortpref=None, limit_point_releases=False):
+     # debian5, debian4, fedora14, fedora13
+     #   rather than
+     # debian4, debian5, fedora13, fedora14
+-    for distro_list in distro_mappings.values():
++    for distro_list in list(distro_mappings.values()):
+         distro_list.sort()
+         distro_list.reverse()
+ 
+     # Move the sortpref values to the front of the list
+-    sorted_distro_list = distro_mappings.keys()
++    sorted_distro_list = list(distro_mappings.keys())
+     sorted_distro_list.sort()
+     sortpref.reverse()
+     for prefer in sortpref:
+@@ -255,7 +255,7 @@ class _OSDB(object):
+         """
+         sortmap = {}
+ 
+-        for name, osobj in self._all_variants.items():
++        for name, osobj in list(self._all_variants.items()):
+             if typename and typename != osobj.get_typename():
+                 continue
+             if only_supported and not osobj.get_supported():
+diff --git a/virtinst/pollhelpers.py b/virtinst/pollhelpers.py
+index 2090b8c..21f8772 100644
+--- a/virtinst/pollhelpers.py
++++ b/virtinst/pollhelpers.py
+@@ -35,7 +35,7 @@ def _new_poll_helper(origmap, typename, listfunc, buildfunc):
+ 
+     try:
+         objs = listfunc()
+-    except Exception, e:
++    except Exception as e:
+         logging.debug("Unable to list all %ss: %s", typename, e)
+ 
+     for obj in objs:
+@@ -50,7 +50,7 @@ def _new_poll_helper(origmap, typename, listfunc, buildfunc):
+             current[connkey] = origmap[connkey]
+             del(origmap[connkey])
+ 
+-    return (origmap.values(), new.values(), current.values())
++    return (list(origmap.values()), list(new.values()), list(current.values()))
+ 
+ 
+ def _old_poll_helper(origmap, typename,
+@@ -75,11 +75,11 @@ def _old_poll_helper(origmap, typename,
+ 
+     try:
+         newActiveNames = active_list()
+-    except Exception, e:
++    except Exception as e:
+         logging.debug("Unable to list active %ss: %s", typename, e)
+     try:
+         newInactiveNames = inactive_list()
+-    except Exception, e:
++    except Exception as e:
+         logging.debug("Unable to list inactive %ss: %s", typename, e)
+ 
+     def check_obj(name):
+@@ -89,7 +89,7 @@ def _old_poll_helper(origmap, typename,
+         if connkey not in origmap:
+             try:
+                 obj = lookup_func(name)
+-            except Exception, e:
++            except Exception as e:
+                 logging.debug("Could not fetch %s '%s': %s",
+                               typename, connkey, e)
+                 return
+@@ -108,7 +108,7 @@ def _old_poll_helper(origmap, typename,
+         except:
+             logging.exception("Couldn't fetch %s '%s'", typename, name)
+ 
+-    return (origmap.values(), new.values(), current.values())
++    return (list(origmap.values()), list(new.values()), list(current.values()))
+ 
+ 
+ def fetch_nets(backend, origmap, build_func):
+@@ -209,7 +209,7 @@ def _old_fetch_vms(backend, origmap, build_func):
+     new = {}
+ 
+     # Build list of previous vms with proper id/name mappings
+-    for vm in origmap.values():
++    for vm in list(origmap.values()):
+         if vm.is_active():
+             oldActiveIDs[vm.get_id()] = vm
+         else:
+@@ -217,12 +217,12 @@ def _old_fetch_vms(backend, origmap, build_func):
+ 
+     try:
+         newActiveIDs = backend.listDomainsID()
+-    except Exception, e:
++    except Exception as e:
+         logging.debug("Unable to list active domains: %s", e)
+ 
+     try:
+         newInactiveNames = backend.listDefinedDomains()
+-    except Exception, e:
++    except Exception as e:
+         logging.exception("Unable to list inactive domains: %s", e)
+ 
+     def add_vm(vm):
+@@ -272,7 +272,7 @@ def _old_fetch_vms(backend, origmap, build_func):
+             except:
+                 logging.exception("Couldn't fetch domain '%s'", name)
+ 
+-    return (origmap.values(), new.values(), current.values())
++    return (list(origmap.values()), list(new.values()), list(current.values()))
+ 
+ 
+ def fetch_vms(backend, origmap, build_func):
+diff --git a/virtinst/progress.py b/virtinst/progress.py
+index 2f57d45..55f93c2 100644
+--- a/virtinst/progress.py
++++ b/virtinst/progress.py
+@@ -27,7 +27,7 @@
+ import sys
+ import time
+ import math
+-import thread
++import _thread
+ import fcntl
+ import struct
+ import termios
+@@ -482,7 +482,7 @@ def format_number(number, SI=0, space=' '):
+         depth  = depth + 1
+         number = number / step
+ 
+-    if type(number) == type(1) or type(number) == type(1L):
++    if type(number) == type(1) or type(number) == type(1):
+         # it's an int or a long, which means it didn't get divided,
+         # which means it's already short enough
+         format = '%i%s%s'
+diff --git a/virtinst/storage.py b/virtinst/storage.py
+index 2a42eca..6804a3d 100644
+--- a/virtinst/storage.py
++++ b/virtinst/storage.py
+@@ -128,7 +128,7 @@ class StoragePool(_StorageObject):
+         """
+         Return list of appropriate pool types
+         """
+-        return StoragePool._descs.keys()
++        return list(StoragePool._descs.keys())
+ 
+     @staticmethod
+     def get_pool_type_desc(pool_type):
+@@ -158,7 +158,7 @@ class StoragePool(_StorageObject):
+ 
+         try:
+             xml = conn.findStoragePoolSources(pool_type, source_xml, 0)
+-        except libvirt.libvirtError, e:
++        except libvirt.libvirtError as e:
+             if util.is_error_nosupport(e):
+                 return []
+             raise
+@@ -225,7 +225,7 @@ class StoragePool(_StorageObject):
+             defpool.install(build=True, create=True, autostart=True)
+             conn.clear_cache(pools=True)
+             return defpool
+-        except Exception, e:
++        except Exception as e:
+             raise RuntimeError(
+                 _("Couldn't create default storage pool '%s': %s") %
+                 (path, str(e)))
+@@ -512,33 +512,33 @@ class StoragePool(_StorageObject):
+ 
+         try:
+             pool = self.conn.storagePoolDefineXML(xml, 0)
+-        except Exception, e:
++        except Exception as e:
+             raise RuntimeError(_("Could not define storage pool: %s") % str(e))
+ 
+         errmsg = None
+         if build:
+             try:
+                 pool.build(libvirt.VIR_STORAGE_POOL_BUILD_NEW)
+-            except Exception, e:
++            except Exception as e:
+                 errmsg = _("Could not build storage pool: %s") % str(e)
+ 
+         if create and not errmsg:
+             try:
+                 pool.create(0)
+-            except Exception, e:
++            except Exception as e:
+                 errmsg = _("Could not start storage pool: %s") % str(e)
+ 
+         if autostart and not errmsg:
+             try:
+                 pool.setAutostart(True)
+-            except Exception, e:
++            except Exception as e:
+                 errmsg = _("Could not set pool autostart flag: %s") % str(e)
+ 
+         if errmsg:
+             # Try and clean up the leftover pool
+             try:
+                 pool.undefine()
+-            except Exception, e:
++            except Exception as e:
+                 logging.debug("Error cleaning up pool after failure: " +
+                               "%s" % str(e))
+             raise RuntimeError(errmsg)
+@@ -848,7 +848,7 @@ class StorageVolume(_StorageObject):
+             logging.debug("Storage volume '%s' install complete.",
+                           self.name)
+             return vol
+-        except Exception, e:
++        except Exception as e:
+             logging.debug("Error creating storage volume", exc_info=True)
+             raise RuntimeError("Couldn't create storage volume "
+                                "'%s': '%s'" % (self.name, str(e)))
+diff --git a/virtinst/support.py b/virtinst/support.py
+index 9516d83..4619f51 100644
+--- a/virtinst/support.py
++++ b/virtinst/support.py
+@@ -56,13 +56,13 @@ def _get_flag(flag_name):
+ def _try_command(func, run_args, check_all_error=False):
+     try:
+         func(*run_args)
+-    except libvirt.libvirtError, e:
++    except libvirt.libvirtError as e:
+         if util.is_error_nosupport(e):
+             return False
+ 
+         if check_all_error:
+             return False
+-    except Exception, e:
++    except Exception as e:
+         # Other python exceptions likely mean the bindings are horked
+         return False
+     return True
+@@ -167,7 +167,7 @@ class _SupportCheck(object):
+         self.hv_version = hv_version or {}
+         self.hv_libvirt_version = hv_libvirt_version or {}
+ 
+-        versions = ([self.version] + self.hv_libvirt_version.values())
++        versions = ([self.version] + list(self.hv_libvirt_version.values()))
+         for vstr in versions:
+             v = _version_str_to_int(vstr)
+             if vstr is not None and v != 0 and v < 7009:
+diff --git a/virtinst/urlfetcher.py b/virtinst/urlfetcher.py
+index 692a297..7b0a8f5 100644
+--- a/virtinst/urlfetcher.py
++++ b/virtinst/urlfetcher.py
+@@ -19,17 +19,17 @@
+ # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ # MA 02110-1301 USA.
+ 
+-import ConfigParser
++import configparser
+ import ftplib
+ import logging
+ import os
+ import re
+ import stat
+-import StringIO
++import io
+ import subprocess
+ import tempfile
+-import urllib2
+-import urlparse
++import urllib.request, urllib.error, urllib.parse
++import urllib.parse
+ 
+ import requests
+ 
+@@ -83,7 +83,7 @@ class _URLFetcher(object):
+ 
+         try:
+             urlobj, size = self._grabber(url)
+-        except Exception, e:
++        except Exception as e:
+             raise ValueError(_("Couldn't acquire file %s: %s") %
+                                (url, str(e)))
+ 
+@@ -169,7 +169,7 @@ class _URLFetcher(object):
+         """
+         Grab the passed filename from self.location and return it as a string
+         """
+-        fileobj = StringIO.StringIO()
++        fileobj = io.StringIO()
+         self._grabURL(filename, fileobj)
+         return fileobj.getvalue()
+ 
+@@ -182,7 +182,7 @@ class _HTTPURLFetcher(_URLFetcher):
+         try:
+             response = requests.head(url, allow_redirects=True)
+             response.raise_for_status()
+-        except Exception, e:
++        except Exception as e:
+             logging.debug("HTTP hasFile request failed: %s", str(e))
+             return False
+         return True
+@@ -220,11 +220,11 @@ class _FTPURLFetcher(_URLFetcher):
+             return
+ 
+         try:
+-            parsed = urlparse.urlparse(self.location)
++            parsed = urllib.parse.urlparse(self.location)
+             self._ftp = ftplib.FTP()
+             self._ftp.connect(parsed.hostname, parsed.port)
+             self._ftp.login()
+-        except Exception, e:
++        except Exception as e:
+             raise ValueError(_("Opening URL %s failed: %s.") %
+                               (self.location, str(e)))
+ 
+@@ -232,9 +232,9 @@ class _FTPURLFetcher(_URLFetcher):
+         """
+         Use urllib2 and ftplib to grab the file
+         """
+-        request = urllib2.Request(url)
+-        urlobj = urllib2.urlopen(request)
+-        size = self._ftp.size(urlparse.urlparse(url)[2])
++        request = urllib.request.Request(url)
++        urlobj = urllib.request.urlopen(request)
++        size = self._ftp.size(urllib.parse.urlparse(url)[2])
+         return urlobj, size
+ 
+ 
+@@ -250,7 +250,7 @@ class _FTPURLFetcher(_URLFetcher):
+         self._ftp = None
+ 
+     def _hasFile(self, url):
+-        path = urlparse.urlparse(url)[2]
++        path = urllib.parse.urlparse(url)[2]
+ 
+         try:
+             try:
+@@ -259,7 +259,7 @@ class _FTPURLFetcher(_URLFetcher):
+             except ftplib.all_errors:
+                 # If it's a dir
+                 self._ftp.cwd(path)
+-        except ftplib.all_errors, e:
++        except ftplib.all_errors as e:
+             logging.debug("FTP hasFile: couldn't access %s: %s",
+                           url, str(e))
+             return False
+@@ -367,14 +367,14 @@ def _grabTreeinfo(fetcher):
+         return None
+ 
+     try:
+-        treeinfo = ConfigParser.SafeConfigParser()
++        treeinfo = configparser.SafeConfigParser()
+         treeinfo.read(tmptreeinfo)
+     finally:
+         os.unlink(tmptreeinfo)
+ 
+     try:
+         treeinfo.get("general", "family")
+-    except ConfigParser.NoSectionError:
++    except configparser.NoSectionError:
+         logging.debug("Did not find 'family' section in treeinfo")
+         return None
+ 
+@@ -570,7 +570,7 @@ class Distro(object):
+             try:
+                 kernelpath = self._getTreeinfoMedia("kernel")
+                 initrdpath = self._getTreeinfoMedia("initrd")
+-            except ConfigParser.NoSectionError:
++            except configparser.NoSectionError:
+                 pass
+ 
+         if not kernelpath or not initrdpath:
+@@ -704,15 +704,15 @@ class GenericDistro(Distro):
+                     self._valid_kernel_path = (
+                         self._getTreeinfoMedia("kernel"),
+                         self._getTreeinfoMedia("initrd"))
+-                except (ConfigParser.NoSectionError,
+-                        ConfigParser.NoOptionError), e:
++                except (configparser.NoSectionError,
++                        configparser.NoOptionError) as e:
+                     logging.debug(e)
+ 
+             if self.treeinfo.has_section(isoSection):
+                 try:
+                     self._valid_iso_path = self.treeinfo.get(isoSection,
+                                                              "boot.iso")
+-                except ConfigParser.NoOptionError, e:
++                except configparser.NoOptionError as e:
+                     logging.debug(e)
+ 
+         if self.type == "xen":
+@@ -1265,7 +1265,7 @@ class ALTLinuxDistro(Distro):
+ # Build list of all *Distro classes
+ def _build_distro_list():
+     allstores = []
+-    for obj in globals().values():
++    for obj in list(globals().values()):
+         if type(obj) is type and issubclass(obj, Distro) and obj.name:
+             allstores.append(obj)
+ 
+diff --git a/virtinst/util.py b/virtinst/util.py
+index 64300db..3aa835b 100644
+--- a/virtinst/util.py
++++ b/virtinst/util.py
+@@ -200,7 +200,7 @@ def generate_name(base, collision_cb, suffix="", lib_collision=True,
+         else:
+             return collision_cb(tryname)
+ 
+-    numrange = range(start_num, start_num + 100000)
++    numrange = list(range(start_num, start_num + 100000))
+     if not force_num:
+         numrange = [None] + numrange
+ 
+@@ -260,7 +260,7 @@ def default_route():
+     d = file(route_file)
+ 
+     defn = 0
+-    for line in d.xreadlines():
++    for line in d:
+         info = line.split()
+         if (len(info) != 11):  # 11 = typical num of fields in the file
+             logging.warn(_("Invalid line length while parsing %s."),
+@@ -368,7 +368,7 @@ def make_scratchdir(conn, hvtype):
+         not os.access(scratch, os.W_OK)):
+         scratch = os.path.join(get_cache_dir(), "boot")
+         if not os.path.exists(scratch):
+-            os.makedirs(scratch, 0751)
++            os.makedirs(scratch, 0o751)
+ 
+     return scratch
+ 
+diff --git a/virtinst/xmlbuilder.py b/virtinst/xmlbuilder.py
+index d5475e7..d7d66f9 100644
+--- a/virtinst/xmlbuilder.py
++++ b/virtinst/xmlbuilder.py
+@@ -273,7 +273,7 @@ class XMLChildProperty(property):
+ 
+     def _findpropname(self, xmlbuilder):
+         if self._propname is None:
+-            for key, val in xmlbuilder._all_child_props().items():
++            for key, val in list(xmlbuilder._all_child_props().items()):
+                 if val is self:
+                     self._propname = key
+                     break
+@@ -420,7 +420,7 @@ class XMLProperty(property):
+         as in the XMLBuilder class. This is just for debug purposes.
+         """
+         if self._propname is None:
+-            for key, val in xmlbuilder._all_xml_props().items():
++            for key, val in list(xmlbuilder._all_xml_props().items()):
+                 if val is self:
+                     self._propname = key
+                     break
+@@ -768,7 +768,7 @@ class XMLBuilder(object):
+     def _initial_child_parse(self):
+         # Walk the XML tree and hand of parsing to any registered
+         # child classes
+-        for xmlprop in self._all_child_props().values():
++        for xmlprop in list(self._all_child_props().values()):
+             if xmlprop.is_single:
+                 child_class = xmlprop.child_classes[0]
+                 prop_path = xmlprop.get_prop_xpath(self, child_class)
+@@ -812,7 +812,7 @@ class XMLBuilder(object):
+ 
+         # XMLChildProperty stores a list in propstore, which dict shallow
+         # copy won't fix for us.
+-        for name, value in ret._propstore.items():
++        for name, value in list(ret._propstore.items()):
+             if type(value) is not list:
+                 continue
+             ret._propstore[name] = [obj.copy() for obj in ret._propstore[name]]
+@@ -853,8 +853,8 @@ class XMLBuilder(object):
+             if leave_stub:
+                 _top_node = _get_xpath_node(self._xmlstate.xml_ctx,
+                                             self.get_root_xpath())
+-            props = self._all_xml_props().values()
+-            props += self._all_child_props().values()
++            props = list(self._all_xml_props().values())
++            props += list(self._all_child_props().values())
+             for prop in props:
+                 prop.clear(self)
+         finally:
+@@ -917,7 +917,7 @@ class XMLBuilder(object):
+         if not hasattr(self.__class__, cachename):
+             ret = {}
+             for c in reversed(type.mro(self.__class__)[:-1]):
+-                for key, val in c.__dict__.items():
++                for key, val in list(c.__dict__.items()):
+                     if isinstance(val, checkclass):
+                         ret[key] = val
+             setattr(self.__class__, cachename, ret)
+@@ -952,7 +952,7 @@ class XMLBuilder(object):
+ 
+     def _find_child_prop(self, child_class, return_single=False):
+         xmlprops = self._all_child_props()
+-        for xmlprop in xmlprops.values():
++        for xmlprop in list(xmlprops.values()):
+             if xmlprop.is_single and not return_single:
+                 continue
+             if child_class in xmlprop.child_classes:
+@@ -1009,7 +1009,7 @@ class XMLBuilder(object):
+         Return a list of all XML child objects with the passed class
+         """
+         ret = []
+-        for prop in self._all_child_props().values():
++        for prop in list(self._all_child_props().values()):
+             ret += [obj for obj in util.listify(prop._get(self))
+                     if obj.__class__ == klass]
+         return ret
+@@ -1032,7 +1032,7 @@ class XMLBuilder(object):
+         xpaths point at their particular element
+         """
+         typecount = {}
+-        for propname, xmlprop in self._all_child_props().items():
++        for propname, xmlprop in list(self._all_child_props().items()):
+             for obj in util.listify(getattr(self, propname)):
+                 idxstr = ""
+                 if not xmlprop.is_single:
+@@ -1090,7 +1090,7 @@ class XMLBuilder(object):
+         xmlprops = self._all_xml_props()
+         childprops = self._all_child_props()
+ 
+-        for prop in xmlprops.values():
++        for prop in list(xmlprops.values()):
+             prop._set_default(self)
+ 
+         # Set up preferred XML ordering
+@@ -1105,7 +1105,7 @@ class XMLBuilder(object):
+             elif key in childprops:
+                 do_order.insert(0, key)
+ 
+-        for key in childprops.keys():
++        for key in list(childprops.keys()):
+             if key not in do_order:
+                 do_order.append(key)
+ 

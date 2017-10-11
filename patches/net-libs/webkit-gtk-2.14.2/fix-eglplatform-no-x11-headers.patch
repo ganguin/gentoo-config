@@ -1,0 +1,28 @@
+diff --git a/Source/ThirdParty/ANGLE/include/EGL/eglplatform.h b/Source/ThirdParty/ANGLE/include/EGL/eglplatform.h
+index 6d550da..ff8ec9c 100644
+--- a/Source/ThirdParty/ANGLE/include/EGL/eglplatform.h
++++ b/Source/ThirdParty/ANGLE/include/EGL/eglplatform.h
+@@ -107,6 +107,14 @@ typedef intptr_t EGLNativePixmapType;
+ 
+ #elif defined(__unix__)
+ 
++#if defined(MESA_EGL_NO_X11_HEADERS)
++
++typedef void            *EGLNativeDisplayType;
++typedef khronos_uintptr_t EGLNativePixmapType;
++typedef khronos_uintptr_t EGLNativeWindowType;
++
++#else
++
+ /* X11 (tentative)  */
+ #include <X11/Xlib.h>
+ #include <X11/Xutil.h>
+@@ -115,6 +123,8 @@ typedef Display *EGLNativeDisplayType;
+ typedef Pixmap   EGLNativePixmapType;
+ typedef Window   EGLNativeWindowType;
+ 
++#endif /* MESA_EGL_NO_X11_HEADERS */
++
+ #elif defined(__GNUC__) && ( defined(__APPLE_CPP__) || defined(__APPLE_CC__) || defined(__MACOS_CLASSIC__) )
+ 
+ #if defined(__OBJC__)

@@ -1,0 +1,2 @@
+CFLAGS="-O2 -pipe -march=native -DMESA_EGL_NO_X11_HEADERS"
+CXXFLAGS="-O2 -pipe -march=native -DMESA_EGL_NO_X11_HEADERS"

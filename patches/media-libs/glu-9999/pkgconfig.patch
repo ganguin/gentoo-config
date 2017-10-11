@@ -1,0 +1,16 @@
+diff --git a/glu.pc b/glu.pc
+new file mode 100644
+index 0000000..36b117b
+--- /dev/null
++++ glu.pc
+@@ -0,0 +1,10 @@
++prefix=/usr
++exec_prefix=${prefix}
++libdir=/usr/lib64
++includedir=${prefix}/include
++
++Name: glu
++Description: Mesa OpenGL Utility library
++Version: 9.0.0
++Libs: -L${libdir} -lGLU
++Libs.private: -lm

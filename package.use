@@ -1,0 +1,98 @@
+media-libs/mesa osmesa vulkan -dri3 -vaapi
+<media-video/mpv-0.22.0 -egl -vaapi -xscreensaver opengl
+>=media-video/mpv-0.22.0 egl vaapi -xscreensaver -xv -opengl archive
+>=media-video/mpv-0.25.0 egl vaapi -xscreensaver -xv opengl archive
+dev-libs/sway swaylock swaygrab
+x11-terms/gnome-terminal -gnome-shell -nautilus
+dev-lang/php pdo gd sockets intl exif zip
+mail-client/roundcube enigma
+sys-kernel/linux-firmware savedconfig
+dev-java/icedtea-bin -gtk -webstart headless-awt
+dev-java/icedtea -gtk -webstart headless-awt
+dev-db/sqlite secure-delete
+media-libs/harfbuzz icu
+media-libs/libcanberra -gtk
+app-crypt/gcr gtk
+media-video/ffmpeg openssl
+app-office/libreoffice -gtk -postgres gtk3
+www-client/firefox system-cairo system-harfbuzz system-icu system-jpeg system-libevent system-libvpx system-sqlite gtk3 force-gtk3
+media-libs/libvpx postproc
+dev-libs/libxml2 icu
+media-libs/libvpx svc
+sys-libs/zlib minizip
+app-emulation/libvirt opengl gtk spice virgl
+dev-libs/beignet ocl-icd
+app-crypt/pinentry gnome-keyring
+www-client/otter -spell webkit
+dev-qt/qtcore icu
+dev-qt/qtwebkit printsupport
+>=dev-qt/qtwebkit-5.200.0 opengl
+dev-python/PyQt5 network declarative gui webkit printsupport opengl sql svg webchannel webengine xmlpatterns
+gnome-base/gvfs gtk archive fuse mtp -udisks -systemd
+dev-libs/weston wayland-compositor
+dev-vcs/git libsecret
+dev-util/intel-ocl-sdk -system-qt
+app-text/xmlto text
+sys-apps/dbus user-session
+media-libs/libmypaint gegl
+dev-libs/xmlsec nss
+media-libs/gst-plugins-bad gles2 gtk
+media-plugins/gst-plugins-vaapi -egl
+media-plugins/gst-plugins-meta alsa ffmpeg flac mp3 ogg opus theora vaapi vpx x264
+app-text/texlive-core xetex
+app-text/texlive context extra luatex metapost xetex
+net-libs/libmicrohttpd messages
+net-misc/spice-gtk gtk3 usbredir
+app-emulation/virt-manager gtk
+app-emulation/virt-viewer -vnc
+app-emulation/qemu usbredir spice gtk virgl virtfs
+www-plugins/chrome-binary-plugins widevine
+www-client/chromium widevine
+
+# no webengine
+net-news/rssguard -webengine
+dev-python/PyQt5 -webengine
+www-client/otter -webengine
+
+#required python 2.7
+app-emulation/qemu python_targets_python2_7
+app-text/asciidoc python_targets_python2_7 python_single_target_python2_7 # 2.7 only
+<dev-java/javatoolkit-0.6.0 python_targets_python2_7 # 2.7 only
+sys-devel/clang python_targets_python2_7 # 2.7 only
+dev-libs/libxml2 python_targets_python2_7 # required by dev-util/itstool
+dev-util/itstool python_targets_python2_7 # 2.7 only, required by app-text/evince, ...
+dev-util/scons python_targets_python2_7 # 2.7 only, required by dev-libs/double-conversion (qtcore)
+dev-util/systemtap python_targets_python2_7 # 2.7 only, required by icedtea
+dev-python/m2crypto python_targets_python2_7 # 2.7 only, required by net-wireless/crda
+dev-python/six python_targets_python2_7 # required by dev-python/html5lib
+dev-python/html5lib python_targets_python2_7 # required by dev-python/beautifulsoup
+dev-python/lxml python_targets_python2_7 # required by dev-python/beautifulsoup
+dev-python/beautifulsoup python_targets_python2_7 # required by www-client/chromium
+net-libs/nodejs python_targets_python2_7 # 2.7 only, required by www-client/chromium
+dev-python/simplejson python_targets_python2_7 # required by www-client/chromium
+
+# required by dev-python/lxml[python_targets_python2_7]
+dev-python/setuptools python_targets_python2_7
+dev-python/packaging python_targets_python2_7
+dev-python/appdirs python_targets_python2_7
+dev-python/certifi python_targets_python2_7
+dev-python/pyparsing python_targets_python2_7
+
+
+#disable python if no python 3.6
+dev-libs/libnl -python
+dev-libs/boost:0/1.62.0 -python
+
+#disable python if python 2.7 only
+app-office/gnumeric -python
+dev-lang/yasm -python
+dev-libs/libxslt -python
+dev-libs/protobuf -python
+dev-util/boost-build -python
+dev-vcs/git -python
+media-gfx/graphviz -python
+media-libs/alsa-lib -python
+net-analyzer/net-snmp -python
+net-libs/libproxy -python
+net-print/cups -python
+sys-apps/usbutils -python

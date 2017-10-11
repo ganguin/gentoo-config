@@ -1,0 +1,13 @@
+diff --git a/src/dispatch_common.c b/src/dispatch_common.c
+index b521b1b..0e98f26 100644
+--- a/src/dispatch_common.c
++++ b/src/dispatch_common.c
+@@ -178,7 +178,7 @@
+ #elif defined(ANDROID)
+ #define GLX_LIB "libGLESv2.so"
+ #else
+-#define GLX_LIB "libGL.so.1"
++#define GLX_LIB "libGLESv2.so"
+ #endif
+ 
+ #ifdef ANDROID

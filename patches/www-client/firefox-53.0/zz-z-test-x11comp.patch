@@ -1,0 +1,1518 @@
+diff --git a/config/system-headers b/config/system-headers
+index 15671ce..989e508 100644
+--- a/config/system-headers
++++ b/config/system-headers
+@@ -488,6 +488,7 @@ gdk/gdk.h
+ gdk/gdkkeysyms.h
+ gdk/gdkprivate.h
+ gdk/gdkx.h
++gdk/gdkwayland.h
+ gdk/gdkdirectfb.h
+ gdk-pixbuf/gdk-pixbuf.h
+ Gestalt.h
+diff --git a/gfx/thebes/gfxPlatformGtk.cpp b/gfx/thebes/gfxPlatformGtk.cpp
+index 815b5f2..0fbfac9 100644
+--- a/gfx/thebes/gfxPlatformGtk.cpp
++++ b/gfx/thebes/gfxPlatformGtk.cpp
+@@ -55,6 +55,8 @@
+ 
+ #endif /* MOZ_X11 */
+ 
++#include <gdk/gdkwayland.h>
++
+ #include <fontconfig/fontconfig.h>
+ 
+ #include "nsMathUtils.h"
+@@ -107,6 +109,8 @@ gfxPlatformGtk::gfxPlatformGtk()
+ 
+ #ifdef MOZ_X11
+       mCompositorDisplay = nullptr;
++      mWaylandCompositorDisplay = wl_display_connect(nullptr);
++      MOZ_ASSERT(mWaylandCompositorDisplay, "Failed to create compositor display!");
+ #endif // MOZ_X11
+ }
+ 
+@@ -123,6 +127,7 @@ gfxPlatformGtk::~gfxPlatformGtk()
+       XCloseDisplay(mCompositorDisplay);
+     }
+ #endif // MOZ_X11
++    wl_display_disconnect(mWaylandCompositorDisplay);
+ }
+ 
+ void
+diff --git a/gfx/thebes/gfxPlatformGtk.h b/gfx/thebes/gfxPlatformGtk.h
+index 25706de..46590a6 100644
+--- a/gfx/thebes/gfxPlatformGtk.h
++++ b/gfx/thebes/gfxPlatformGtk.h
+@@ -21,6 +21,7 @@ extern "C" {
+ struct _XDisplay;
+ typedef struct _XDisplay Display;
+ #endif // MOZ_X11
++struct wl_display;
+ 
+ class gfxFontconfigUtils;
+ 
+@@ -144,6 +145,9 @@ public:
+     Display* GetCompositorDisplay() {
+       return mCompositorDisplay;
+     }
++    wl_display* GetWaylandCompositorDisplay() {
++      return mWaylandCompositorDisplay;
++    }
+ #endif // MOZ_X11
+ 
+ protected:
+@@ -157,6 +161,7 @@ private:
+ 
+ #ifdef MOZ_X11
+     Display* mCompositorDisplay;
++    wl_display* mWaylandCompositorDisplay;
+ #endif
+ 
+     // xxx - this will be removed once the new fontconfig platform font list
+diff --git a/toolkit/library/moz.build b/toolkit/library/moz.build
+index 16747f7..c4ec6c1 100644
+--- a/toolkit/library/moz.build
++++ b/toolkit/library/moz.build
+@@ -311,6 +311,9 @@ if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+     OS_LIBS += [
+         'gthread-2.0',
+     ]
++    OS_LIBS += [
++        'wayland-client',
++    ]
+ 
+ if CONFIG['MOZ_ENABLE_STARTUP_NOTIFICATION']:
+     OS_LIBS += CONFIG['MOZ_STARTUP_NOTIFICATION_LIBS']
+diff --git a/widget/gtk/CompositorWidgetChild.h b/widget/gtk/CompositorWidgetChild.h
+index 4e188d9..fce2f14 100644
+--- a/widget/gtk/CompositorWidgetChild.h
++++ b/widget/gtk/CompositorWidgetChild.h
+@@ -6,7 +6,7 @@
+ #ifndef widget_gtk_CompositorWidgetChild_h
+ #define widget_gtk_CompositorWidgetChild_h
+ 
+-//#include "X11CompositorWidget.h"
++#include "X11CompositorWidget.h"
+ #include "mozilla/widget/PCompositorWidgetChild.h"
+ #include "mozilla/widget/CompositorWidgetVsyncObserver.h"
+ 
+@@ -15,6 +15,7 @@ namespace widget {
+ 
+ class CompositorWidgetChild final
+  : public PCompositorWidgetChild
++ , public CompositorWidgetDelegate
+ {
+ public:
+   CompositorWidgetChild(RefPtr<CompositorVsyncDispatcher> aVsyncDispatcher,
+diff --git a/widget/gtk/WindowSurfaceProvider.cpp b/widget/gtk/WindowSurfaceProvider.cpp
+index 526fe6a..5540628 100644
+--- a/widget/gtk/WindowSurfaceProvider.cpp
++++ b/widget/gtk/WindowSurfaceProvider.cpp
+@@ -8,9 +8,10 @@
+ 
+ #include "gfxPlatformGtk.h"
+ #include "mozilla/layers/LayersTypes.h"
+-#include "WindowSurfaceX11Image.h"
+-#include "WindowSurfaceX11SHM.h"
+-#include "WindowSurfaceXRender.h"
++//#include "WindowSurfaceX11Image.h"
++//#include "WindowSurfaceX11SHM.h"
++//#include "WindowSurfaceXRender.h"
++#include "WindowSurfaceWayland.h"
+ 
+ namespace mozilla {
+ namespace widget {
+@@ -19,30 +20,46 @@ using namespace mozilla::gfx;
+ using namespace mozilla::layers;
+ 
+ WindowSurfaceProvider::WindowSurfaceProvider()
+-    : mXDisplay(nullptr)
+-    , mXWindow(0)
+-    , mXVisual(nullptr)
+-    , mXDepth(0)
+-    , mWindowSurface(nullptr)
++    : //mXDisplay(nullptr)
++    //, mXWindow(0)
++    //, mXVisual(nullptr)
++    //, mXDepth(0)
++    /*,*/ mWindowSurface(nullptr)
++    , mWidget(nullptr)
++    , mWaylandDisplay(nullptr)
++    , mWaylandSurface(nullptr)
+ {
+ }
+ 
++//void WindowSurfaceProvider::Initialize(
++//      Display* aDisplay,
++//      Window aWindow,
++//      Visual* aVisual,
++//      int aDepth)
++//{
++//  // We should not be initialized
++//  MOZ_ASSERT(!mXDisplay);
++//
++//  // This should also be a valid initialization
++//  MOZ_ASSERT(aDisplay && aWindow != X11None && aVisual);
++//
++//  mXDisplay = aDisplay;
++//  mXWindow = aWindow;
++//  mXVisual = aVisual;
++//  mXDepth = aDepth;
++//}
++
+ void WindowSurfaceProvider::Initialize(
+-      Display* aDisplay,
+-      Window aWindow,
+-      Visual* aVisual,
+-      int aDepth)
++      nsWindow *aWidget,
++      wl_display *aWaylandDisplay,
++      wl_surface *aWaylandSurface)
+ {
+   // We should not be initialized
+-  MOZ_ASSERT(!mXDisplay);
+-
+-  // This should also be a valid initialization
+-  MOZ_ASSERT(aDisplay && aWindow != X11None && aVisual);
++  MOZ_ASSERT(!mWaylandSurface);
+ 
+-  mXDisplay = aDisplay;
+-  mXWindow = aWindow;
+-  mXVisual = aVisual;
+-  mXDepth = aDepth;
++  mWidget = aWidget;
++  mWaylandDisplay = aWaylandDisplay;
++  mWaylandSurface = aWaylandSurface;
+ }
+ void WindowSurfaceProvider::CleanupResources()
+ {
+@@ -52,30 +69,33 @@ void WindowSurfaceProvider::CleanupResources()
+ UniquePtr<WindowSurface>
+ WindowSurfaceProvider::CreateWindowSurface()
+ {
++    MOZ_ASSERT(mWaylandDisplay);
++    LOGDRAW(("Drawing to nsWindow %p using wl_surface\n", (void*)this));
++    return MakeUnique<WindowSurfaceWayland>(mWidget, mWaylandDisplay, mWaylandSurface);
+   // We should be initialized
+-  MOZ_ASSERT(mXDisplay);
++//  MOZ_ASSERT(mXDisplay);
+ 
+   // Blit to the window with the following priority:
+   // 1. XRender (iff XRender is enabled && we are in-process)
+   // 2. MIT-SHM
+   // 3. XPutImage
+ 
+-#ifdef MOZ_WIDGET_GTK
++#ifdef MOZ_WIDGET_GTK_no
+   if (gfxVars::UseXRender()) {
+     LOGDRAW(("Drawing to nsWindow %p using XRender\n", (void*)this));
+     return MakeUnique<WindowSurfaceXRender>(mXDisplay, mXWindow, mXVisual, mXDepth);
+   }
+ #endif // MOZ_WIDGET_GTK
+ 
+-#ifdef MOZ_HAVE_SHMIMAGE
++#ifdef MOZ_HAVE_SHMIMAGE_no
+   if (nsShmImage::UseShm()) {
+     LOGDRAW(("Drawing to nsWindow %p using MIT-SHM\n", (void*)this));
+     return MakeUnique<WindowSurfaceX11SHM>(mXDisplay, mXWindow, mXVisual, mXDepth);
+   }
+ #endif // MOZ_HAVE_SHMIMAGE
+ 
+-  LOGDRAW(("Drawing to nsWindow %p using XPutImage\n", (void*)this));
+-  return MakeUnique<WindowSurfaceX11Image>(mXDisplay, mXWindow, mXVisual, mXDepth);
++  //LOGDRAW(("Drawing to nsWindow %p using XPutImage\n", (void*)this));
++  //return MakeUnique<WindowSurfaceX11Image>(mXDisplay, mXWindow, mXVisual, mXDepth);
+ }
+ 
+ already_AddRefed<gfx::DrawTarget>
+@@ -93,12 +113,12 @@ WindowSurfaceProvider::StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvali
+ 
+   *aBufferMode = BufferMode::BUFFER_NONE;
+   RefPtr<DrawTarget> dt = nullptr;
+-  if (!(dt = mWindowSurface->Lock(aInvalidRegion)) &&
+-      !mWindowSurface->IsFallback()) {
+-    gfxWarningOnce() << "Failed to lock WindowSurface, falling back to XPutImage backend.";
+-    mWindowSurface = MakeUnique<WindowSurfaceX11Image>(mXDisplay, mXWindow, mXVisual, mXDepth);
+-    dt = mWindowSurface->Lock(aInvalidRegion);
+-  }
++  //if (!(dt = mWindowSurface->Lock(aInvalidRegion)) &&
++  //    !mWindowSurface->IsFallback()) {
++  //  gfxWarningOnce() << "Failed to lock WindowSurface, falling back to XPutImage backend.";
++  //  mWindowSurface = MakeUnique<WindowSurfaceX11Image>(mXDisplay, mXWindow, mXVisual, mXDepth);
++  //  dt = mWindowSurface->Lock(aInvalidRegion);
++  //}
+   return dt.forget();
+ }
+ 
+diff --git a/widget/gtk/WindowSurfaceProvider.h b/widget/gtk/WindowSurfaceProvider.h
+index 7b69e4f..41829f1 100644
+--- a/widget/gtk/WindowSurfaceProvider.h
++++ b/widget/gtk/WindowSurfaceProvider.h
+@@ -12,7 +12,10 @@
+ #include "mozilla/gfx/2D.h"
+ #include "Units.h"
+ 
++#include <gdk/gdk.h>
++#include <gdk/gdkwayland.h>
+ //#include <X11/Xlib.h> // for Window, Display, Visual, etc.
++class nsWindow;
+ 
+ namespace mozilla {
+ namespace widget {
+@@ -38,6 +41,9 @@ public:
+ //      Window aWindow,
+ //      Visual* aVisual,
+ //      int aDepth);
++   void Initialize(nsWindow *aWidget,
++                   wl_display *aWaylandDisplay,
++                   wl_surface *aWaylandSurface);
+ 
+   /**
+    * Releases any surfaces created by this provider.
+@@ -61,6 +67,9 @@ private:
+ //  int       mXDepth;
+ 
+   UniquePtr<WindowSurface> mWindowSurface;
++  nsWindow*   mWidget;
++  wl_display* mWaylandDisplay;
++  wl_surface* mWaylandSurface;
+ };
+ 
+ }  // namespace widget
+diff --git a/widget/gtk/WindowSurfaceWayland.cpp b/widget/gtk/WindowSurfaceWayland.cpp
+new file mode 100644
+index 0000000..ed8c238
+--- /dev/null
++++ b/widget/gtk/WindowSurfaceWayland.cpp
+@@ -0,0 +1,527 @@
++/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
++ *
++ * This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#include "WindowSurfaceWayland.h"
++
++#include "base/message_loop.h"          // for MessageLoop
++#include "base/task.h"                  // for NewRunnableMethod, etc
++#include "nsPrintfCString.h"
++#include "mozilla/gfx/2D.h"
++#include "mozilla/gfx/Tools.h"
++#include "gfxPlatform.h"
++#include "mozcontainer.h"
++
++#include <gdk/gdkwayland.h>
++#include <sys/mman.h>
++#include <fcntl.h>
++#include <assert.h>
++#include <poll.h>
++
++namespace mozilla {
++namespace widget {
++
++static nsWaylandDisplay* gWaylandDisplay = nullptr;
++
++static void
++WaylandDisplayAddRef(wl_display *aDisplay)
++{
++  // We should run in Compositor thread
++  MOZ_ASSERT(!NS_IsMainThread());
++  if (!gWaylandDisplay) {
++    gWaylandDisplay = new nsWaylandDisplay(aDisplay);
++  } else {
++    MOZ_ASSERT(gWaylandDisplay->GetDisplay() == aDisplay,
++               "Unknown Wayland display!");
++  }
++  NS_ADDREF(gWaylandDisplay);
++}
++
++static void
++WaylandDisplayRelease(void *aUnused)
++{
++  MOZ_ASSERT(!NS_IsMainThread());
++  NS_IF_RELEASE(gWaylandDisplay);
++}
++
++static void
++WaylandDisplayLoop(void *tmp)
++{
++  MOZ_ASSERT(!NS_IsMainThread());
++
++  // Check we still have the display interface
++  if (gWaylandDisplay && gWaylandDisplay->DisplayLoop()) {
++    MessageLoop::current()->PostTask(
++        NewRunnableFunction(&WaylandDisplayLoop, nullptr));
++  }
++}
++
++void
++nsWaylandDisplay::SetWaylandPixelFormat(uint32_t format)
++{
++  switch (format) {
++    case WL_SHM_FORMAT_ARGB8888:
++      mFormat = gfx::SurfaceFormat::B8G8R8A8;
++      break;
++    case WL_SHM_FORMAT_XRGB8888:
++      // TODO - We can use non-alpha formats when we need that
++    default:
++      break;
++  }
++}
++
++static void
++shm_format(void *data, wl_shm *wl_shm, uint32_t format)
++{
++  auto interface = reinterpret_cast<nsWaylandDisplay *>(data);
++  interface->SetWaylandPixelFormat(format);
++ }
++
++struct wl_shm_listener shm_listener = {
++  shm_format
++};
++
++static void
++global_registry_handler(void *data, wl_registry *registry, uint32_t id,
++                        const char *interface, uint32_t version)
++{
++  if (strcmp(interface, "wl_shm") == 0) {
++    auto interface = reinterpret_cast<nsWaylandDisplay *>(data);
++    auto shm = static_cast<wl_shm*>(
++        wl_registry_bind(registry, id, &wl_shm_interface, 1));
++    wl_proxy_set_queue((struct wl_proxy *)shm, interface->GetEventQueue());
++    wl_shm_add_listener(shm, &shm_listener, data);
++    interface->SetShm(shm);
++  }
++}
++
++static void
++global_registry_remover(void *data, wl_registry *registry, uint32_t id)
++{
++}
++
++static const struct wl_registry_listener registry_listener = {
++  global_registry_handler,
++  global_registry_remover
++};
++
++bool
++nsWaylandDisplay::DisplayLoop()
++{
++  /* NoteThis function may dispatch other events being received on the given
++     queue. This function uses wl_display_dispatch_queue() internally.
++     If you are using wl_display_read_events() from more threads,
++     don't use this function (or make sure that calling wl_display_roundtrip_queue()
++     doesn't interfere with calling wl_display_prepare_read() and
++     wl_display_read_events()).
++  */
++  return wl_display_roundtrip_queue(mDisplay, mEventQueue) != -1;
++}
++
++NS_IMPL_ISUPPORTS(nsWaylandDisplay, nsISupports);
++
++nsWaylandDisplay::nsWaylandDisplay(wl_display *aDisplay)
++  : mDisplay(aDisplay)
++{
++  // We're supposed to run in Compositor thread
++  MOZ_ASSERT(!NS_IsMainThread());
++
++  mEventQueue = wl_display_create_queue(mDisplay);
++
++  // wl_shm and wl_subcompositor are not provided by Gtk so we need
++  // to query wayland directly
++  wl_registry* registry = wl_display_get_registry(mDisplay);
++  wl_proxy_set_queue((struct wl_proxy *)registry, mEventQueue);
++  wl_registry_add_listener(registry, &registry_listener, this);
++
++  // We need two roundtrips here to get the registry info
++  wl_display_dispatch_queue(mDisplay, mEventQueue);
++  wl_display_roundtrip_queue(mDisplay, mEventQueue);
++  wl_display_roundtrip_queue(mDisplay, mEventQueue);
++
++  // We must have a valid pixel format
++  MOZ_RELEASE_ASSERT(mFormat != gfx::SurfaceFormat::UNKNOWN,
++                     "We don't have any pixel format!");
++
++  // TODO - is that correct way how to run wayland event pump?
++  MessageLoop::current()->PostTask(NewRunnableFunction(&WaylandDisplayLoop, nullptr));
++}
++
++nsWaylandDisplay::~nsWaylandDisplay()
++{
++  MOZ_ASSERT(!NS_IsMainThread());
++  wl_event_queue_destroy(mEventQueue);
++  mEventQueue = nullptr;
++  mDisplay = nullptr;
++}
++
++int
++WaylandShmPool::CreateTemporaryFile(int aSize)
++{
++  const char* tmppath = getenv("XDG_RUNTIME_DIR");
++  MOZ_RELEASE_ASSERT(tmppath, "Missing XDG_RUNTIME_DIR env variable.");
++
++  nsPrintfCString tmpname("%s/weston-shared-XXXXXX", tmppath);
++
++  char* filename;
++  int fd = -1;
++
++  if (tmpname.GetMutableData(&filename)) {
++      fd = mkstemp(filename);
++      if (fd >= 0) {
++          int flags = fcntl(fd, F_GETFD);
++          if (flags >= 0) {
++              fcntl(fd, F_SETFD, flags | FD_CLOEXEC);
++          }
++      }
++  }
++
++  if (fd >= 0) {
++      unlink(tmpname.get());
++  } else {
++      printf_stderr("Unable to create mapping file %s\n", filename);
++      MOZ_CRASH();
++  }
++
++#ifdef HAVE_POSIX_FALLOCATE
++  int ret = posix_fallocate(fd, 0, aSize);
++#else
++  int ret = ftruncate(fd, aSize);
++#endif
++  MOZ_RELEASE_ASSERT(ret == 0, "Mapping file allocation failed.");
++
++  return fd;
++}
++
++WaylandShmPool::WaylandShmPool(bool aIsMainThread, int aSize)
++{
++  mAllocatedSize = aSize;
++
++  mShmPoolFd = CreateTemporaryFile(mAllocatedSize);
++  mImageData = mmap(nullptr, mAllocatedSize,
++                     PROT_READ | PROT_WRITE, MAP_SHARED, mShmPoolFd, 0);
++  MOZ_RELEASE_ASSERT(mImageData != MAP_FAILED,
++                     "Unable to map drawing surface!");
++
++  mShmPool = wl_shm_create_pool(gWaylandDisplay->GetShm(),
++                                mShmPoolFd, mAllocatedSize);
++  if (!aIsMainThread) {
++    wl_proxy_set_queue((struct wl_proxy *)mShmPool,
++                      gWaylandDisplay->GetEventQueue());
++  }
++}
++
++bool
++WaylandShmPool::Resize(int aSize)
++{
++  // We do size increase only
++  if (aSize <= mAllocatedSize)
++    return true;
++
++  if (ftruncate(mShmPoolFd, aSize) < 0)
++    return false;
++
++#ifdef HAVE_POSIX_FALLOCATE
++  errno = posix_fallocate(mShmPoolFd, 0, aSize);
++  if (errno != 0)
++    return false;
++#endif
++
++  wl_shm_pool_resize(mShmPool, aSize);
++
++  munmap(mImageData, mAllocatedSize);
++
++  mImageData = mmap(nullptr, aSize,
++                     PROT_READ | PROT_WRITE, MAP_SHARED, mShmPoolFd, 0);
++  if (mImageData == MAP_FAILED)
++    return false;
++
++  mAllocatedSize = aSize;
++  return true;
++}
++
++WaylandShmPool::~WaylandShmPool()
++{
++  munmap(mImageData, mAllocatedSize);
++  wl_shm_pool_destroy(mShmPool);
++  close(mShmPoolFd);
++}
++
++static void
++buffer_release(void *data, wl_buffer *buffer)
++{
++  auto surface = reinterpret_cast<WindowBackBuffer*>(data);
++  surface->Detach();
++}
++
++static const struct wl_buffer_listener buffer_listener = {
++  buffer_release
++};
++
++void WindowBackBuffer::Create(int aWidth, int aHeight)
++{
++  MOZ_ASSERT(!IsAttached(), "We can't resize attached buffers.");
++
++  int newBufferSize = aWidth*aHeight*BUFFER_BPP;
++  mShmPool.Resize(newBufferSize);
++
++  mWaylandBuffer = wl_shm_pool_create_buffer(mShmPool.GetShmPool(), 0,
++                                            aWidth, aHeight, aWidth*BUFFER_BPP,
++                                            WL_SHM_FORMAT_ARGB8888);
++  if (!mIsMainThread) {
++    wl_proxy_set_queue((struct wl_proxy *)mWaylandBuffer,
++                      gWaylandDisplay->GetEventQueue());
++  }
++  wl_buffer_add_listener(mWaylandBuffer, &buffer_listener, this);
++
++  mWidth = aWidth;
++  mHeight = aHeight;
++}
++
++void WindowBackBuffer::Release()
++{
++  wl_buffer_destroy(mWaylandBuffer);
++  mWidth = mHeight = 0;
++}
++
++WindowBackBuffer::WindowBackBuffer(bool aIsMainThread, int aWidth, int aHeight)
++ : mShmPool(aIsMainThread, aWidth*aHeight*BUFFER_BPP)
++  ,mWaylandBuffer(nullptr)
++  ,mWidth(aWidth)
++  ,mHeight(aHeight)
++  ,mAttached(false)
++  ,mIsMainThread(aIsMainThread)
++{
++  Create(aWidth, aHeight);
++}
++
++WindowBackBuffer::~WindowBackBuffer()
++{
++  Release();
++}
++
++bool
++WindowBackBuffer::Resize(int aWidth, int aHeight)
++{
++  if (aWidth == mWidth && aHeight == mHeight)
++    return true;
++
++  Release();
++  Create(aWidth, aHeight);
++
++  return (mWaylandBuffer != nullptr);
++}
++
++void
++WindowBackBuffer::Attach(wl_surface* aSurface)
++{
++  wl_surface_attach(aSurface, mWaylandBuffer, 0, 0);
++  wl_surface_commit(aSurface);
++  wl_display_flush(gWaylandDisplay->GetDisplay());
++  mAttached = true;
++}
++
++void
++WindowBackBuffer::Detach()
++{
++  mAttached = false;
++}
++
++bool WindowBackBuffer::Sync(class WindowBackBuffer* aSourceBuffer)
++{
++  bool bufferSizeMatches = MatchSize(aSourceBuffer);
++  if (!bufferSizeMatches) {
++    Resize(aSourceBuffer->mWidth, aSourceBuffer->mHeight);
++  }
++
++  memcpy(mShmPool.GetImageData(), aSourceBuffer->mShmPool.GetImageData(),
++         aSourceBuffer->mWidth * aSourceBuffer->mHeight * BUFFER_BPP);
++  return true;
++}
++
++already_AddRefed<gfx::DrawTarget>
++WindowBackBuffer::Lock(const LayoutDeviceIntRegion& aRegion)
++{
++  gfx::IntRect bounds = aRegion.GetBounds().ToUnknownRect();
++  gfx::IntSize lockSize(bounds.XMost(), bounds.YMost());
++
++  return gfxPlatform::CreateDrawTargetForData(static_cast<unsigned char*>(mShmPool.GetImageData()),
++                                              lockSize,
++                                              BUFFER_BPP * mWidth,
++                                              gWaylandDisplay->GetSurfaceFormat());
++}
++
++static void
++frame_callback_handler(void *data, struct wl_callback *callback, uint32_t time)
++{
++    auto surface = reinterpret_cast<WindowSurfaceWayland*>(data);
++    surface->FrameCallbackHandler();
++}
++
++static const struct wl_callback_listener frame_listener = {
++    frame_callback_handler
++};
++
++WindowSurfaceWayland::WindowSurfaceWayland(nsWindow *aWidget,
++                                           wl_display *aDisplay,
++                                           wl_surface *aSurface)
++  : mWidget(aWidget)
++  , mSurface(aSurface)
++  , mFrontBuffer(nullptr)
++  , mBackBuffer(nullptr)
++  , mFrameCallback(nullptr)
++  , mDelayedCommit(false)
++  , mFullScreenDamage(false)
++  , mWaylandMessageLoop(nullptr)
++  , mIsMainThread(NS_IsMainThread())
++{
++  MOZ_RELEASE_ASSERT(mSurface != nullptr,
++                    "We can't do anything useful without valid wl_surface.");
++
++  if (!mIsMainThread) {
++    // Register and run wayland loop when running in compositor thread.
++    mWaylandMessageLoop = MessageLoop::current();
++    WaylandDisplayAddRef(aDisplay);
++    wl_proxy_set_queue((struct wl_proxy *)mSurface,
++                       gWaylandDisplay->GetEventQueue());
++  }
++}
++
++WindowSurfaceWayland::~WindowSurfaceWayland()
++{
++  delete mFrontBuffer;
++  delete mBackBuffer;
++
++  if (mFrameCallback) {
++    wl_callback_destroy(mFrameCallback);
++  }
++
++  if (!mIsMainThread) {
++    // Release WaylandDisplay only for surfaces created in Compositor thread.
++    mWaylandMessageLoop->PostTask(
++      NewRunnableFunction(&WaylandDisplayRelease, nullptr));
++  }
++}
++
++WindowBackBuffer*
++WindowSurfaceWayland::GetBufferToDraw(int aWidth, int aHeight)
++{
++  if (!mFrontBuffer) {
++    mFrontBuffer = new WindowBackBuffer(mIsMainThread, aWidth, aHeight);
++    mBackBuffer = new WindowBackBuffer(mIsMainThread, aWidth, aHeight);
++    return mFrontBuffer;
++  }
++
++  if (!mFrontBuffer->IsAttached()) {
++    if (!mFrontBuffer->MatchSize(aWidth, aHeight)) {
++      mFrontBuffer->Resize(aWidth, aHeight);
++    }
++    return mFrontBuffer;
++  }
++
++  // Front buffer is used by compositor, draw to back buffer
++  if (mBackBuffer->IsAttached()) {
++    NS_WARNING("No drawing buffer available");
++    return nullptr;
++  }
++
++  MOZ_ASSERT(!mDelayedCommit,
++             "Uncommitted buffer switch, screen artifacts ahead.");
++
++  WindowBackBuffer *tmp = mFrontBuffer;
++  mFrontBuffer = mBackBuffer;
++  mBackBuffer = tmp;
++
++  if (mBackBuffer->MatchSize(aWidth, aHeight)) {
++    // Former front buffer has the same size as a requested one.
++    // Gecko may expect a content already drawn on screen so copy
++    // existing data to the new buffer.
++    mFrontBuffer->Sync(mBackBuffer);
++    // When buffer switches we need to damage whole screen
++    // (https://bugzilla.redhat.com/show_bug.cgi?id=1418260)
++    mFullScreenDamage = true;
++  } else {
++    // Former buffer has different size from the new request. Only resize
++    // the new buffer and leave geck to render new whole content.
++    mFrontBuffer->Resize(aWidth, aHeight);
++  }
++
++  return mFrontBuffer;
++}
++
++already_AddRefed<gfx::DrawTarget>
++WindowSurfaceWayland::Lock(const LayoutDeviceIntRegion& aRegion)
++{
++  MOZ_ASSERT(mIsMainThread == NS_IsMainThread());
++
++  // We allocate back buffer to widget size but return only
++  // portion requested by aRegion.
++  LayoutDeviceIntRect rect = mWidget->GetBounds();
++  WindowBackBuffer* buffer = GetBufferToDraw(rect.width,
++                                             rect.height);
++  MOZ_ASSERT(buffer, "We don't have any buffer to draw to!");
++  if (!buffer) {
++    return nullptr;
++  }
++
++  return buffer->Lock(aRegion);
++}
++
++void
++WindowSurfaceWayland::Commit(const LayoutDeviceIntRegion& aInvalidRegion)
++{
++  MOZ_ASSERT(mIsMainThread == NS_IsMainThread());
++
++  for (auto iter = aInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
++    const mozilla::LayoutDeviceIntRect &r = iter.Get();
++    if (!mFullScreenDamage)
++      wl_surface_damage(mSurface, r.x, r.y, r.width, r.height);
++  }
++
++  if (mFullScreenDamage) {
++    LayoutDeviceIntRect rect = mWidget->GetBounds();
++    wl_surface_damage(mSurface, 0, 0, rect.width, rect.height);
++    mFullScreenDamage = false;
++  }
++
++  if (mFrameCallback) {
++    // Do nothing here - buffer will be commited to compositor
++    // in next frame callback event.
++    mDelayedCommit = true;
++    return;
++  } else  {
++    mFrameCallback = wl_surface_frame(mSurface);
++    wl_callback_add_listener(mFrameCallback, &frame_listener, this);
++
++    // There's no pending frame callback so we can draw immediately
++    // and create frame callback for possible subsequent drawing.
++    mFrontBuffer->Attach(mSurface);
++    mDelayedCommit = false;
++  }
++}
++
++void
++WindowSurfaceWayland::FrameCallbackHandler()
++{
++  MOZ_ASSERT(mIsMainThread == NS_IsMainThread());
++
++  if (mFrameCallback) {
++      wl_callback_destroy(mFrameCallback);
++      mFrameCallback = nullptr;
++  }
++
++  if (mDelayedCommit) {
++    // Send pending surface to compositor and register frame callback
++    // for possible subsequent drawing.
++    mFrameCallback = wl_surface_frame(mSurface);
++    wl_callback_add_listener(mFrameCallback, &frame_listener, this);
++
++    mFrontBuffer->Attach(mSurface);
++    mDelayedCommit = false;
++  }
++}
++
++}  // namespace widget
++}  // namespace mozilla
+diff --git a/widget/gtk/WindowSurfaceWayland.h b/widget/gtk/WindowSurfaceWayland.h
+new file mode 100644
+index 0000000..45e523a
+--- /dev/null
++++ b/widget/gtk/WindowSurfaceWayland.h
+@@ -0,0 +1,133 @@
++/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
++ *
++ * This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#ifndef _MOZILLA_WIDGET_GTK_WINDOW_SURFACE_WAYLAND_H
++#define _MOZILLA_WIDGET_GTK_WINDOW_SURFACE_WAYLAND_H
++
++namespace mozilla {
++namespace widget {
++
++// We support only 32bpp formats
++#define BUFFER_BPP 4
++
++// Our general connection to Wayland display server,
++// holds our display connection and runs event loop.
++class nsWaylandDisplay : public nsISupports {
++  NS_DECL_THREADSAFE_ISUPPORTS
++
++public:
++  nsWaylandDisplay(wl_display *aDisplay);
++
++  void                SetShm(wl_shm* aShm)   { mShm = aShm; };
++  wl_shm*             GetShm()               { return(mShm); };
++  wl_event_queue*     GetEventQueue()        { return mEventQueue; };
++  wl_display*         GetDisplay()           { return mDisplay; };
++  gfx::SurfaceFormat  GetSurfaceFormat()     { return mFormat; };
++  void                SetWaylandPixelFormat(uint32_t format);
++  bool                DisplayLoop();
++
++private:
++  virtual ~nsWaylandDisplay();
++
++  gfx::SurfaceFormat  mFormat;
++  wl_shm*             mShm;
++  wl_event_queue*     mEventQueue;
++  wl_display*         mDisplay;
++};
++
++// Allocates and owns shared memory for Wayland drawing surfaces
++class WaylandShmPool {
++public:
++  WaylandShmPool(bool aIsMainThread, int aSize);
++  ~WaylandShmPool();
++
++  bool                Resize(int aSize);
++  wl_shm_pool*        GetShmPool()    { return mShmPool;   };
++  void*               GetImageData()  { return mImageData; };
++
++private:
++  int CreateTemporaryFile(int aSize);
++
++  wl_shm_pool*        mShmPool;
++  int                 mShmPoolFd;
++  int                 mAllocatedSize;
++  void*               mImageData;
++};
++
++// Holds actual graphics data for wl_surface
++class WindowBackBuffer {
++public:
++  WindowBackBuffer(bool aIsMainThread, int aWidth, int aHeight);
++  ~WindowBackBuffer();
++
++  already_AddRefed<gfx::DrawTarget> Lock(const LayoutDeviceIntRegion& aRegion);
++
++  void Attach(wl_surface* aSurface);
++  void Detach();
++  bool IsAttached() { return mAttached; }
++
++  bool Resize(int aWidth, int aHeight);
++  bool Sync(class WindowBackBuffer* aSourceBuffer);
++
++  bool MatchSize(int aWidth, int aHeight)
++  {
++    return aWidth == mWidth && aHeight == mHeight;
++  }
++  bool MatchSize(class WindowBackBuffer *aBuffer)
++  {
++    return aBuffer->mWidth == mWidth && aBuffer->mHeight == mHeight;
++  }
++
++private:
++  void Create(int aWidth, int aHeight);
++  void Release();
++
++  // WaylandShmPool provides actual shared memory we draw into
++  WaylandShmPool      mShmPool;
++
++  // wl_buffer is a wayland object that encapsulates the shared memory
++  // and passes it to wayland compositor by wl_surface object.
++  wl_buffer*          mWaylandBuffer;
++  int                 mWidth;
++  int                 mHeight;
++  bool                mAttached;
++  bool                mIsMainThread;
++};
++
++// WindowSurfaceWayland is an abstraction for wl_surface
++// and related management
++class WindowSurfaceWayland : public WindowSurface {
++public:
++  WindowSurfaceWayland(nsWindow *aWidget, wl_display *aDisplay, wl_surface *aSurface);
++  ~WindowSurfaceWayland();
++
++  already_AddRefed<gfx::DrawTarget> Lock(const LayoutDeviceIntRegion& aRegion) override;
++  void                      Commit(const LayoutDeviceIntRegion& aInvalidRegion) final;
++  void                      FrameCallbackHandler();
++
++private:
++  WindowBackBuffer*         GetBufferToDraw(int aWidth, int aHeight);
++
++  nsWindow*                 mWidget;
++
++  // The surface size is dynamically allocated by Commit() call,
++  // we store the latest size request here to optimize
++  // buffer usage and our gfx operations
++  wl_surface*               mSurface;
++
++  WindowBackBuffer*         mFrontBuffer;
++  WindowBackBuffer*         mBackBuffer;
++  wl_callback*              mFrameCallback;
++  bool                      mDelayedCommit;
++  bool                      mFullScreenDamage;
++  MessageLoop*              mWaylandMessageLoop;
++  bool                      mIsMainThread;
++};
++
++}  // namespace widget
++}  // namespace mozilla
++
++#endif // _MOZILLA_WIDGET_GTK_WINDOW_SURFACE_WAYLAND_H
+diff --git a/widget/gtk/X11CompositorWidget.cpp b/widget/gtk/X11CompositorWidget.cpp
+index 41cedd9..08e9da0 100644
+--- a/widget/gtk/X11CompositorWidget.cpp
++++ b/widget/gtk/X11CompositorWidget.cpp
+@@ -44,6 +44,10 @@ X11CompositorWidget::X11CompositorWidget(const CompositorWidgetInitData& aInitDa
+   //  depth
+   //  );
+ 
++  mWaylandDisplay = aWindow->WaylandDisplay();
++  mWaylandSurface = (wl_surface *)aInitData.XWindow();
++  mProvider.Initialize(aWindow, mWaylandDisplay, mWaylandSurface);
++
+   mClientSize = aInitData.InitialClientSize();
+ }
+ 
+diff --git a/widget/gtk/X11CompositorWidget.h b/widget/gtk/X11CompositorWidget.h
+index 9d09476..cf0d94c 100644
+--- a/widget/gtk/X11CompositorWidget.h
++++ b/widget/gtk/X11CompositorWidget.h
+@@ -61,6 +61,8 @@ private:
+ 
+   //Display* mXDisplay;
+   //Window   mXWindow;
++  wl_display* mWaylandDisplay;
++  wl_surface* mWaylandSurface;
+   WindowSurfaceProvider mProvider;
+ };
+ 
+diff --git a/widget/gtk/moz.build b/widget/gtk/moz.build
+index 299e4d8..b7d2f1c 100644
+--- a/widget/gtk/moz.build
++++ b/widget/gtk/moz.build
+@@ -19,7 +19,7 @@ EXPORTS.mozilla += [
+ 
+ UNIFIED_SOURCES += [
+     'IMContextWrapper.cpp',
+-    'mozcontainer.c',
++    'mozcontainer.cpp',
+     'NativeKeyBindings.cpp',
+     'nsAppShell.cpp',
+     'nsBidiKeyboard.cpp',
+@@ -73,13 +73,14 @@ if CONFIG['MOZ_X11']:
+     UNIFIED_SOURCES += [
+         #'nsClipboard.cpp',
+         'nsDragService.cpp',
+-        #'WindowSurfaceProvider.cpp',
++        'WindowSurfaceProvider.cpp',
+         #'WindowSurfaceX11.cpp',
+         #'WindowSurfaceX11Image.cpp',
+         #'WindowSurfaceXRender.cpp',
++        'WindowSurfaceWayland.cpp',
+     ]
+     EXPORTS.mozilla.widget += [
+-        #'WindowSurfaceProvider.h',
++        'WindowSurfaceProvider.h',
+     ]
+ 
+ if CONFIG['ACCESSIBILITY']:
+diff --git a/widget/gtk/mozcontainer.c b/widget/gtk/mozcontainer.cpp
+similarity index 72%
+rename from widget/gtk/mozcontainer.c
+rename to widget/gtk/mozcontainer.cpp
+index 9b596e4..0d61ee0 100644
+--- a/widget/gtk/mozcontainer.c
++++ b/widget/gtk/mozcontainer.cpp
+@@ -7,7 +7,10 @@
+ 
+ #include "mozcontainer.h"
+ #include <gtk/gtk.h>
++#include <gdk/gdkwayland.h>
++
+ #include <stdio.h>
++#include <string.h>
+ 
+ #ifdef ACCESSIBILITY
+ #include <atk/atk.h>
+@@ -22,6 +25,7 @@ static void moz_container_init                (MozContainer      *container);
+ static void moz_container_map                 (GtkWidget         *widget);
+ static void moz_container_unmap               (GtkWidget         *widget);
+ static void moz_container_realize             (GtkWidget         *widget);
++static void moz_container_unrealize           (GtkWidget         *widget);
+ static void moz_container_size_allocate       (GtkWidget         *widget,
+                                                GtkAllocation     *allocation);
+ 
+@@ -71,7 +75,8 @@ moz_container_get_type(void)
+ 
+         moz_container_type = g_type_register_static (GTK_TYPE_CONTAINER,
+                                                      "MozContainer",
+-                                                     &moz_container_info, 0);
++                                                     &moz_container_info,
++                                                     static_cast<GTypeFlags>(0));
+ #ifdef ACCESSIBILITY
+         /* Set a factory to return accessible object with ROLE_REDUNDANT for
+          * MozContainer, so that gail won't send focus notification for it */
+@@ -89,7 +94,7 @@ moz_container_new (void)
+ {
+     MozContainer *container;
+ 
+-    container = g_object_new (MOZ_CONTAINER_TYPE, NULL);
++    container = static_cast<MozContainer*>(g_object_new (MOZ_CONTAINER_TYPE, nullptr));
+ 
+     return GTK_WIDGET(container);
+ }
+@@ -143,6 +148,65 @@ moz_container_move (MozContainer *container, GtkWidget *child_widget,
+ 
+ /* static methods */
+ 
++/* We have to recreate our wl_surfaces when GdkWindow is shown,
++ * otherwise Gdk resources may not finished
++ * and gdk_wayland_window_get_wl_surface() fails.
++ */
++gboolean
++moz_container_map_wl_surface(MozContainer *container)
++{
++    if (container->subsurface)
++      return TRUE;
++
++    GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
++    wl_surface* gtk_surface = gdk_wayland_window_get_wl_surface(window);
++    if (!gtk_surface) {
++      // We requested the underlying wl_surface too early.
++      return FALSE;
++    }
++
++    container->subsurface =
++      wl_subcompositor_get_subsurface (container->subcompositor,
++                                       container->surface,
++                                       gtk_surface);
++    gint x, y;
++    gdk_window_get_position(window, &x, &y);
++    wl_subsurface_set_position(container->subsurface, x, y);
++    wl_subsurface_set_desync(container->subsurface);
++
++    // Don't accept input on subsurface
++    GdkDisplay* display = gtk_widget_get_display(GTK_WIDGET (container));
++    wl_compositor* compositor = gdk_wayland_display_get_wl_compositor(display);
++    wl_region* region = wl_compositor_create_region(compositor);
++    wl_surface_set_input_region(container->surface, region);
++    wl_region_destroy(region);
++    return TRUE;
++}
++
++static void
++moz_container_unmap_surface(MozContainer *container)
++{
++    g_clear_pointer(&container->subsurface, wl_subsurface_destroy);
++}
++
++static void
++moz_container_create_surface(MozContainer *container)
++{
++    GdkDisplay *display = gtk_widget_get_display(GTK_WIDGET(container));
++
++    if (!container->surface) {
++        struct wl_compositor *compositor;
++        compositor = gdk_wayland_display_get_wl_compositor(display);
++        container->surface = wl_compositor_create_surface(compositor);
++    }
++}
++
++static void
++moz_container_delete_surface(MozContainer *container)
++{
++    g_clear_pointer(&container->surface, wl_surface_destroy);
++}
++
+ void
+ moz_container_class_init (MozContainerClass *klass)
+ {
+@@ -154,6 +218,7 @@ moz_container_class_init (MozContainerClass *klass)
+     widget_class->map = moz_container_map;
+     widget_class->unmap = moz_container_unmap;
+     widget_class->realize = moz_container_realize;
++    widget_class->unrealize = moz_container_unrealize;
+     widget_class->size_allocate = moz_container_size_allocate;
+ 
+     container_class->remove = moz_container_remove;
+@@ -161,12 +226,48 @@ moz_container_class_init (MozContainerClass *klass)
+     container_class->add = moz_container_add;
+ }
+ 
++static void
++registry_handle_global (void *data,
++                        struct wl_registry *registry,
++                        uint32_t name,
++                        const char *interface,
++                        uint32_t version)
++{
++    MozContainer *container = MOZ_CONTAINER(data);
++    if(strcmp(interface, "wl_subcompositor") == 0) {
++        container->subcompositor =
++            static_cast<wl_subcompositor*>(wl_registry_bind(registry,
++                                           name,
++                                           &wl_subcompositor_interface,
++                                           1));
++    }
++}
++
++static void
++registry_handle_global_remove (void *data,
++                               struct wl_registry *registry,
++                               uint32_t name)
++{
++}
++
++static const struct wl_registry_listener registry_listener = {
++    registry_handle_global,
++    registry_handle_global_remove
++};
+ void
+ moz_container_init (MozContainer *container)
+ {
+     gtk_widget_set_can_focus(GTK_WIDGET(container), TRUE);
+     gtk_container_set_resize_mode(GTK_CONTAINER(container), GTK_RESIZE_IMMEDIATE);
+     gtk_widget_set_redraw_on_allocate(GTK_WIDGET(container), FALSE);
++    {
++      GdkDisplay *gdk_display = gtk_widget_get_display(GTK_WIDGET(container));
++          wl_display* display = gdk_wayland_display_get_wl_display(gdk_display);
++          wl_registry* registry = wl_display_get_registry(display);
++          wl_registry_add_listener(registry, &registry_listener, container);
++          wl_display_roundtrip(display);
++          wl_display_roundtrip(display);
++    }
+ }
+ 
+ void
+@@ -207,6 +308,11 @@ moz_container_unmap (GtkWidget *widget)
+     if (gtk_widget_get_has_window (widget)) {
+         gdk_window_hide (gtk_widget_get_window(widget));
+     }
++  /* Gdk/Wayland deletes underlying GdkWindow wl_surface on unmap event.
++   * Delete the wl_subsurface interface which
++   * keeps wl_surface object and it's available for reuse.
++   */
++    moz_container_unmap_surface(MOZ_CONTAINER(widget));
+ }
+ 
+ void
+@@ -237,6 +343,12 @@ moz_container_realize (GtkWidget *widget)
+         attributes_mask |= GDK_WA_COLORMAP;
+ #endif
+ 
++        // Get mShell type
++        GtkWidget* parent_widget = gtk_widget_get_parent(widget);
++        if (parent_widget &&
++            gtk_window_get_window_type(GTK_WINDOW(parent_widget)) == GTK_WINDOW_POPUP) {
++            //attributes.window_type = GDK_WINDOW_SUBSURFACE;
++        }
+         window = gdk_window_new (parent, &attributes, attributes_mask);
+         gdk_window_set_user_data (window, widget);
+ #if (MOZ_WIDGET_GTK == 2)
+@@ -255,6 +367,15 @@ moz_container_realize (GtkWidget *widget)
+ #if (MOZ_WIDGET_GTK == 2)
+     widget->style = gtk_style_attach (widget->style, widget->window);
+ #endif
++    moz_container_create_surface(MOZ_CONTAINER(widget));
++}
++
++static void
++moz_container_unrealize (GtkWidget *widget)
++{
++  MozContainer* container = MOZ_CONTAINER(widget);
++  moz_container_unmap_surface(container);
++  moz_container_delete_surface(container);
+ }
+ 
+ void
+@@ -290,7 +411,7 @@ moz_container_size_allocate (GtkWidget     *widget,
+     tmp_list = container->children;
+ 
+     while (tmp_list) {
+-        MozContainerChild *child = tmp_list->data;
++        MozContainerChild *child = static_cast<MozContainerChild*>(tmp_list->data);
+ 
+         moz_container_allocate_child (container, child);
+ 
+@@ -306,6 +427,12 @@ moz_container_size_allocate (GtkWidget     *widget,
+                                allocation->width,
+                                allocation->height);
+     }
++
++    if (container->subsurface) {
++        gint x, y;
++        gdk_window_get_position(gtk_widget_get_window(widget), &x, &y);
++        wl_subsurface_set_position(container->subsurface, x, y);
++      }
+ }
+ 
+ void
+@@ -372,7 +499,7 @@ moz_container_forall (GtkContainer *container, gboolean include_internals,
+     tmp_list = moz_container->children;
+     while (tmp_list) {
+         MozContainerChild *child;
+-        child = tmp_list->data;
++        child = static_cast<MozContainerChild*>(tmp_list->data);
+         tmp_list = tmp_list->next;
+         (* callback) (child->widget, callback_data);
+     }
+@@ -400,7 +527,7 @@ moz_container_get_child (MozContainer *container, GtkWidget *child_widget)
+     while (tmp_list) {
+         MozContainerChild *child;
+     
+-        child = tmp_list->data;
++        child = static_cast<MozContainerChild*>(tmp_list->data);
+         tmp_list = tmp_list->next;
+ 
+         if (child->widget == child_widget)
+@@ -416,3 +543,8 @@ moz_container_add(GtkContainer *container, GtkWidget *widget)
+     moz_container_put(MOZ_CONTAINER(container), widget, 0, 0);
+ }
+ 
++struct wl_surface*
++moz_container_get_wl_surface(MozContainer *container)
++{
++    return container->surface;
++}
+diff --git a/widget/gtk/mozcontainer.h b/widget/gtk/mozcontainer.h
+index 23e17f7..ee48ab9 100644
+--- a/widget/gtk/mozcontainer.h
++++ b/widget/gtk/mozcontainer.h
+@@ -10,10 +10,6 @@
+ 
+ #include <gtk/gtk.h>
+ 
+-#ifdef __cplusplus
+-extern "C" {
+-#endif /* __cplusplus */
+-
+ /*
+  * MozContainer
+  *
+@@ -55,10 +51,16 @@ extern "C" {
+ typedef struct _MozContainer      MozContainer;
+ typedef struct _MozContainerClass MozContainerClass;
+ 
++struct wl_subcompositor;
++struct wl_surface;
++struct wl_subsurface;
+ struct _MozContainer
+ {
+     GtkContainer   container;
+     GList         *children;
++    struct wl_subcompositor *subcompositor;
++    struct wl_surface       *surface;
++    struct wl_subsurface    *subsurface;
+ };
+ 
+ struct _MozContainerClass
+@@ -79,8 +81,7 @@ void       moz_container_move          (MozContainer *container,
+                                         gint          width,
+                                         gint          height);
+ 
+-#ifdef __cplusplus
+-}
+-#endif /* __cplusplus */
++struct wl_surface * moz_container_get_wl_surface (MozContainer *container);
++gboolean            moz_container_map_wl_surface (MozContainer *container);
+ 
+ #endif /* __MOZ_CONTAINER_H__ */
+diff --git a/widget/gtk/nsWindow.cpp b/widget/gtk/nsWindow.cpp
+index 4aefa28..bad6abb 100644
+--- a/widget/gtk/nsWindow.cpp
++++ b/widget/gtk/nsWindow.cpp
+@@ -58,6 +58,8 @@
+ #include <gtk/gtkprivate.h>
+ #endif
+ 
++#include <gdk/gdkwayland.h>
++
+ #include "nsGkAtoms.h"
+ 
+ #ifdef MOZ_ENABLE_STARTUP_NOTIFICATION
+@@ -117,12 +119,13 @@ using namespace mozilla::widget;
+ #include "mozilla/layers/CompositorThread.h"
+ 
+ #ifdef MOZ_X11_no
+-#include "X11CompositorWidget.h"
+ #include "gfxXlibSurface.h"
+ #include "WindowSurfaceX11Image.h"
+ #include "WindowSurfaceX11SHM.h"
+ #include "WindowSurfaceXRender.h"
+ #endif // MOZ_X11
++#include "X11CompositorWidget.h"
++#include "WindowSurfaceWayland.h"
+ 
+ #include "nsShmImage.h"
+ 
+@@ -431,6 +434,7 @@ nsWindow::nsWindow()
+     mXVisual  = nullptr;
+     mXDepth   = 0;
+ #endif /* MOZ_X11 */
++    mWaylandSurface = nullptr;
+     mPluginType          = PluginType_NONE;
+ 
+     if (!gGlobalsInitialized) {
+@@ -1698,12 +1702,13 @@ nsWindow::GetNativeData(uint32_t aDataType)
+         return (void*)mPluginNativeWindow->window;
+ 
+     case NS_NATIVE_DISPLAY: {
+-#ifdef MOZ_X11_no
+         GdkDisplay* gdkDisplay = gdk_display_get_default();
++#ifdef MOZ_X11_no
+         if (GDK_IS_X11_DISPLAY(gdkDisplay)) {
+           return GDK_DISPLAY_XDISPLAY(gdkDisplay);
+         }
+ #endif /* MOZ_X11 */
++        return gdk_wayland_display_get_wl_display(gdkDisplay);
+         return nullptr;
+     }
+     case NS_NATIVE_SHELLWIDGET:
+@@ -1729,7 +1734,8 @@ nsWindow::GetNativeData(uint32_t aDataType)
+       return nullptr;
+ #ifdef MOZ_X11
+     case NS_NATIVE_COMPOSITOR_DISPLAY:
+-        return gfxPlatformGtk::GetPlatform()->GetCompositorDisplay();
++        //return gfxPlatformGtk::GetPlatform()->GetCompositorDisplay();
++	return gfxPlatformGtk::GetPlatform()->GetWaylandCompositorDisplay();
+ #endif // MOZ_X11
+     default:
+         NS_WARNING("nsWindow::GetNativeData called with bad value");
+@@ -2095,6 +2101,9 @@ nsWindow::OnExposeEvent(cairo_t *cr)
+     if (!listener)
+         return FALSE;
+ 
++    if (mContainer && !moz_container_map_wl_surface(mContainer))
++        return FALSE;
++
+     LayoutDeviceIntRegion exposeRegion;
+ #if (MOZ_WIDGET_GTK == 2)
+     if (!ExtractExposeRegion(exposeRegion, aEvent)) {
+@@ -3725,7 +3734,7 @@ nsWindow::Create(nsIWidget* aParent,
+         // We can't draw directly to top-level window when client side
+         // decorations are enabled. We use container with GdkWindow instead.
+         GtkStyleContext* style = gtk_widget_get_style_context(mShell);
+-        shellHasCSD = gtk_style_context_has_class(style, "csd");
++        shellHasCSD = true;
+ #endif
+         if (!shellHasCSD) {
+             // Use mShell's window for drawing and events.
+@@ -3746,6 +3755,11 @@ nsWindow::Create(nsIWidget* aParent,
+ 
+         // the drawing window
+         mGdkWindow = gtk_widget_get_window(eventWidget);
++	
++	wl_surface *waylandSurface = moz_container_get_wl_surface(
++                                          MOZ_CONTAINER(container));
++        g_object_set_data(G_OBJECT(mGdkWindow), "WAYLAND_SURFACE",
++                          waylandSurface);
+ 
+         if (mWindowType == eWindowType_popup) {
+             // gdk does not automatically set the cursor for "temporary"
+@@ -3971,6 +3985,9 @@ nsWindow::Create(nsIWidget* aParent,
+       mSurfaceProvider.Initialize(mXDisplay, mXWindow, mXVisual, mXDepth);
+     }
+ #endif
++    mWaylandDisplay = gdk_wayland_display_get_wl_display(gdk_display_get_default());
++    mWaylandSurface = moz_container_get_wl_surface(MOZ_CONTAINER(mContainer));
++    mSurfaceProvider.Initialize(this, mWaylandDisplay, mWaylandSurface);
+ 
+     return NS_OK;
+ }
+@@ -4654,14 +4671,17 @@ nsWindow::GrabPointer(guint32 aTime)
+     if (!mGdkWindow)
+         return;
+ 
++    GdkSeat *gdkSeat = gdk_display_get_default_seat(gdk_display_get_default());
+     gint retval;
+-    retval = gdk_pointer_grab(mGdkWindow, TRUE,
+-                              (GdkEventMask)(GDK_BUTTON_PRESS_MASK |
+-                                             GDK_BUTTON_RELEASE_MASK |
+-                                             GDK_ENTER_NOTIFY_MASK |
+-                                             GDK_LEAVE_NOTIFY_MASK |
+-                                             GDK_POINTER_MOTION_MASK),
+-                              (GdkWindow *)nullptr, nullptr, aTime);
++    //retval = gdk_pointer_grab(mGdkWindow, TRUE,
++    //                          (GdkEventMask)(GDK_BUTTON_PRESS_MASK |
++    //                                         GDK_BUTTON_RELEASE_MASK |
++    //                                         GDK_ENTER_NOTIFY_MASK |
++    //                                         GDK_LEAVE_NOTIFY_MASK |
++    //                                         GDK_POINTER_MOTION_MASK),
++    //                          (GdkWindow *)nullptr, nullptr, aTime);
++    retval = gdk_seat_grab(gdkSeat, mGdkWindow, GDK_SEAT_CAPABILITY_ALL_POINTING, TRUE,
++                           nullptr, nullptr, nullptr, nullptr);
+ 
+     if (retval == GDK_GRAB_NOT_VIEWABLE) {
+         LOG(("GrabPointer: window not viewable; will retry\n"));
+@@ -4685,7 +4705,9 @@ nsWindow::ReleaseGrabs(void)
+     LOG(("ReleaseGrabs\n"));
+ 
+     mRetryPointerGrab = false;
+-    gdk_pointer_ungrab(GDK_CURRENT_TIME);
++    //gdk_pointer_ungrab(GDK_CURRENT_TIME);
++    GdkSeat *gdkSeat = gdk_display_get_default_seat(gdk_display_get_default());
++    gdk_seat_ungrab(gdkSeat);
+ }
+ 
+ GtkWidget *
+@@ -6407,13 +6429,14 @@ nsWindow::GetDrawTargetForGdkDrawable(GdkDrawable* aDrawable,
+ already_AddRefed<DrawTarget>
+ nsWindow::StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion, BufferMode* aBufferMode)
+ {
+-  return NULL;
++  return mSurfaceProvider.StartRemoteDrawingInRegion(aInvalidRegion, aBufferMode);
+ }
+ 
+ void
+ nsWindow::EndRemoteDrawingInRegion(DrawTarget* aDrawTarget,
+                                    LayoutDeviceIntRegion& aInvalidRegion)
+ {
++  mSurfaceProvider.EndRemoteDrawingInRegion(aDrawTarget, aInvalidRegion);
+ }
+ 
+ // Code shared begin BeginMoveDrag and BeginResizeDrag
+@@ -6858,4 +6881,9 @@ void nsWindow::GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInit
+                                   nsCString(XDisplayString(mXDisplay)),
+                                   GetClientSize());
+   #endif
++  *aInitData = mozilla::widget::CompositorWidgetInitData(
++                                  (uintptr_t)mWaylandSurface,
++                                  (nsCString)nullptr,
++                                  GetClientSize());
++
+ }
+diff --git a/widget/gtk/nsWindow.h b/widget/gtk/nsWindow.h
+index ff66233..6ac6469 100644
+--- a/widget/gtk/nsWindow.h
++++ b/widget/gtk/nsWindow.h
+@@ -18,6 +18,7 @@
+ 
+ #include "nsBaseWidget.h"
+ #include <gdk/gdk.h>
++#include <gdk/gdkwayland.h>
+ #include <gtk/gtk.h>
+ 
+ #ifdef MOZ_X11_no
+@@ -25,7 +26,7 @@
+ #endif /* MOZ_X11 */
+ 
+ #include "mozilla/widget/WindowSurface.h"
+-//#include "mozilla/widget/WindowSurfaceProvider.h"
++#include "mozilla/widget/WindowSurfaceProvider.h"
+ 
+ #ifdef ACCESSIBILITY
+ #include "mozilla/a11y/Accessible.h"
+@@ -351,6 +352,7 @@ public:
+ #ifdef MOZ_X11_no
+     Display* XDisplay() { return mXDisplay; }
+ #endif
++    wl_display* WaylandDisplay() { return mWaylandDisplay; }
+     virtual void GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInitData* aInitData) override;
+ 
+     // HiDPI scale conversion
+@@ -464,8 +466,10 @@ private:
+     Window              mXWindow;
+     Visual*             mXVisual;
+     int                 mXDepth;
+-    mozilla::widget::WindowSurfaceProvider mSurfaceProvider;
+ #endif
++    mozilla::widget::WindowSurfaceProvider mSurfaceProvider;
++    wl_display*         mWaylandDisplay;
++    wl_surface*         mWaylandSurface;
+ 
+     // Upper bound on pending ConfigureNotify events to be dispatched to the
+     // window. See bug 1225044.

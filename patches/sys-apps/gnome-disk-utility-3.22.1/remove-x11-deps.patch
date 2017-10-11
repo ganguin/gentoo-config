@@ -1,0 +1,72 @@
+diff --git a/src/disks/gducreatefilesystemwidget.c b/src/disks/gducreatefilesystemwidget.c
+index 107268a..b20c8a4 100644
+--- a/src/disks/gducreatefilesystemwidget.c
++++ b/src/disks/gducreatefilesystemwidget.c
+@@ -12,7 +12,6 @@
+ 
+ #include <math.h>
+ #include <gdk/gdkkeysyms.h>
+-#include <gdk/gdkx.h>
+ #include <stdlib.h>
+ 
+ #include "gduapplication.h"
+diff --git a/src/disks/gduestimator.c b/src/disks/gduestimator.c
+index aa1bae1..6bc0b21 100644
+--- a/src/disks/gduestimator.c
++++ b/src/disks/gduestimator.c
+@@ -12,7 +12,6 @@
+ 
+ #include <math.h>
+ #include <gdk/gdkkeysyms.h>
+-#include <gdk/gdkx.h>
+ #include <stdlib.h>
+ 
+ #include "gduestimator.h"
+diff --git a/src/disks/gduformatvolumedialog.c b/src/disks/gduformatvolumedialog.c
+index 2e0ca79..3404af4 100644
+--- a/src/disks/gduformatvolumedialog.c
++++ b/src/disks/gduformatvolumedialog.c
+@@ -10,7 +10,6 @@
+ #include "config.h"
+ 
+ #include <glib/gi18n.h>
+-#include <gdk/gdkx.h>
+ 
+ #include "gduapplication.h"
+ #include "gduwindow.h"
+@@ -187,11 +186,6 @@ gdu_format_volume_dialog_show_internal (UDisksClient *client,
+     }
+   else if (parent_xid != -1)
+     {
+-      GdkWindow *foreign_window = gdk_x11_window_foreign_new_for_display (gdk_display_get_default (), parent_xid);
+-      if (!gtk_widget_get_realized (data->dialog))
+-          gtk_widget_realize (data->dialog);
+-      if (foreign_window != NULL)
+-        gdk_window_set_transient_for (gtk_widget_get_window (data->dialog), foreign_window);
+     }
+ 
+   gtk_dialog_set_default_response (GTK_DIALOG (data->dialog), GTK_RESPONSE_OK);
+diff --git a/src/disks/gdupasswordstrengthwidget.c b/src/disks/gdupasswordstrengthwidget.c
+index 6f4138c..0dcc8f9 100644
+--- a/src/disks/gdupasswordstrengthwidget.c
++++ b/src/disks/gdupasswordstrengthwidget.c
+@@ -12,7 +12,6 @@
+ 
+ #include <math.h>
+ #include <gdk/gdkkeysyms.h>
+-#include <gdk/gdkx.h>
+ #include <stdlib.h>
+ 
+ #include <pwquality.h>
+diff --git a/src/disks/gduvolumegrid.c b/src/disks/gduvolumegrid.c
+index 1f2d2ca..7354dad 100644
+--- a/src/disks/gduvolumegrid.c
++++ b/src/disks/gduvolumegrid.c
+@@ -12,7 +12,6 @@
+ 
+ #include <math.h>
+ #include <gdk/gdkkeysyms.h>
+-#include <gdk/gdkx.h>
+ #include <stdlib.h>
+ 
+ #include "gduvolumegrid.h"

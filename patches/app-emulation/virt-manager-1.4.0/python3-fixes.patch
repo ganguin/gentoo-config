@@ -1,0 +1,169 @@
+diff --git a/virtManager/connection.py b/virtManager/connection.py
+index 820322e..d2b2a0b 100644
+--- a/virtManager/connection.py
++++ b/virtManager/connection.py
+@@ -910,28 +910,28 @@ class vmmConnection(vmmGObject):
+                 libvirt_error_code = exc.get_error_code()
+                 libvirt_error_message = exc.get_error_message()
+ 
+-        if (libvirt_error_code ==
+-            getattr(libvirt, "VIR_ERR_AUTH_CANCELLED", None)):
+-            logging.debug("User cancelled auth, not raising any error.")
+-            return False, None
+-
+-        if (libvirt_error_code == libvirt.VIR_ERR_AUTH_FAILED and
+-            "not authorized" in libvirt_error_message.lower()):
+-            logging.debug("Looks like we might have failed policykit "
+-                          "auth. Checking to see if we have a valid "
+-                          "console session")
+-            if (not self.is_remote() and
+-                not connectauth.do_we_have_session()):
+-                warnconsole = True
+-
+-        if (libvirt_error_code == libvirt.VIR_ERR_AUTH_FAILED and
+-            "GSSAPI Error" in libvirt_error_message and
+-            "No credentials cache found" in libvirt_error_message):
+-            if retry_for_tgt and connectauth.acquire_tgt():
+-                self._do_open(retry_for_tgt=False)
+-
+-        connectError = (str(exc), tb, warnconsole)
+-        return False, connectError
++                if (libvirt_error_code ==
++                    getattr(libvirt, "VIR_ERR_AUTH_CANCELLED", None)):
++                    logging.debug("User cancelled auth, not raising any error.")
++                    return False, None
++
++                if (libvirt_error_code == libvirt.VIR_ERR_AUTH_FAILED and
++                    "not authorized" in libvirt_error_message.lower()):
++                    logging.debug("Looks like we might have failed policykit "
++                                  "auth. Checking to see if we have a valid "
++                                  "console session")
++                    if (not self.is_remote() and
++                        not connectauth.do_we_have_session()):
++                        warnconsole = True
++
++                if (libvirt_error_code == libvirt.VIR_ERR_AUTH_FAILED and
++                    "GSSAPI Error" in libvirt_error_message and
++                    "No credentials cache found" in libvirt_error_message):
++                    if retry_for_tgt and connectauth.acquire_tgt():
++                        self._do_open(retry_for_tgt=False)
++
++            connectError = (str(exc), tb, warnconsole)
++            return False, connectError
+ 
+     def _populate_initial_state(self):
+         logging.debug("libvirt version=%s",
+diff --git a/virtManager/engine.py b/virtManager/engine.py
+index 3b5fad5..d8f9cf9 100644
+--- a/virtManager/engine.py
++++ b/virtManager/engine.py
+@@ -268,15 +268,15 @@ class vmmEngine(vmmGObject):
+         """
+         We serialize conn autostart, so polkit/ssh-askpass doesn't spam
+         """
+-        queue = queue.Queue()
++        _queue = queue.Queue()
+         auto_conns = [uri for uri in self.conns
+                       if self.conns[uri]["conn"].get_autoconnect()]
+ 
+         def add_next_to_queue():
+             if not auto_conns:
+-                queue.put(None)
++                _queue.put(None)
+             else:
+-                queue.put(auto_conns.pop(0))
++                _queue.put(auto_conns.pop(0))
+ 
+         def state_change_cb(conn):
+             if conn.is_active():
+@@ -288,7 +288,7 @@ class vmmEngine(vmmGObject):
+ 
+         def handle_queue():
+             while True:
+-                uri = queue.get()
++                uri = _queue.get()
+                 if uri is None:
+                     return
+                 if uri not in self.conns:
+diff --git a/virtManager/graphwidgets.py b/virtManager/graphwidgets.py
+index cac6975..ce225c9 100644
+--- a/virtManager/graphwidgets.py
++++ b/virtManager/graphwidgets.py
+@@ -316,7 +316,7 @@ class Sparkline(Gtk.DrawingArea):
+         w = window.get_width()
+         h = window.get_height()
+ 
+-        points_per_set = (len(self.data_array) / self.num_sets)
++        points_per_set = int(len(self.data_array) / self.num_sets)
+         pixels_per_point = (float(w) /
+                             (float((points_per_set - 1) or 1)))
+ 
+diff --git a/virtManager/viewers.py b/virtManager/viewers.py
+index 6635e7f..1824112 100644
+--- a/virtManager/viewers.py
++++ b/virtManager/viewers.py
+@@ -26,8 +26,11 @@ from gi.repository import GObject
+ from gi.repository import Gdk
+ 
+ import gi
+-gi.require_version('GtkVnc', '2.0')
+-from gi.repository import GtkVnc
++try:
++    gi.require_version('GtkVnc', '2.0')
++    from gi.repository import GtkVnc
++except (ValueError, ImportError):
++    pass
+ try:
+     gi.require_version('SpiceClientGtk', '3.0')
+     from gi.repository import SpiceClientGtk
+diff --git a/virtinst/devicedisk.py b/virtinst/devicedisk.py
+index b9592db..269aba6 100644
+--- a/virtinst/devicedisk.py
++++ b/virtinst/devicedisk.py
+@@ -430,7 +430,7 @@ class VirtualDisk(VirtualDevice):
+         """
+         digits = []
+         for factor in range(0, 3):
+-            amt = (num % (26 ** (factor + 1))) / (26 ** factor)
++            amt = int((num % (26 ** (factor + 1))) / (26 ** factor))
+             if amt == 0 and num >= (26 ** (factor + 1)):
+                 amt = 26
+             num -= amt
+diff --git a/virtinst/storage.py b/virtinst/storage.py
+index 6804a3d..70b5f62 100644
+--- a/virtinst/storage.py
++++ b/virtinst/storage.py
+@@ -894,6 +894,8 @@ class StorageVolume(_StorageObject):
+             capacity = self.capacity
+         if allocation is None:
+             allocation = self.allocation
++        if allocation is None:
++            allocation = 0
+ 
+         if not self.pool:
+             return (False, "")
+diff --git a/virtinst/support.py b/virtinst/support.py
+index 4619f51..ee54389 100644
+--- a/virtinst/support.py
++++ b/virtinst/support.py
+@@ -119,7 +119,7 @@ def _check_function(function, flag, run_args, data):
+ 
+ def _version_str_to_int(verstr):
+     if verstr is None:
+-        return None
++        return 0
+     if verstr == 0:
+         return 0
+ 
+diff --git a/virtinst/xmlbuilder.py b/virtinst/xmlbuilder.py
+index d7d66f9..063b085 100644
+--- a/virtinst/xmlbuilder.py
++++ b/virtinst/xmlbuilder.py
+@@ -754,7 +754,6 @@ class XMLBuilder(object):
+         self.conn = conn
+ 
+         if self._XML_SANITIZE:
+-            parsexml = parsexml.decode('ascii', 'ignore').encode('ascii')
+             parsexml = "".join([c for c in parsexml if c in string.printable])
+ 
+         self._propstore = {}

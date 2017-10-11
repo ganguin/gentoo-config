@@ -1,0 +1,20 @@
+diff --git a/tools/buildscripts/gyp_qtwebengine b/tools/buildscripts/gyp_qtwebengine
+index ee09de9..4e209ef 100755
+--- a/tools/buildscripts/gyp_qtwebengine
++++ b/tools/buildscripts/gyp_qtwebengine
+@@ -173,6 +173,15 @@ if __name__ == '__main__':
+ 
+   print 'Updating projects from gyp files...'
+   #sys.stdout.flush()
++  args.extend(['-D', 'ozone_platform=wayland'])
++  args.extend(['-D', 'enable_package_mash_services=1'])
++  args.extend(['-D', 'ozone_platform_wayland=1'])
++  args.extend(['-D', 'ozone_platform_dri=1'])
++  args.extend(['-D', 'ozone_platform_egltest=0'])
++  args.extend(['-D', 'use_aura=1'])
++  args.extend(['-D', 'use_ozone=1'])
++  args.extend(['-D', 'use_ozone_evdev=1'])
++  args.extend(['-D', 'use_x11=0'])
+ 
+   # Off we go...
+   sys.exit(gyp.main(args))
