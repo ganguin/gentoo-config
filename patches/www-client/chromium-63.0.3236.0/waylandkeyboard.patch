@@ -1,0 +1,174 @@
+From a3cbedb2b06481bd3bc817cb03804ea951d89d66 Mon Sep 17 00:00:00 2001
+From: Maksim Sisov <msisov@igalia.com>
+Date: Thu, 12 Oct 2017 15:13:44 +0300
+Subject: [PATCH] Make WaylandKeyboard to notify about keyboard modifiers.
+
+This patch makes WaylandKeyboard to notify observers about
+keyboard modifiers (ctrl, alt, shift and etc). Interested
+clients are WaylandPointer, WaylandTouch(to be checked yet) and
+maybe others. ModifiersObserver is introduced now in order to
+quickly add other interested parties in the future.
+
+In this patch WaylandPointer is the only observer now. It gets
+a notification and modifies its flags with modifiers, which
+are used to create MouseEvents, for example. Thus, MouseEvent
+can now say if that has been a pointer event with keyboard modifiers
+(alt down, ctrl down and etc) or not.
+
+Issue #193
+---
+ ui/ozone/platform/wayland/wayland_connection.cc |  4 ++++
+ ui/ozone/platform/wayland/wayland_keyboard.cc   | 15 +++++++++++++++
+ ui/ozone/platform/wayland/wayland_keyboard.h    | 13 +++++++++++++
+ ui/ozone/platform/wayland/wayland_pointer.cc    |  7 +++++++
+ ui/ozone/platform/wayland/wayland_pointer.h     |  9 ++++++++-
+ 5 files changed, 47 insertions(+), 1 deletion(-)
+
+diff --git a/ui/ozone/platform/wayland/wayland_connection.cc b/ui/ozone/platform/wayland/wayland_connection.cc
+index fb13c2a683ef..60b026367ecf 100644
+--- a/ui/ozone/platform/wayland/wayland_connection.cc
++++ b/ui/ozone/platform/wayland/wayland_connection.cc
+@@ -71,6 +71,10 @@ bool WaylandConnection::Initialize() {
+     return false;
+   }
+ 
++  if (keyboard_ && pointer_) {
++    keyboard_->AddObserver(pointer_.get());
++  }
++
+   return true;
+ }
+ 
+diff --git a/ui/ozone/platform/wayland/wayland_keyboard.cc b/ui/ozone/platform/wayland/wayland_keyboard.cc
+index f0078480f664..3b4c6ca16e6e 100644
+--- a/ui/ozone/platform/wayland/wayland_keyboard.cc
++++ b/ui/ozone/platform/wayland/wayland_keyboard.cc
+@@ -46,6 +46,19 @@ WaylandKeyboard::WaylandKeyboard(wl_keyboard* keyboard,
+ 
+ WaylandKeyboard::~WaylandKeyboard() {}
+ 
++void WaylandKeyboard::AddObserver(ModifiersObserver* observer) {
++  observers_.AddObserver(observer);
++}
++
++void WaylandKeyboard::RemoveObserver(ModifiersObserver* observer) {
++  observers_.RemoveObserver(observer);
++}
++
++void WaylandKeyboard::NotifyModifiersUpdated() {
++  for (ModifiersObserver& observer : observers_)
++    observer.OnModifiersUpdated(modifiers_);
++}
++
+ void WaylandKeyboard::Keymap(void* data,
+                              wl_keyboard* obj,
+                              uint32_t format,
+@@ -130,6 +143,8 @@ void WaylandKeyboard::Modifiers(void* data,
+   keyboard->modifiers_ =
+       engine->UpdateModifiers(mods_depressed, mods_latched, mods_locked, group);
+ 
++  // Update modifiers of other Wayland objects as well.
++  keyboard->NotifyModifiersUpdated();
+ #endif
+ }
+ 
+diff --git a/ui/ozone/platform/wayland/wayland_keyboard.h b/ui/ozone/platform/wayland/wayland_keyboard.h
+index e1ebd2bd1395..36fbb77c3a67 100644
+--- a/ui/ozone/platform/wayland/wayland_keyboard.h
++++ b/ui/ozone/platform/wayland/wayland_keyboard.h
+@@ -5,6 +5,7 @@
+ #ifndef UI_OZONE_PLATFORM_WAYLAND_WAYLAND_KEYBOARD_H_
+ #define UI_OZONE_PLATFORM_WAYLAND_WAYLAND_KEYBOARD_H_
+ 
++#include "base/observer_list.h"
+ #include "ui/events/ozone/evdev/event_dispatch_callback.h"
+ #include "ui/ozone/platform/wayland/wayland_object.h"
+ 
+@@ -14,6 +15,12 @@ class WaylandConnection;
+ 
+ class WaylandKeyboard {
+  public:
++  class ModifiersObserver {
++   public:
++    // Notifies observers about updated keyboard modifiers.
++    virtual void OnModifiersUpdated(uint8_t modifiers) = 0;
++  };
++
+   WaylandKeyboard(wl_keyboard* keyboard, const EventDispatchCallback& callback);
+   virtual ~WaylandKeyboard();
+ 
+@@ -21,6 +28,10 @@ class WaylandKeyboard {
+     connection_ = connection;
+   }
+ 
++  void AddObserver(ModifiersObserver* observer);
++  void RemoveObserver(ModifiersObserver* observer);
++  void NotifyModifiersUpdated();
++
+  private:
+   // wl_keyboard_listener
+   static void Keymap(void* data,
+@@ -61,6 +72,8 @@ class WaylandKeyboard {
+   wl::Object<wl_keyboard> obj_;
+   EventDispatchCallback callback_;
+   uint8_t modifiers_ = 0;
++
++  base::ObserverList<ModifiersObserver> observers_;
+ };
+ 
+ }  // namespace ui
+diff --git a/ui/ozone/platform/wayland/wayland_pointer.cc b/ui/ozone/platform/wayland/wayland_pointer.cc
+index 667fb9e24dfb..18cbf66148bd 100644
+--- a/ui/ozone/platform/wayland/wayland_pointer.cc
++++ b/ui/ozone/platform/wayland/wayland_pointer.cc
+@@ -155,4 +155,11 @@ void WaylandPointer::SetSerial(uint32_t serial) {
+   connection_->set_serial(serial);
+ }
+ 
++void WaylandPointer::OnModifiersUpdated(uint8_t modifiers) {
++  // Remove old modifiers from flags and then update them with new modifiers.
++  flags_ &= ~modifiers_;
++  modifiers_ = modifiers;
++  flags_ |= modifiers_;
++}
++
+ }  // namespace ui
+diff --git a/ui/ozone/platform/wayland/wayland_pointer.h b/ui/ozone/platform/wayland/wayland_pointer.h
+index c75842dd3e3b..4ce7ca832d4f 100644
+--- a/ui/ozone/platform/wayland/wayland_pointer.h
++++ b/ui/ozone/platform/wayland/wayland_pointer.h
+@@ -8,13 +8,14 @@
+ #include "ui/events/ozone/evdev/event_dispatch_callback.h"
+ #include "ui/gfx/geometry/point_f.h"
+ #include "ui/ozone/platform/wayland/wayland_cursor.h"
++#include "ui/ozone/platform/wayland/wayland_keyboard.h"
+ #include "ui/ozone/platform/wayland/wayland_object.h"
+ 
+ namespace ui {
+ 
+ class WaylandConnection;
+ 
+-class WaylandPointer {
++class WaylandPointer : public WaylandKeyboard::ModifiersObserver {
+  public:
+   WaylandPointer(wl_pointer* pointer, const EventDispatchCallback& callback);
+   virtual ~WaylandPointer();
+@@ -57,12 +58,18 @@ class WaylandPointer {
+ 
+   void SetSerial(uint32_t serial);
+ 
++  // WaylandKeyboard::ModifiersObserver overrides:
++  void OnModifiersUpdated(uint8_t modifiers) override;
++
+   WaylandConnection* connection_ = nullptr;
+   std::unique_ptr<WaylandCursor> cursor_;
+   wl::Object<wl_pointer> obj_;
+   EventDispatchCallback callback_;
+   gfx::PointF location_;
+   int flags_ = 0;
++
++  // Keeps track of current modifiers.
++  uint8_t modifiers_ = 0;
+ };
+ 
+ }  // namespace ui
