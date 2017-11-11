@@ -1,0 +1,26 @@
+diff --git a/gfx/gl/GLContextProvider.h b/gfx/gl/GLContextProvider.h
+index 6e096c1..ac0156a 100644
+--- a/gfx/gl/GLContextProvider.h
++++ b/gfx/gl/GLContextProvider.h
+@@ -41,12 +41,11 @@ namespace gl {
+   #define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderCGL
+ #endif
+ 
+-#if defined(MOZ_X11)
++#if defined(MOZ_X11_no)
+   #define GL_CONTEXT_PROVIDER_NAME GLContextProviderGLX
+   #include "GLContextProviderImpl.h"
+   #undef GL_CONTEXT_PROVIDER_NAME
+   #define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderGLX
+-#endif
+ 
+ #define GL_CONTEXT_PROVIDER_NAME GLContextProviderEGL
+ #include "GLContextProviderImpl.h"
+@@ -54,6 +53,7 @@ namespace gl {
+ #ifndef GL_CONTEXT_PROVIDER_DEFAULT
+   #define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderEGL
+ #endif
++#endif
+ 
+ #if defined(MOZ_WIDGET_UIKIT)
+ #define GL_CONTEXT_PROVIDER_NAME GLContextProviderEAGL

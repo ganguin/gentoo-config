@@ -1,0 +1,15 @@
+diff --git a/netwerk/moz.build b/netwerk/moz.build
+index 5505a4ccd030..15a424186b61 100644
+--- a/netwerk/moz.build
++++ b/netwerk/moz.build
+@@ -27,8 +27,8 @@ if CONFIG['MOZ_SRTP']:
+ if CONFIG['MOZ_SCTP']:
+     DIRS += ['sctp/src', 'sctp/datachannel']
+ 
+-if CONFIG['NECKO_WIFI']:
+-    DIRS += ['wifi']
++#if CONFIG['NECKO_WIFI']:
++DIRS += ['wifi']
+ 
+ DIRS += ['locales']
+ 

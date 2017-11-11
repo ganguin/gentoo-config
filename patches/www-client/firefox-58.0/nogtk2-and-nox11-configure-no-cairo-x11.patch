@@ -1,0 +1,45 @@
+diff --git a/old-configure.in b/old-configure.in
+index 1c12ce62a449..a3a49b2f502b 100644
+--- a/old-configure.in
++++ b/old-configure.in
+@@ -1278,7 +1278,7 @@ dnl Checks for X libraries.
+ dnl Ordering is important.
+ dnl Xt is dependent upon SM as of X11R6
+ dnl ========================================================
+-if test -n "$MOZ_X11"; then
++if test -n "$MOZ_X11_no"; then
+     AC_DEFINE_UNQUOTED(FUNCPROTO,15)
+     _SAVE_LDFLAGS="$LDFLAGS"
+     _SAVE_LIBS="$LIBS"
+@@ -4306,11 +4306,11 @@ if test "$MOZ_TREE_CAIRO"; then
+ 
+     # Define macros for cairo-features.h
+     TEE_SURFACE_FEATURE="#define CAIRO_HAS_TEE_SURFACE 1"
+-    if test "$MOZ_X11"; then
++    if test "$MOZ_X11_no"; then
+         XLIB_SURFACE_FEATURE="#define CAIRO_HAS_XLIB_SURFACE 1"
+         XLIB_XRENDER_SURFACE_FEATURE="#define CAIRO_HAS_XLIB_XRENDER_SURFACE 1"
+-        PS_SURFACE_FEATURE="#define CAIRO_HAS_PS_SURFACE 1"
+     fi
++        PS_SURFACE_FEATURE="#define CAIRO_HAS_PS_SURFACE 1"
+     if test "$_HAVE_FREETYPE2"; then
+         FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
+         MOZ_ENABLE_CAIRO_FT=1
+@@ -4366,7 +4366,7 @@ if test "$MOZ_TREE_CAIRO"; then
+     AC_SUBST(TEE_SURFACE_FEATURE)
+ 
+     if test "$MOZ_X11"; then
+-        MOZ_CAIRO_OSLIBS="$MOZ_CAIRO_OSLIBS $XLDFLAGS -lXrender"
++        MOZ_CAIRO_OSLIBS="$MOZ_CAIRO_OSLIBS $XLDFLAGS"
+     fi
+ 
+     CAIRO_FEATURES_H=gfx/cairo/cairo/src/cairo-features.h
+@@ -4884,7 +4884,7 @@ if test -n "$COMPILE_ENVIRONMENT"; then
+ AC_CHECK_FUNCS(posix_fadvise posix_fallocate)
+ 
+ dnl Check for missing components
+-if test "$MOZ_X11"; then
++if test "$MOZ_X11no"; then
+     dnl ====================================================
+     dnl = Check if X headers exist
+     dnl ====================================================

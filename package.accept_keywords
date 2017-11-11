@@ -3,14 +3,14 @@
 sys-kernel/gentoo-sources ~amd64
 sys-kernel/linux-headers ~amd64
 www-plugins/chrome-binary-plugins ~amd64
-=dev-lang/python-3.6.1-r1 ~amd64
+=dev-lang/python-3.6.3 ~amd64
 
 #=sys-firmware/iwl8000-ucode-16.242414.0 ~amd64
 =dev-libs/wlc-0.0.10 ~amd64
 =dev-libs/sway-0.14.0 ~amd64
 
 # php 7
-=dev-lang/php-7.1.9 ~amd64
+=dev-lang/php-7.1.11 ~amd64
 =virtual/httpd-php-7.1 ~amd64
 
 # ruby 2.4
@@ -158,11 +158,14 @@ www-plugins/chrome-binary-plugins ~amd64
 =app-crypt/hashcat-3.5.0 ~amd64
 =app-text/aspell-0.60.7_rc1 ~amd64
 =dev-lang/rust-1.19.0 ~amd64
+=dev-lang/rust-1.21.0 ~amd64
+=virtual/rust-1.21.0 ~amd64
 =dev-libs/libclc-0.2.0_pre20170118 ~amd64
 =dev-libs/libuv-1.11.0 ~amd64
 =dev-python/pygments-2.2.0 ~amd64
 =dev-python/pypeg2-2.15.2 ~amd64
-=dev-util/cargo-0.20.0 ~amd64
+=dev-util/cargo-0.22.0 ~amd64
+=dev-util/cargo-0.21.0 ~amd64
 =dev-util/colm-0.13.0.4 ~amd64
 =dev-util/intel-ocl-sdk-4.4.0.117-r1 ~amd64
 =dev-util/ragel-7.0.0.9 ~amd64
@@ -170,8 +173,7 @@ www-plugins/chrome-binary-plugins ~amd64
 =media-fonts/sil-doulos-5.000 ~amd64
 =media-fonts/sil-gentium-5.000 ~amd64
 =net-firewall/nftables-0.6-r4 ~amd64
-=net-libs/nodejs-7.10.0 ~amd64
-=net-misc/youtube-dl-2017.10.01 ~amd64
+=net-misc/youtube-dl-2017.10.29 ~amd64
 =net-news/rssguard-3.3.5 ~amd64
 =sys-auth/libfprint-0.6.0-r2 ~amd64
 =sys-libs/efivar-31 ~amd64
@@ -182,8 +184,10 @@ www-plugins/chrome-binary-plugins ~amd64
 =x11-libs/libva-intel-driver-1.8.1 ~amd64
 =x11-libs/vte-0.48.3 ~amd64
 =x11-misc/py3status-3.6 ~amd64
-=dev-libs/nspr-4.16 ~amd64
-=dev-libs/nss-3.32.1 ~amd64
+=dev-libs/nspr-4.17 ~amd64
+=dev-libs/nss-3.34* ~amd64
+=media-libs/libpng-1.6.34 ~amd64
+=dev-db/sqlite-3.20.1-r1 ~amd64
 =dev-libs/wayland-protocols-1.10 ~amd64
 =x11-libs/libdrm-2.4.84 ~amd64
 =media-libs/harfbuzz-1.5.1 ~amd64
@@ -194,9 +198,10 @@ www-plugins/chrome-binary-plugins ~amd64
 =dev-libs/gobject-introspection-common-1.52.1 ~amd64
 =sys-apps/kmod-24 ~amd64
 =dev-libs/capstone-3.0.5_rc2-r1 ~amd64
-=dev-util/radare2-1.6.0 ~amd64
-# required by dev-libs/libxslt-1.1.29-r1::gentoo
-# required by www-client/chromium-63.0.3236.0-r9999::local
-# required by @selected
-# required by @world (argument)
+=dev-util/radare2-2.0.1-r1 ~amd64
+=dev-libs/protobuf-3.3.0 ~amd64
 =dev-libs/libxml2-2.9.5 ~amd64
+=dev-libs/libuv-1.15.0 ~amd64
+=net-libs/http-parser-2.7.1 ~amd64
+=net-libs/nghttp2-1.26.0 ~amd64
+=net-libs/nodejs-8.9.1 ~amd64
