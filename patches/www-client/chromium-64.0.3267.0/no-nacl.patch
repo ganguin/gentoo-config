@@ -1,0 +1,11 @@
+--- a/DEPS	2017-11-13 22:21:15.464091940 +0100
++++ b/DEPS	2017-11-13 22:20:38.467095054 +0100
+@@ -42,7 +42,7 @@
+ 
+   # Check out and download nacl by default. This can be disabled e.g. with
+   # custom_vars.
+-  'checkout_nacl': True,
++  'checkout_nacl': False,
+ 
+   # By default, do not check out src-internal. This can be overridden e.g. with
+   # custom_vars.

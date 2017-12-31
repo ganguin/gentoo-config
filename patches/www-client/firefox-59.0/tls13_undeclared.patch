@@ -1,0 +1,16 @@
+diff --git a/security/manager/ssl/nsNSSIOLayer.cpp b/security/manager/ssl/nsNSSIOLayer.cpp
+index f6cb7300afc1..beb8397990f4 100644
+--- a/security/manager/ssl/nsNSSIOLayer.cpp
++++ b/security/manager/ssl/nsNSSIOLayer.cpp
+@@ -2605,11 +2605,9 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
+   if (getTLSProviderFlagCompatMode(infoObject->GetProviderTlsFlags())) {
+     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+             ("[%p] nsSSLIOLayerSetOptions: Use Compatible Handshake\n", fd));
+-    if (SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_TLS13_COMPAT_MODE, PR_TRUE)) {
+           MOZ_LOG(gPIPNSSLog, LogLevel::Error,
+                   ("[%p] nsSSLIOLayerSetOptions: Setting compat mode failed\n", fd));
+           // continue on default path
+-    }
+   }
+ 
+   if ((infoObject->GetProviderFlags() & nsISocketProvider::BE_CONSERVATIVE) &&

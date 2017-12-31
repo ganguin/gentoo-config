@@ -1,0 +1,145 @@
+diff --git a/configure.ac b/configure.ac
+index 0bd9650..b17dbfc 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -1767,8 +1767,6 @@ fi
+ if test x"$enable_dri3" = xyes; then
+     DEFINES="$DEFINES -DHAVE_DRI3"
+ 
+-    dri3_modules="x11-xcb xcb >= $XCB_REQUIRED xcb-dri3 xcb-xfixes xcb-present xcb-sync xshmfence >= $XSHMFENCE_REQUIRED"
+-    PKG_CHECK_MODULES([XCB_DRI3], [$dri3_modules])
+ fi
+ 
+ AM_CONDITIONAL(HAVE_PLATFORM_X11, echo "$platforms" | grep -q 'x11')
+diff --git a/configure b/configure
+index 93a2a37..75e7fc1 100755
+--- a/configure
++++ b/configure
+@@ -848,8 +848,6 @@ HAVE_PLATFORM_WAYLAND_FALSE
+ HAVE_PLATFORM_WAYLAND_TRUE
+ HAVE_PLATFORM_X11_FALSE
+ HAVE_PLATFORM_X11_TRUE
+-XCB_DRI3_LIBS
+-XCB_DRI3_CFLAGS
+ ANDROID_LIBS
+ ANDROID_CFLAGS
+ XCB_DRI2_LIBS
+@@ -1256,8 +1254,6 @@ XCB_DRI2_CFLAGS
+ XCB_DRI2_LIBS
+ ANDROID_CFLAGS
+ ANDROID_LIBS
+-XCB_DRI3_CFLAGS
+-XCB_DRI3_LIBS
+ EXPAT_CFLAGS
+ EXPAT_LIBS
+ I915_CFLAGS
+@@ -2120,10 +2116,6 @@ Some influential environment variables:
+               C compiler flags for ANDROID, overriding pkg-config
+   ANDROID_LIBS
+               linker flags for ANDROID, overriding pkg-config
+-  XCB_DRI3_CFLAGS
+-              C compiler flags for XCB_DRI3, overriding pkg-config
+-  XCB_DRI3_LIBS
+-              linker flags for XCB_DRI3, overriding pkg-config
+   EXPAT_CFLAGS
+               C compiler flags for EXPAT, overriding pkg-config
+   EXPAT_LIBS  linker flags for EXPAT, overriding pkg-config
+@@ -24502,98 +24494,6 @@ fi
+ if test x"$enable_dri3" = xyes; then
+     DEFINES="$DEFINES -DHAVE_DRI3"
+ 
+-    dri3_modules="x11-xcb xcb >= $XCB_REQUIRED xcb-dri3 xcb-xfixes xcb-present xcb-sync xshmfence >= $XSHMFENCE_REQUIRED"
+-
+-pkg_failed=no
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $dri3_modules" >&5
+-$as_echo_n "checking for $dri3_modules... " >&6; }
+-
+-if test -n "$XCB_DRI3_CFLAGS"; then
+-    pkg_cv_XCB_DRI3_CFLAGS="$XCB_DRI3_CFLAGS"
+- elif test -n "$PKG_CONFIG"; then
+-    if test -n "$PKG_CONFIG" && \
+-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"\$dri3_modules\""; } >&5
+-  ($PKG_CONFIG --exists --print-errors "$dri3_modules") 2>&5
+-  ac_status=$?
+-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+-  test $ac_status = 0; }; then
+-  pkg_cv_XCB_DRI3_CFLAGS=`$PKG_CONFIG --cflags "$dri3_modules" 2>/dev/null`
+-		      test "x$?" != "x0" && pkg_failed=yes
+-else
+-  pkg_failed=yes
+-fi
+- else
+-    pkg_failed=untried
+-fi
+-if test -n "$XCB_DRI3_LIBS"; then
+-    pkg_cv_XCB_DRI3_LIBS="$XCB_DRI3_LIBS"
+- elif test -n "$PKG_CONFIG"; then
+-    if test -n "$PKG_CONFIG" && \
+-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"\$dri3_modules\""; } >&5
+-  ($PKG_CONFIG --exists --print-errors "$dri3_modules") 2>&5
+-  ac_status=$?
+-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+-  test $ac_status = 0; }; then
+-  pkg_cv_XCB_DRI3_LIBS=`$PKG_CONFIG --libs "$dri3_modules" 2>/dev/null`
+-		      test "x$?" != "x0" && pkg_failed=yes
+-else
+-  pkg_failed=yes
+-fi
+- else
+-    pkg_failed=untried
+-fi
+-
+-
+-
+-if test $pkg_failed = yes; then
+-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+-$as_echo "no" >&6; }
+-
+-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+-        _pkg_short_errors_supported=yes
+-else
+-        _pkg_short_errors_supported=no
+-fi
+-        if test $_pkg_short_errors_supported = yes; then
+-	        XCB_DRI3_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "$dri3_modules" 2>&1`
+-        else
+-	        XCB_DRI3_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "$dri3_modules" 2>&1`
+-        fi
+-	# Put the nasty error message in config.log where it belongs
+-	echo "$XCB_DRI3_PKG_ERRORS" >&5
+-
+-	as_fn_error $? "Package requirements ($dri3_modules) were not met:
+-
+-$XCB_DRI3_PKG_ERRORS
+-
+-Consider adjusting the PKG_CONFIG_PATH environment variable if you
+-installed software in a non-standard prefix.
+-
+-Alternatively, you may set the environment variables XCB_DRI3_CFLAGS
+-and XCB_DRI3_LIBS to avoid the need to call pkg-config.
+-See the pkg-config man page for more details." "$LINENO" 5
+-elif test $pkg_failed = untried; then
+-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+-$as_echo "no" >&6; }
+-	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+-as_fn_error $? "The pkg-config script could not be found or is too old.  Make sure it
+-is in your PATH or set the PKG_CONFIG environment variable to the full
+-path to pkg-config.
+-
+-Alternatively, you may set the environment variables XCB_DRI3_CFLAGS
+-and XCB_DRI3_LIBS to avoid the need to call pkg-config.
+-See the pkg-config man page for more details.
+-
+-To get pkg-config, see <http://pkg-config.freedesktop.org/>.
+-See \`config.log' for more details" "$LINENO" 5; }
+-else
+-	XCB_DRI3_CFLAGS=$pkg_cv_XCB_DRI3_CFLAGS
+-	XCB_DRI3_LIBS=$pkg_cv_XCB_DRI3_LIBS
+-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+-$as_echo "yes" >&6; }
+-
+-fi
+ fi
+ 
+  if echo "$platforms" | grep -q 'x11'; then
