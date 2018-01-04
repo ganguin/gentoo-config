@@ -1,6 +1,4 @@
 media-libs/mesa osmesa vulkan dri3 vaapi
-<media-video/mpv-0.22.0 -egl -vaapi -xscreensaver opengl
->=media-video/mpv-0.22.0 egl vaapi -xscreensaver -xv -opengl archive
 >=media-video/mpv-0.25.0 egl vaapi -xscreensaver -xv opengl archive
 dev-libs/sway swaylock swaygrab
 x11-terms/gnome-terminal -gnome-shell -nautilus
@@ -15,7 +13,8 @@ media-libs/libcanberra -gtk
 app-crypt/gcr gtk
 media-video/ffmpeg openssl
 app-office/libreoffice -gtk -postgres gtk3
-www-client/firefox system-cairo system-harfbuzz system-icu system-jpeg system-libevent system-libvpx system-sqlite gtk3 force-gtk3
+www-client/firefox system-cairo system-harfbuzz system-icu system-jpeg system-libevent system-libvpx system-sqlite gtk3 force-gtk3 hwaccel
+>=www-client/firefox-58.0 -system-icu
 media-libs/libvpx postproc
 dev-libs/libxml2 icu
 media-libs/libvpx svc
@@ -24,8 +23,6 @@ app-emulation/libvirt opengl gtk spice virgl
 dev-libs/beignet ocl-icd ocl20
 app-crypt/pinentry gnome-keyring
 www-client/otter -spell webkit
-mail-client/claws-mail -python -notification -libindicate -libcanberra -libnotify -session gtk3
-mail-client/claws-mail -spell
 dev-qt/qtcore icu
 dev-qt/qtwebkit printsupport
 >=dev-qt/qtwebkit-5.200.0 opengl
@@ -49,6 +46,7 @@ app-emulation/virt-manager gtk
 app-emulation/virt-viewer -vnc
 app-emulation/qemu usbredir spice gtk virgl virtfs
 www-plugins/chrome-binary-plugins widevine
+net-misc/iputils -nettle
 www-client/chromium widevine
 
 # no webengine
@@ -85,19 +83,16 @@ dev-python/certifi python_targets_python2_7
 dev-python/pyparsing python_targets_python2_7
 
 #disable python if no python 3.6
-dev-libs/libnl -python
-dev-libs/boost:0/1.62.0 -python
+<dev-libs/libnl-3.4.0 -python
 
 #disable python if python 2.7 only
 app-office/gnumeric -python
 dev-lang/yasm -python
 dev-libs/libxslt -python
-dev-libs/protobuf -python
 dev-util/boost-build -python
 dev-vcs/git -python
 media-gfx/graphviz -python
 media-libs/alsa-lib -python
-net-analyzer/net-snmp -python
 net-libs/libproxy -python
 net-print/cups -python
 sys-apps/usbutils -python
