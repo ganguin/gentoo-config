@@ -1,0 +1,13 @@
+diff --git a/python/types.c b/python/types.c
+index f237677..124af56 100644
+--- a/python/types.c
++++ b/python/types.c
+@@ -31,8 +31,6 @@ libxml_PyFileGet(PyObject *f) {
+     const char *mode;
+ 
+     fd = PyObject_AsFileDescriptor(f);
+-    if (!_PyVerify_fd(fd))
+-        return(NULL);
+     /*
+      * Get the flags on the fd to understand how it was opened
+      */
