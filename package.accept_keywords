@@ -6,7 +6,7 @@ www-plugins/chrome-binary-plugins ~amd64
 #=sys-firmware/iwl8000-ucode-16.242414.0 ~amd64
 =dev-libs/wlc-0.0.10 ~amd64
 =dev-libs/json-c-0.13 ~amd64
-=dev-libs/sway-0.15.0 ~amd64
+=dev-libs/sway-0.15.1 ~amd64
 
 # ruby 2.4
 =dev-lang/ruby-2.4.2 ~amd64
@@ -197,3 +197,7 @@ www-plugins/chrome-binary-plugins ~amd64
 =dev-java/javatoolkit-0.6.0 ~amd64
 # required by =weston-3* (argument)
 =dev-libs/weston-3.0.0 ~amd64
+# required by =html2text-2017* (argument)
+=dev-python/html2text-2017.10.4 ~amd64
+# required by ruby:2.4 (argument)
+=dev-lang/ruby-2.4.3 ~amd64
