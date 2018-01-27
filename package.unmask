@@ -1,5 +1,3 @@
-<www-client/chromium-9999
-www-plugins/chrome-binary-plugins
 # required by =javatoolkit-0.6.0 (argument)
 # /usr/portage/profiles/package.mask:
 # Patrice Clement <monsieurp@gentoo.org> (09 Sep 2017)

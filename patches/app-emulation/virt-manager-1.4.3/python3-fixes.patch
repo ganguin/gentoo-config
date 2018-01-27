@@ -1,0 +1,39 @@
+diff --git a/virtManager/graphwidgets.py b/virtManager/graphwidgets.py
+index 84480b7..e81dd5e 100644
+--- a/virtManager/graphwidgets.py
++++ b/virtManager/graphwidgets.py
+@@ -316,7 +316,7 @@ class Sparkline(Gtk.DrawingArea):
+         w = window.get_width()
+         h = window.get_height()
+ 
+-        points_per_set = (len(self.data_array) / self.num_sets)
++        points_per_set = (len(self.data_array) // self.num_sets)
+         pixels_per_point = (float(w) /
+                             (float((points_per_set - 1) or 1)))
+ 
+diff --git a/virtinst/devicedisk.py b/virtinst/devicedisk.py
+index 73ccb5d..9f56398 100644
+--- a/virtinst/devicedisk.py
++++ b/virtinst/devicedisk.py
+@@ -430,7 +430,7 @@ class VirtualDisk(VirtualDevice):
+         """
+         digits = []
+         for factor in range(0, 3):
+-            amt = (num % (26 ** (factor + 1))) / (26 ** factor)
++            amt = (num % (26 ** (factor + 1))) // (26 ** factor)
+             if amt == 0 and num >= (26 ** (factor + 1)):
+                 amt = 26
+             num -= amt
+diff --git a/virtinst/support.py b/virtinst/support.py
+index 19160fb..e075b74 100644
+--- a/virtinst/support.py
++++ b/virtinst/support.py
+@@ -119,7 +119,7 @@ def _check_function(function, flag, run_args, data):
+ 
+ def _version_str_to_int(verstr):
+     if verstr is None:
+-        return None
++        return 0
+     if verstr == 0:
+         return 0
+ 

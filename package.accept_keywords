@@ -1,7 +1,6 @@
 =sys-devel/gcc-7.2.0 ~amd64
 sys-kernel/gentoo-sources ~amd64
 sys-kernel/linux-headers ~amd64
-www-plugins/chrome-binary-plugins ~amd64
 
 #=sys-firmware/iwl8000-ucode-16.242414.0 ~amd64
 =dev-libs/wlc-0.0.11 ~amd64
@@ -9,7 +8,7 @@ www-plugins/chrome-binary-plugins ~amd64
 =dev-libs/sway-0.15.1 ~amd64
 
 # ruby 2.4
-=dev-lang/ruby-2.4.2 ~amd64
+=dev-lang/ruby-2.4.3 ~amd64
 =dev-ruby/kpeg-1.1.0 ~amd64
 =dev-ruby/xmlrpc-0.3.0 ~amd64
 =dev-ruby/power_assert-1.0.1-r1 ~amd64
@@ -19,25 +18,10 @@ www-plugins/chrome-binary-plugins ~amd64
 =dev-ruby/minitest-5.10.3 ~amd64
 =dev-ruby/rake-12.0.0 ~amd64
 =dev-ruby/json-2.1.0 ~amd64
-=dev-ruby/net-telnet-0.1.1-r1 ~amd64
-=dev-ruby/racc-1.4.14 ~amd64
-
-#llvm/clang 5
-=sys-devel/llvm-common-5.0.1 ~amd64
-=sys-libs/compiler-rt-5.0.1 ~amd64
-=sys-devel/clang-5.0.1 ~amd64
-=sys-devel/llvm-5.0.1 ~amd64
-=sys-devel/clang-runtime-5.0.1 ~amd64
-=sys-libs/libomp-5.0.1 ~amd64
-=sys-libs/compiler-rt-sanitizers-5.0.1 ~amd64
-
-#python 3.6
-=dev-python/html2text-2016.9.19 ~amd64
 
 #metasploit (bump to ruby24)
 =net-analyzer/metasploit-4.14.16 ~amd64
 =app-eselect/eselect-metasploit-0.16 ~amd64
-=app-eselect/eselect-rails-0.23 ~amd64
 =dev-ruby/actionpack-4.2.10 ~amd64
 =dev-ruby/actionview-4.2.10 ~amd64
 =dev-ruby/activemodel-4.2.10 ~amd64
@@ -56,7 +40,6 @@ www-plugins/chrome-binary-plugins ~amd64
 =dev-ruby/i18n-0.7.0-r2 ~amd64
 =dev-ruby/jsobfu-0.4.2 ~amd64
 =dev-ruby/kissfft-0.0.2 ~amd64
-=dev-ruby/loofah-2.0.3 ~amd64
 =dev-ruby/metasm-1.0.2-r4 ~amd64
 =dev-ruby/metasploit-concern-2.0.3 ~amd64
 =dev-ruby/metasploit-credential-2.0.8 ~amd64
@@ -81,7 +64,6 @@ www-plugins/chrome-binary-plugins ~amd64
 =dev-ruby/public_suffix-2.0.5 ~amd64
 =dev-ruby/rails-deprecated_sanitizer-1.0.3-r2 ~amd64
 =dev-ruby/rails-dom-testing-1.0.8-r1 ~amd64
-=dev-ruby/rails-html-sanitizer-1.0.3-r1 ~amd64
 =dev-ruby/railties-4.2.10 ~amd64
 =dev-ruby/rb-readline-0.5.5 ~amd64
 =dev-ruby/rdiscount-2.2.0.1 ~amd64
@@ -113,7 +95,6 @@ www-plugins/chrome-binary-plugins ~amd64
 =dev-ruby/sawyer-0.8.1 ~amd64
 =dev-ruby/sqlite3-1.3.13 ~amd64
 =dev-ruby/sshkey-1.9.0 ~amd64
-=dev-ruby/thor-0.19.4 ~amd64
 =dev-ruby/windows_error-0.1.2 ~amd64
 =virtual/ruby-ssl-9 ~amd64
 =virtual/rubygems-12 ~amd64
@@ -140,7 +121,7 @@ www-plugins/chrome-binary-plugins ~amd64
 =dev-qt/qtsql-5.9.3 ~amd64
 =dev-qt/qtpositioning-5.9.3 ~amd64
 =dev-qt/qtwebkit-5.212.0_alpha2 ~amd64
-=dev-python/PyQt5-5.9.2 ~amd64
+#=dev-python/PyQt5-5.9.2 ~amd64
 
 #=dev-libs/ocl-icd-2.2.8 ~amd64
 #=dev-libs/beignet-1.3.1 ~amd64
@@ -149,16 +130,13 @@ www-plugins/chrome-binary-plugins ~amd64
 =dev-lang/rust-1.22.1 ~amd64
 =virtual/rust-1.21.0 ~amd64
 =virtual/rust-1.22.1 ~amd64
-=dev-libs/libuv-1.11.0 ~amd64
 =dev-python/pypeg2-2.15.2 ~amd64
-=dev-util/cargo-0.22.0 ~amd64
-=dev-util/cargo-0.21.0 ~amd64
+=dev-util/cargo-0.24.0 ~amd64
 =dev-util/colm-0.13.0.5 ~amd64
 =dev-util/intel-ocl-sdk-4.4.0.117-r1 ~amd64
 =dev-util/ragel-7.0.0.10-r1 ~amd64
 =media-fonts/sil-doulos-5.000 ~amd64
 =media-fonts/sil-gentium-5.000 ~amd64
-=net-firewall/nftables-0.6-r4 ~amd64
 =net-news/rssguard-3.3.5 ~amd64
 =sys-auth/libfprint-0.6.0-r2 ~amd64
 =www-client/otter-0.9.11 ~amd64
@@ -166,38 +144,22 @@ www-plugins/chrome-binary-plugins ~amd64
 =www-plugins/pdfjs-1.9.426 ~amd64
 =x11-libs/libva-1.8.3 ~amd64
 =x11-libs/libva-intel-driver-1.8.3 ~amd64
-=x11-libs/vte-0.48.3 ~amd64
 =x11-misc/py3status-3.7 ~amd64
 =dev-libs/nspr-4.18 ~amd64
 =dev-libs/nss-3.35* ~amd64
 =media-libs/libpng-1.6.34 ~amd64
 =sys-devel/gdb-8.0 ~amd64
-=dev-util/gdbus-codegen-2.52.3 ~amd64
-=dev-libs/glib-2.52.3 ~amd64
-=dev-libs/gobject-introspection-1.52.1 ~amd64
-=dev-libs/gobject-introspection-common-1.52.1 ~amd64
-=sys-apps/kmod-24 ~amd64
 =dev-libs/capstone-3.0.5_rc2-r1 ~amd64
 =dev-util/radare2-2.2.0 ~amd64
-=dev-libs/protobuf-3.3.0 ~amd64
-=dev-libs/libuv-1.15.0 ~amd64
 =net-libs/http-parser-2.7.1 ~amd64
-=net-libs/nghttp2-1.28.0 ~amd64
-=net-libs/nodejs-8.9.3 ~amd64
 =dev-python/sip-4.19.6 ~amd64
 =dev-libs/beignet-1.3.2 ~amd64
 =www-client/qutebrowser-1.0.4 ~amd64
-# required by =sqlite-3.21.0 (argument)
 =dev-db/sqlite-3.21.0 ~amd64
-# required by =protobuf-3.4.1 (argument)
 =dev-libs/protobuf-3.4.1 ~amd64
-# required by =mosh-1.3.2 (argument)
 =net-misc/mosh-1.3.2 ~amd64
-# required by =javatoolkit-0.6.0 (argument)
 =dev-java/javatoolkit-0.6.0 ~amd64
-# required by =weston-3* (argument)
 =dev-libs/weston-3.0.0 ~amd64
-# required by =html2text-2017* (argument)
 =dev-python/html2text-2017.10.4 ~amd64
-# required by ruby:2.4 (argument)
-=dev-lang/ruby-2.4.3 ~amd64
+# required by gcc:7.3.0 (argument)
+=sys-devel/gcc-7.3.0 **

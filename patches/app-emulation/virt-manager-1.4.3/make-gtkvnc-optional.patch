@@ -1,0 +1,18 @@
+diff --git a/virtManager/viewers.py b/virtManager/viewers.py
+index 80bdb08..fbbf6d9 100644
+--- a/virtManager/viewers.py
++++ b/virtManager/viewers.py
+@@ -26,8 +26,11 @@ from gi.repository import GObject
+ from gi.repository import Gdk
+ 
+ import gi
+-gi.require_version('GtkVnc', '2.0')
+-from gi.repository import GtkVnc
++try:
++    gi.require_version('GtkVnc', '2.0')
++    from gi.repository import GtkVnc
++except (ValueError, ImportError):
++    pass
+ try:
+     gi.require_version('SpiceClientGtk', '3.0')
+     from gi.repository import SpiceClientGtk
