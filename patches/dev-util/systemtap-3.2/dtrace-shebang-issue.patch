@@ -1,0 +1,10 @@
+diff --git a/dtrace.in b/dtrace.in
+index 2e2e002..f169687 100644
+--- a/dtrace.in
++++ b/dtrace.in
+@@ -1,4 +1,4 @@
+-#!@preferred_python@
++#!/usr/bin/python3.6
+ # vim: et sta sts=4 sw=4 ts=8
+ 
+ # This handles the systemtap equivalent of

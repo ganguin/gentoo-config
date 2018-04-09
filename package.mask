@@ -1,2 +1,5 @@
 x11-libs/libX11
 x11-libs/gtk+:2
+
+#fails to build egl only
+=dev-python/PyQt5-5.9.2

@@ -48,6 +48,7 @@ app-emulation/qemu usbredir spice gtk virgl virtfs
 www-plugins/chrome-binary-plugins widevine
 net-misc/iputils -nettle
 sys-fs/cryptsetup -nettle
+net-firewall/iptables nftables
 www-client/chromium widevine
 
 # no webengine
@@ -70,6 +71,10 @@ app-text/asciidoc python_targets_python2_7 python_single_target_python2_7 # 2.7 
 #dev-util/systemtap python_targets_python2_7 # 2.7 only, required by icedtea
 #systemtap is supposed to work with python3 --with-python3
 
+#mesa[vulkan] requires mako
+dev-python/mako python_targets_python2_7
+dev-python/markupsafe python_targets_python2_7
+
 #required python 2.7: chromium
 dev-python/six python_targets_python2_7 # required by dev-python/html5lib
 dev-python/html5lib python_targets_python2_7 # required by dev-python/beautifulsoup
@@ -83,6 +88,8 @@ dev-python/packaging python_targets_python2_7
 dev-python/appdirs python_targets_python2_7
 dev-python/certifi python_targets_python2_7
 dev-python/pyparsing python_targets_python2_7
+
+dev-python/pip python_targets_python2_7
 
 #disable python if no python 3.6
 <dev-libs/libnl-3.4.0 -python

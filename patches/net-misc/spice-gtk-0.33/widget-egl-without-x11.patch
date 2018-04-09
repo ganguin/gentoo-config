@@ -1,0 +1,63 @@
+diff --git a/src/spice-widget-egl.c b/src/spice-widget-egl.c
+index 0698af3..ded7222 100644
+--- a/src/spice-widget-egl.c
++++ b/src/spice-widget-egl.c
+@@ -27,7 +27,9 @@
+ #include "spice-gtk-session-priv.h"
+ #include <libdrm/drm_fourcc.h>
+ 
++#ifdef GDK_WINDOWING_X11
+ #include <gdk/gdkx.h>
++#endif
+ #ifdef GDK_WINDOWING_WAYLAND
+ #include <gdk/gdkwayland.h>
+ #endif
+@@ -289,6 +291,7 @@ gl_make_current(SpiceDisplay *display, GError **err)
+ {
+     SpiceDisplayPrivate *d = SPICE_DISPLAY_GET_PRIVATE(display);
+ 
++#ifdef GDK_WINDOWING_X11
+     if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+         EGLBoolean success = eglMakeCurrent(d->egl.display,
+                                             d->egl.surface,
+@@ -301,8 +304,10 @@ gl_make_current(SpiceDisplay *display, GError **err)
+             return FALSE;
+         }
+     }
++    else
++#endif
+ #if GTK_CHECK_VERSION(3,16,0)
+-    else {
++    {
+         GtkWidget *area = gtk_stack_get_child_by_name(d->stack, "gl-area");
+ 
+         gtk_gl_area_make_current(GTK_GL_AREA(area));
+@@ -397,6 +402,7 @@ void spice_egl_unrealize_display(SpiceDisplay *display)
+         d->egl.prog = 0;
+     }
+ 
++#ifdef GDK_WINDOWING_X11
+     if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+         /* egl.surface && egl.ctx are only created on x11, see
+            spice_egl_init() */
+@@ -417,6 +423,7 @@ void spice_egl_unrealize_display(SpiceDisplay *display)
+         /* do not call eglterminate() since egl may be used by
+          * somebody else code */
+     }
++#endif
+ }
+ 
+ G_GNUC_INTERNAL
+@@ -614,10 +621,12 @@ void spice_egl_update_display(SpiceDisplay *display)
+                              0, 0, 1, 1);
+     }
+ 
++#ifdef GDK_WINDOWING_X11
+     if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+         /* gtk+ does the swap with gtkglarea */
+         eglSwapBuffers(d->egl.display, d->egl.surface);
+     }
++#endif
+ 
+     glUseProgram(prog);
+ }
