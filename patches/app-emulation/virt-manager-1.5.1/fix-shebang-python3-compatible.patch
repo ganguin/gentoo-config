@@ -1,0 +1,50 @@
+diff --git a/setup.py b/setup.py
+index 1ae6a22..18a0a38 100755
+--- a/setup.py
++++ b/setup.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python2
++#!/usr/bin/env python
+ # Copyright (C) 2013, 2014 Red Hat, Inc.
+ 
+ import glob
+diff --git a/tests/test_inject.py b/tests/test_inject.py
+index 94ab114..7eb17ec 100755
+--- a/tests/test_inject.py
++++ b/tests/test_inject.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python2
++#!/usr/bin/env python
+ # Copyright (C) 2013, 2014 Red Hat, Inc.
+ 
+ from __future__ import print_function
+diff --git a/virt-clone b/virt-clone
+index 12f0d06..4edbfb2 100755
+--- a/virt-clone
++++ b/virt-clone
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python2
++#!/usr/bin/env python
+ #
+ # Copyright(c) FUJITSU Limited 2007.
+ #
+diff --git a/virt-convert b/virt-convert
+index c42f2ef..486b37a 100755
+--- a/virt-convert
++++ b/virt-convert
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python2
++#!/usr/bin/env python
+ #
+ # Copyright 2008, 2013, 2014  Red Hat, Inc.
+ # Joey Boggs <jboggs@redhat.com>
+diff --git a/virt-install b/virt-install
+index 4163d0f..01c3317 100755
+--- a/virt-install
++++ b/virt-install
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python2
++#!/usr/bin/env python
+ #
+ # Copyright 2005-2014 Red Hat, Inc.
+ #
